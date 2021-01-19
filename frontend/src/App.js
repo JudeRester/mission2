@@ -1,39 +1,22 @@
 import './App.css';
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import axios from 'axios';
+import { connect } from 'react-redux';
 
-function App() {
-  useEffect(() => {
-    axios.post('http://localhost:8080/api/authenticate', {
-      "username": "root",
-      "password": "12345"
-    }).then((response) => {
-      console.log(response);
-    })
-  },[]
-  )
-
-  const [message, setMessage] = useState("");
-  useEffect(() => {
-    //setInterval(() => {
-      fetch('/api/hello')
-        .then(response => response.text())
-        .then(message => {
-          setMessage(message);
-        });
-    //}, 500);
-
-  }, [])
-  
+function App(props) {
   return (
     <div className="App">
-      <header className="App-header">
-        <p>
-          {message}
-        </p>
-      </header>
+      hi
+      <p>{props.shoe[0].name}</p>
     </div>
   );
 }
 
-export default App;
+function state를props화(state){
+  return {
+    shoe : state
+  }
+}
+export default connect(state를props화)(App);
+//xport default App;
