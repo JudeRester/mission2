@@ -57,13 +57,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         // For CORS error
-        httpSecurity.cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues());
+        // httpSecurity.cors().configurationSource(request -> new
+        // CorsConfiguration().applyPermitDefaultValues());
         // We don't need CSRF for this example
         httpSecurity.csrf().disable()
                 // dont authenticate this particular request
                 .authorizeRequests().antMatchers("/api/authenticate").permitAll().
                 // all other requests need to be authenticated
-                anyRequest().permitAll().and().
+                anyRequest().authenticated().and().
 
                 // stateless session
                 exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
