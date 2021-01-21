@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import axios from 'axios';
 import { BrowserRouter } from 'react-router-dom'
@@ -7,27 +7,48 @@ import { Provider } from 'react-redux';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
 import Login, { loginReducer } from './container/login/Login';
 import thunk from 'redux-thunk'
-import CommandHeader from './container/login/CommandHeader'
+import Header from './container/commons/Header';
+import Upload from './container/upload/Upload';
 
 const rootReducer = combineReducers({
   loginReducer
 })
 
+
 const store = createStore(rootReducer, applyMiddleware(thunk))
 
+export const isLogin = React.createContext({
+  setLoginedAccount: ()=>{}
+})
+
 function App() {
+  const [loginedAccount, setLoginedAccount] = useState(false);
+  
+  //const sessionUser = JSON.parse(sessionStorage.getItem("sessionUser"))
+  useEffect(() => {
+    if (sessionStorage.getItem("sessionUser")) {
+      const sessionUser = JSON.parse(sessionStorage.getItem("sessionUser"));
+      if (sessionUser) {
+        setLoginedAccount(true);
+      }
+    }
+  })
+
   return (
 
     <div className="App">
-      <BrowserRouter>
-        <Provider store={store}>
-          <CommandHeader/>
-          <Switch>
-            <Route exact path="/" component={Login} />
-            <Route path="/main" component={Main} />
-          </Switch>
-        </Provider>
-      </BrowserRouter>
+      <Router>
+        <isLogin.Provider value={false}>
+          <Provider store={store}>
+            <Header />
+            <Switch>
+              <Route exact path="/" component={Login} />
+              <Route path="/main" component={Main} />
+              <Route path="/upload" component={Upload}/>
+            </Switch>
+          </Provider>
+        </isLogin.Provider>
+      </Router>
     </div>
 
 
@@ -36,8 +57,8 @@ function App() {
 
 function Main() {
   const [message, setMessage] = useState("");
-  console.log(JSON.parse(sessionStorage.getItem("sessionUser")).token); 
-  axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token; 
+  //console.log(JSON.parse(sessionStorage.getItem("sessionUser")).token); 
+  axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
   useEffect(() => {
     axios.get(`/api/hello`)
       .then(response => {

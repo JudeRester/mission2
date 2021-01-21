@@ -2,10 +2,13 @@ import React, {useEffect, useState} from 'react';
 import { Link, useHistory } from 'react-router-dom';
 
 const CommonHeader = () => {
-    const [loginedAccount, setLoginedAccount] = useState(false);
-   
-    const sessionUser = JSON.parse(sessionStorage.getItem("sessionUser"))
-    useEffect(() => {if(sessionUser) setLoginedAccount(true)},[sessionUser])
+    let history = useHistory();
+
+    const logout = () => {
+      sessionStorage.removeItem("sessionUser");
+      history.push("/");
+    }
+    
     return (
       <div className="container">
         <div className="row">
@@ -19,7 +22,7 @@ const CommonHeader = () => {
    
           <div className="col-lg-2">
    
-            {!loginedAccount &&
+            {/* {!loginedAccount &&
               <div id="common-header-links">
                 <Link to="/account/login">
                   <span className="btn-link btn-sm">로그인</span>
@@ -28,18 +31,14 @@ const CommonHeader = () => {
                   <span className="btn-link btn-sm">회원가입</span>
                 </Link>
               </div>
-            }
-            {loginedAccount &&
+            } */}
+            {/* {loginedAccount && */}
               <div id="common-header-links">
    
-                <Link to="/account/login">
-                  <span className="btn-link btn-sm">로그아웃</span>
-                </Link>
-                <Link to="/mypage">
-                  <span className="btn-link btn-sm">마이페이지</span>
-                </Link>
+                  <span onClick={logout} className="btn-link btn-sm">로그아웃</span>
+        
               </div>
-            }
+            {/* } */}
    
           </div>
    
