@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 //import axios from 'axios';
-import styled from 'styled-components'
+import styled from 'styled-components';
+import DropZone from './DropZone';
 
 //style 
 
@@ -34,7 +35,6 @@ let DivTitleContainer = styled.div`
 display:flex;
 margin-bottom: 20px;
 border-bottom: 1px solid #eaeaea;
-
 `;
 
 let DivBox = styled.div`
@@ -88,8 +88,12 @@ width: 100%;
   justify-content: space-between;
   padding: 43px 88px 93px 150px;
 `;
+
+
 //style end
 const Upload = () => {
+    let [tags, setTages] = useState<Array<string>>([]);
+    
     return (
         <div>
             <DivWrapper>
@@ -104,10 +108,12 @@ const Upload = () => {
                                 <InputLogin type="text" placeholder="" className="logininput" />
                             </DivLoginGroup>
 
-                            <DivLoginGroup controlId="formBasicPassword">
+                            <DivLoginGroup>
                                 <SpanLoginLabel>태그</SpanLoginLabel>
                                 <InputLogin type="text" placeholder="" className="logininput"/>
                             </DivLoginGroup>
+
+                            <DropZone />
                         </FormLogin>
                     </DivBox>
                 </DivContainer>

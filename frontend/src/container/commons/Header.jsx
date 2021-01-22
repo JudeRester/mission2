@@ -1,15 +1,12 @@
 import React, { useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
-import { isLogin } from '../../App';
 
 const Header = () => {
     const history = useHistory();
-    const isLoginContext = useContext(isLogin);
     const logout = () => {
         sessionStorage.removeItem("sessionUser");
         history.push("/");
-        isLoginContext((prev) => !prev);
     }
     if (true) {
         return (

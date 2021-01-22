@@ -238,7 +238,6 @@ function Login() {
                                 <InputLogin type="email" placeholder="Enter email" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
                                 <SpanLoginFocus></SpanLoginFocus>
                             </DivLoginGroup>
-
                             <DivLoginGroup controlId="formBasicPassword">
                                 <SpanLoginLabel>비밀번호</SpanLoginLabel>
                                 <InputLogin type="password" placeholder="Password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
@@ -252,40 +251,7 @@ function Login() {
                 </DivLoginContainer>
             </DivWrapper>
         </div>
-
-        // <div className="container account_login">
-        //     <form >
-        //         <div className="form-group">
-        //             <input
-        //                 type="text"
-        //                 className="form-control"
-        //                 id="username"
-        //                 placeholder="아이디"
-        //                 value={username}
-        //                 onChange={e => setUsername(e.target.value)}
-        //             />
-        //             <input
-        //                 type="password"
-        //                 className="form-control"
-        //                 id="password"
-        //                 placeholder="비밀번호"
-        //                 value={password}
-        //                 onChange={e => setPassword(e.target.value)}
-        //             />
-        //         </div>
-        //     </form>
-        //     <button
-        //         type="submit"
-        //         className="btn btn-success"
-        //         id="login-button"
-        //         onClick={handleLoginButton}
-        //     >
-        //         로그인
-        //   </button>
-
-        // </div>
     );
-
 }
 
 export default Login;

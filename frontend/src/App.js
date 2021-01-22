@@ -2,7 +2,6 @@ import './App.css';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import axios from 'axios';
-import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
 import Login, { loginReducer } from './container/login/Login';
@@ -17,10 +16,6 @@ const rootReducer = combineReducers({
 
 const store = createStore(rootReducer, applyMiddleware(thunk))
 
-export const isLogin = React.createContext({
-  setLoginedAccount: ()=>{}
-})
-
 function App() {
   const [loginedAccount, setLoginedAccount] = useState(false);
   
@@ -32,22 +27,22 @@ function App() {
         setLoginedAccount(true);
       }
     }
-  })
+  },[])
 
   return (
 
     <div className="App">
       <Router>
-        <isLogin.Provider value={false}>
           <Provider store={store}>
-            <Header />
+            {!loginedAccount && <Login />}
+            {loginedAccount && <Main />}
+            {/* <Header />
             <Switch>
               <Route exact path="/" component={Login} />
               <Route path="/main" component={Main} />
               <Route path="/upload" component={Upload}/>
-            </Switch>
+            </Switch> */}
           </Provider>
-        </isLogin.Provider>
       </Router>
     </div>
 
