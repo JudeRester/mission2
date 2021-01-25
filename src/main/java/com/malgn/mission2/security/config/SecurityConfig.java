@@ -1,8 +1,8 @@
 package com.malgn.mission2.security.config;
 
-import com.malgn.mission2.security.filter.CustomUsernamePasswordAuthenticationFilter;
 import com.malgn.mission2.security.handler.LoginFailureHandler;
 import com.malgn.mission2.security.handler.LoginSuccessHandler;
+import com.malgn.mission2.security.filter.CustomUsernamePasswordAuthenticationFilter;
 import com.malgn.mission2.service.MemberService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +41,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues());
 
-        http.authorizeRequests().antMatchers("/api/login").permitAll().antMatchers("/**").authenticated().and().csrf()
-                .disable();
+        http.authorizeRequests().antMatchers("/api/login").permitAll()
+                // .antMatchers("/**").authenticated()
+                .and().csrf().disable();
         http.addFilterAt(getAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.formLogin().disable();
 

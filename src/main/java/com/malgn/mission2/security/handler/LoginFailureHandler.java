@@ -1,6 +1,8 @@
 package com.malgn.mission2.security.handler;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,8 +37,11 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
 
         session.setAttribute("errormsg", errormsg);
         session.setAttribute("inputId", userid);
-        System.out.println(errormsg);
-        res.getOutputStream().println(objectMapper.writeValueAsString(errormsg));
+        Map<String, Object> data = new HashMap<>();
+        data.put("errormsg", errormsg);
+        data.put("inputId", userid);
+
+        res.getOutputStream().println(objectMapper.writeValueAsString(data));
         // req.getRequestDispatcher(defaultFailureUrl).forward(req, res);
     }
 }
