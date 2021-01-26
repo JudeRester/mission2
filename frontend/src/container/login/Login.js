@@ -235,12 +235,12 @@ function Login() {
                         <FormLogin>
                             <DivLoginGroup>
                                 <SpanLoginLabel>아이디</SpanLoginLabel>
-                                <InputLogin type="email" placeholder="Enter email" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
+                                <InputLogin type="text" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
                                 <SpanLoginFocus></SpanLoginFocus>
                             </DivLoginGroup>
                             <DivLoginGroup controlId="formBasicPassword">
                                 <SpanLoginLabel>비밀번호</SpanLoginLabel>
-                                <InputLogin type="password" placeholder="Password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
+                                <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
                                 <SpanLoginFocus></SpanLoginFocus>
                             </DivLoginGroup>
                             <DivButtonWrapper>

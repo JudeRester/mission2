@@ -8,6 +8,7 @@ import Login, { loginReducer } from './container/login/Login';
 import thunk from 'redux-thunk'
 import Header from './container/commons/Header';
 import Upload from './container/upload/Upload';
+import Main from './container/commons/Main';
 
 const rootReducer = combineReducers({
   loginReducer
@@ -36,12 +37,12 @@ function App() {
           <Provider store={store}>
             {!loginedAccount && <Login />}
             {loginedAccount && <Main />}
-            {/* <Header />
+            <Header />
             <Switch>
               <Route exact path="/" component={Login} />
-              <Route path="/main" component={Main} />
+              {/* <Route path="/main" component={Main} /> */}
               <Route path="/upload" component={Upload}/>
-            </Switch> */}
+            </Switch>
           </Provider>
       </Router>
     </div>
@@ -50,23 +51,23 @@ function App() {
   );
 }
 
-function Main() {
-  const [message, setMessage] = useState("");
-  //console.log(JSON.parse(sessionStorage.getItem("sessionUser")).token); 
-  axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
-  useEffect(() => {
-    axios.get(`/api/hello`)
-      .then(response => {
-        console.log(response.data);
-        setMessage(response.data);
-      });
-  }, [])
-  return (
-    <div>
-      <p>{message}</p>
-    </div>
-  )
-}
+// function Main() {
+//   const [message, setMessage] = useState("");
+//   //console.log(JSON.parse(sessionStorage.getItem("sessionUser")).token); 
+//   axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
+//   useEffect(() => {
+//     axios.get(`/api/hello`)
+//       .then(response => {
+//         console.log(response.data);
+//         setMessage(response.data);
+//       });
+//   }, [])
+//   return (
+//     <div>
+//       <p>{message}</p>
+//     </div>
+//   )
+// }
 
 //export default connect(state를props화)(App);
 export default App;

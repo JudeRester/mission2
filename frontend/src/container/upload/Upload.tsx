@@ -112,8 +112,10 @@ const Upload = () => {
                                 <SpanLoginLabel>태그</SpanLoginLabel>
                                 <InputLogin type="text" placeholder="" className="logininput"/>
                             </DivLoginGroup>
-
-                            <DropZone />
+                            <DivLoginGroup>
+                                <DropZone />
+                            </DivLoginGroup>
+                            
                         </FormLogin>
                     </DivBox>
                 </DivContainer>
