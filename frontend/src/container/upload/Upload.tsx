@@ -115,7 +115,8 @@ const Upload = () => {
                             <DivLoginGroup>
                                 <DropZone />
                             </DivLoginGroup>
-                            
+                                <button>저장</button>
+                                <button>취소</button>
                         </FormLogin>
                     </DivBox>
                 </DivContainer>
