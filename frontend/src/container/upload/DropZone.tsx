@@ -1,4 +1,5 @@
 import React, { forwardRef, useState, useEffect, useRef, InputHTMLAttributes } from 'react';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 
@@ -131,7 +132,11 @@ const SpanFileErrorMsg = styled.span`
 color:red;
 `;
 
-const DropZone = () => {
+const InputFileinput = styled.input`
+display:none;
+`;
+
+const DropZone = (props:any) => {
     //states
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [validFiles, setValidFiles] = useState([]);
@@ -179,13 +184,19 @@ const DropZone = () => {
         validFiles.splice(validFileIndex, 1);
         // update validFiles array
         setValidFiles([...validFiles]);
-        const selectedFileIndex = selectedFiles.findIndex(e => e.name === name);
-        selectedFiles.splice(selectedFileIndex, 1);
+        while(true){
+            const selectedFileIndex = selectedFiles.findIndex(e => e.name === name);
+            if (selectedFileIndex === -1) break;
+            selectedFiles.splice(selectedFileIndex, 1);
+        }
+        // const selectedFileIndex = selectedFiles.findIndex(e => e.name === name);
+        // selectedFiles.splice(selectedFileIndex, 1);
         // update selectedFiles array
         setSelectedFiles([...selectedFiles]);
+        props.dispatch({type:'UPDATE',payload:validFiles});
     }
 
-    const fileInputRef = useRef<HTMLInputElement>();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const fileInputClicked = () =>{
         fileInputRef.current.click();
     }
@@ -210,28 +221,27 @@ const DropZone = () => {
             }
         }, []);
         setValidFiles([...filteredArray]);
-
+        props.dispatch({type:'UPDATE',payload:filteredArray});
     }, [selectedFiles])
 
     return (
-        <DivContainer id="container" onClick={fileInputClicked}>
-            <DivDropConatiner>
+        <DivContainer id="container">
+            <DivDropConatiner  onClick={fileInputClicked}>
                 <DivDropMessage>
                     <DivUploadIcon />
                     Drag & Drop files here or click to upload
                 </DivDropMessage>
-
+                <InputFileinput type="file" multiple onChange={filesSelected} ref={fileInputRef}/>
             </DivDropConatiner>
             <DivFileDisplay>
                 {validFiles.map((data, i) =>
                     <DivFileStatus key={i}>
                         <div>
-                            <input type="file" multiple onChange={filesSelected} ref={fileInputRef} />
                             <div className="file-type-logo"></div>
                             <DivFileType>{fileType(data.name)}</DivFileType>
                             <SpanFileName className={`file-name ${data.invalid ? 'file-error' : ''}`}>{data.name}</SpanFileName>
                             <SpanFileSize>({fileSize(data.size)})</SpanFileSize>{data.invalid && <SpanFileErrorMsg>(error)</SpanFileErrorMsg>}
-                            <SpanFileRemove onClick={() => removeFile(data.name)}>X</SpanFileRemove>
+                            <SpanFileRemove onClick={() => removeFile(data.name)}>×</SpanFileRemove>
                         </div>
                     </DivFileStatus>
                 )}
@@ -315,4 +325,9 @@ const DropZone = () => {
     //         </div>
     //     )
 }
-export default DropZone;
+function getStore(state:any){
+    return{
+        state : state
+    }
+}
+export default connect(getStore)(DropZone);

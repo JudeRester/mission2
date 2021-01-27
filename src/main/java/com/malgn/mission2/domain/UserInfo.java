@@ -109,13 +109,6 @@ public class UserInfo implements UserDetails {
         this.userRole = userRole;
     }
 
-    @Override
-    public String toString() {
-        return "UserInfo [userId=" + userId + ", userPass=" + userPass + ", userName=" + userName + ", userRole="
-                + userRole + ", userEmail=" + userEmail + ", userPhone=" + userPhone + ", usercreatedate="
-                + usercreatedate + ", userIsActive=" + userIsActive + "]";
-    }
-
     public String getUserEmail() {
         return userEmail;
     }
@@ -138,6 +131,14 @@ public class UserInfo implements UserDetails {
 
     public void setUsercreatedate(LocalDateTime usercreatedate) {
         this.usercreatedate = usercreatedate;
+    }
+
+    @Override
+    public String toString() {
+        return "{" + " userId='" + getUserId() + "'" + ", userPass='" + getUserPass() + "'" + ", userName='"
+                + getUserName() + "'" + ", userRole='" + getUserRole() + "'" + ", userEmail='" + getUserEmail() + "'"
+                + ", userPhone='" + getUserPhone() + "'" + ", usercreatedate='" + getUsercreatedate() + "'"
+                + ", userIsActive='" + getUserIsActive() + "'" + "}";
     }
 
 }

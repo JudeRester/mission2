@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useReducer, ChangeEvent, FormEvent } from 'react';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 //import axios from 'axios';
 import styled from 'styled-components';
 import DropZone from './DropZone';
@@ -50,14 +52,21 @@ border-radius: 3px;
 box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;
 `;
 
-const DivLoginGroup = styled.div`
+const DivInputGroup = styled.div`
 width: 100%;
   position: relative;
   border-bottom: 1px solid #b2b2b2;
   margin-bottom: 26px;
 `;
 
-const SpanLoginLabel = styled.span`
+const DivTagGroup = styled.div`
+width:100%;
+position:relative;
+margin-bottom:26px;
+display:block;
+`;
+
+const SpanInputLabel = styled.span`
 font-family: Poppins-Regular;
   font-size: 15px;
   color: #808080;
@@ -68,7 +77,7 @@ font-family: Poppins-Regular;
   left: -105px;
   width: 80px;
 `;
-const InputLogin = styled.input`
+const InputText = styled.input`
 font-family: Poppins-Regular;
   font-size: 15px;
   color: #555555;
@@ -89,11 +98,73 @@ width: 100%;
   padding: 43px 88px 93px 150px;
 `;
 
+const SpanTag = styled.span`
+display:inline-block;
+background:#4abdff;
+margin-right:5px;
+margin-top:2px;
+margin-bottom:2px;
+padding:5px 7px 5px 7px;
+border-radius:4px;
+color:#fff;
+`;
+
+const SpanTimes = styled.span`
+margin: 3px;
+margin-left 5px;
+font-weight: bolder;
+color:#fff;
+&:hover{
+    cursor:pointer;
+    color:#cccccc;
+}
+&:active{
+    color:#7a7a7a;
+}
+`;
 
 //style end
 const Upload = () => {
-    let [tags, setTages] = useState<Array<string>>([]);
-    
+    let [title, setTitle] = useState<string>();
+    let [currentInputTag, setCurrentInputTag] = useState<string>();
+    let [tags, setTags] = useState<Array<string>>([]);
+    let files: Array<File> = [];
+
+    function filesReducer(state = files, action: any) {
+        if (action.type === "UPDATE") {
+            return action.payload;
+        }
+        if (action.type === "RESET") {
+            return [];
+        }
+        return state;
+    }
+    let fileStore = createStore(filesReducer);
+    const submitFiles = (e: FormEvent) => {
+        e.preventDefault();
+        console.log(`title= ${title} files=${fileStore.getState()} tags=${tags}`)
+
+    }
+
+    const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            let inputTag = currentInputTag.trim();
+            if (inputTag != "") {
+                if (tags.filter(tag => tag == inputTag).length<=0){
+                    let tmp: Array<string> = [...tags].concat(currentInputTag);
+                    setTags(tmp);
+                }
+            }
+            setCurrentInputTag('');
+        }
+    }
+
+    const removeTag = (targetTag:string)=>{
+        const targetTagIndex = tags.findIndex(e => e === targetTag);
+        tags.splice(targetTagIndex,1);
+        setTags([...tags]);
+    }
+
     return (
         <div>
             <DivWrapper>
@@ -102,21 +173,31 @@ const Upload = () => {
                         <DivTitleContainer>
                             <h2 className="h3 mb-2 text-gray-800">업로드</h2>
                         </DivTitleContainer>
-                        <FormLogin>
-                        <DivLoginGroup>
-                                <SpanLoginLabel>재목</SpanLoginLabel>
-                                <InputLogin type="text" placeholder="" className="logininput" />
-                            </DivLoginGroup>
-
-                            <DivLoginGroup>
-                                <SpanLoginLabel>태그</SpanLoginLabel>
-                                <InputLogin type="text" placeholder="" className="logininput"/>
-                            </DivLoginGroup>
-                            <DivLoginGroup>
-                                <DropZone />
-                            </DivLoginGroup>
-                                <button>저장</button>
-                                <button>취소</button>
+                        <FormLogin onSubmit={submitFiles}>
+                            <DivInputGroup>
+                                <SpanInputLabel>재목</SpanInputLabel>
+                                <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
+                            </DivInputGroup>
+                            <DivInputGroup>
+                                <SpanInputLabel>태그</SpanInputLabel>
+                                <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
+                            </DivInputGroup>
+                            <DivTagGroup>
+                                
+                                {tags.map((data, i) =>
+                                    <SpanTag key={i}>{data}<SpanTimes onClick={()=>{removeTag(data)}}>×</SpanTimes></SpanTag>
+                                )}
+                            </DivTagGroup>
+                            <DivInputGroup>
+                                <Provider store={fileStore}>
+                                    <DropZone />
+                                </Provider>
+                            </DivInputGroup>
+                            <DivTagGroup>
+                            <button type="submit">저장</button>
+                            <button>취소</button>
+                            </DivTagGroup>
+                            
                         </FormLogin>
                     </DivBox>
                 </DivContainer>
