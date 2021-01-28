@@ -72,16 +72,16 @@ const DivFileDisplay = styled.div`
 const DivFileStatus = styled.div`
 display:flex;
 width: 100%;
-    vertical-align:top;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    position: relative;
-    line-height: 50px;
-    height: 50px;
+vertical-align:top;
+margin-top: 10px;
+margin-bottom: 20px;
+position: relative;
+line-height: 50px;
+height: 50px;
 
-    > div{
-        overflow:hidden;
-    }
+> div{
+    overflow:hidden;
+}
 `;
 
 const DivFileType = styled.div`

@@ -17,23 +17,13 @@ public class UserInfo implements UserDetails {
     private String userRole;
     private String userEmail;
     private String userPhone;
-    private LocalDateTime usercreatedate;
-    private String userIsActive;
+    private LocalDateTime userCreateDate;
 
-    public String getUserIsActive() {
-        return userIsActive;
-    }
-
-    public void setUserIsActive(String userisactive) {
-        this.userIsActive = userisactive;
-    }
-
-    public UserInfo(String userId, String useraName, String userPass, String userRole, String userIsActive) {
+    public UserInfo(String userId, String useraName, String userPass, String userRole) {
         this.userId = userId;
         this.userPass = userPass;
         this.userName = useraName;
         this.userRole = userRole;
-        this.userIsActive = userIsActive;
     }
 
     @Override
@@ -70,11 +60,7 @@ public class UserInfo implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        if (this.userIsActive.equals("ACTIVE"))
-            return true;
-        else
-            return false;
-        // return true;
+        return true;
     }
 
     public String getUserId() {
@@ -126,19 +112,18 @@ public class UserInfo implements UserDetails {
     }
 
     public LocalDateTime getUsercreatedate() {
-        return usercreatedate;
+        return userCreateDate;
     }
 
     public void setUsercreatedate(LocalDateTime usercreatedate) {
-        this.usercreatedate = usercreatedate;
+        this.userCreateDate = usercreatedate;
     }
 
     @Override
     public String toString() {
         return "{" + " userId='" + getUserId() + "'" + ", userPass='" + getUserPass() + "'" + ", userName='"
                 + getUserName() + "'" + ", userRole='" + getUserRole() + "'" + ", userEmail='" + getUserEmail() + "'"
-                + ", userPhone='" + getUserPhone() + "'" + ", usercreatedate='" + getUsercreatedate() + "'"
-                + ", userIsActive='" + getUserIsActive() + "'" + "}";
+                + ", userPhone='" + getUserPhone() + "'" + ", usercreatedate='" + getUsercreatedate() + "'" + "'" + "}";
     }
 
 }

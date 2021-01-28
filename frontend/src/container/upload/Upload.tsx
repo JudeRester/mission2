@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useReducer, ChangeEvent, FormEvent } from 'react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-//import axios from 'axios';
+import axios from 'axios';
 import styled from 'styled-components';
 import DropZone from './DropZone';
 
@@ -128,9 +128,33 @@ const Upload = () => {
     let [title, setTitle] = useState<string>();
     let [currentInputTag, setCurrentInputTag] = useState<string>();
     let [tags, setTags] = useState<Array<string>>([]);
-    let files: Array<File> = [];
+    let [files, setFiles] = useState<Array<File>>([]);
+    let [assetSeq, setAssetSeq] = useState<number>();
 
-    function filesReducer(state = files, action: any) {
+    useEffect(() => {
+        if (assetSeq) {
+            const fileList: Array<File> = files;
+            fileList.forEach((item) => {
+                const formData = new FormData();
+                formData.append("file", item);
+                formData.append("assetSeq", '' + assetSeq);
+
+                axios.post(`/api/file`,
+                    formData,
+                    {
+                        headers:{
+
+                        },
+                        onUploadProgress: (ProgressEvent) => {
+                        }
+                    }
+                );
+            })
+        }
+
+    }, [assetSeq]);
+
+    function filesReducer(state: any, action: any) {
         if (action.type === "UPDATE") {
             return action.payload;
         }
@@ -140,17 +164,35 @@ const Upload = () => {
         return state;
     }
     let fileStore = createStore(filesReducer);
-    const submitFiles = (e: FormEvent) => {
+    const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        console.log(`title= ${title} files=${fileStore.getState()} tags=${tags}`)
+        // console.log(`title= ${title} files=${fileStore.getState()} tags=${tags}`)
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
+        let data = { assetTitle: title }
+        try {
+            const response = await axios.post(`/api/asset`,
+                data,
+                {
+                    headers: {
+                        'Content-type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            setAssetSeq(response.data.result.assetSeq);
+        }
+        catch (err) {
+            console.log(err);
+        }
+
 
     }
 
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
+            e.preventDefault();
             let inputTag = currentInputTag.trim();
             if (inputTag != "") {
-                if (tags.filter(tag => tag == inputTag).length<=0){
+                if (tags.filter(tag => tag == inputTag).length <= 0) {
                     let tmp: Array<string> = [...tags].concat(currentInputTag);
                     setTags(tmp);
                 }
@@ -159,9 +201,9 @@ const Upload = () => {
         }
     }
 
-    const removeTag = (targetTag:string)=>{
+    const removeTag = (targetTag: string) => {
         const targetTagIndex = tags.findIndex(e => e === targetTag);
-        tags.splice(targetTagIndex,1);
+        tags.splice(targetTagIndex, 1);
         setTags([...tags]);
     }
 
@@ -183,9 +225,9 @@ const Upload = () => {
                                 <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
                             </DivInputGroup>
                             <DivTagGroup>
-                                
+
                                 {tags.map((data, i) =>
-                                    <SpanTag key={i}>{data}<SpanTimes onClick={()=>{removeTag(data)}}>×</SpanTimes></SpanTag>
+                                    <SpanTag key={i}>{data}<SpanTimes onClick={() => { removeTag(data) }}>×</SpanTimes></SpanTag>
                                 )}
                             </DivTagGroup>
                             <DivInputGroup>
@@ -194,10 +236,10 @@ const Upload = () => {
                                 </Provider>
                             </DivInputGroup>
                             <DivTagGroup>
-                            <button type="submit">저장</button>
-                            <button>취소</button>
+                                <button type="submit">저장</button>
+                                <button>취소</button>
                             </DivTagGroup>
-                            
+
                         </FormLogin>
                     </DivBox>
                 </DivContainer>

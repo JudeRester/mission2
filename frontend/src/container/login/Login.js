@@ -206,22 +206,24 @@ function Login() {
     let history = useHistory();
     let dispatch = useDispatch();
 
-    function handleLoginButton(e) {
+    async function handleLoginButton(e) {
         e.preventDefault();
-        axios.post(`http://localhost:8080/api/authenticate`,
-            { username: username, password: password },
-            {
-                'Content-type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            })
-            .then(response => {
-                sessionStorage.setItem("sessionUser", JSON.stringify(response.data))
-                dispatch(loginRequestAction(response.data))
-                history.push("/main");
-            })
-            .catch(error => {
-                throw (error)
-            });
+
+        try {
+            const response = await axios.post(`http://localhost:8080/api/authenticate`,
+                { username: username, password: password },
+                {
+                    'Content-type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                });
+
+            sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
+            dispatch(loginRequestAction(response.data));
+            history.push("/main");
+        } catch (err) {
+            console.error(err);
+        }
+
     }
 
     return (

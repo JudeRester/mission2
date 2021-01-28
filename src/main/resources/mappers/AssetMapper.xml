@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.malgn.mission2.mapper.AssetMapper">
+    <insert id="createAsset">
+        <selectKey resultType="int" keyProperty="assetSeq" order="BEFORE">
+            select assetSeq.nextval from dual
+        </selectKey>
+        insert into asset
+        (asset_seq,
+        asset_title,
+        asset_owner,
+        asset_iscomplete)
+        values(
+            #{assetSeq},
+            #{assetTitle},
+            #{assetOwner},
+            0
+        )
+    </insert>
+</mapper>

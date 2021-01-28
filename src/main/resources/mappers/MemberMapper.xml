@@ -6,9 +6,9 @@
 <mapper namespace="com.malgn.mission2.mapper.MemberMapper">
 
 	<select id="getUser" resultType="UserInfo">
-		select userid, username,
-		userrole, userisactive, userpass, useremail,userphone,usercreatedate from users where
-		userid=#{userId}
+		select user_id, user_name,
+		user_role, user_pass, user_email,user_phone,user_create_date from assetuser where
+		user_id=#{userId}
 	</select>
 	
 

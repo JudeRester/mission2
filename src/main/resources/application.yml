@@ -18,4 +18,6 @@ jwt:
 mybatis:
   type-aliases-package: com.malgn.mission2.domain/**
   mapper-locations: classpath:mappers/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
 #mybatis setting end
