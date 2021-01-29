@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useReducer, ChangeEvent, FormEvent } from 'react';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { createStore } from 'redux';
 import axios from 'axios';
 import styled from 'styled-components';
@@ -125,6 +125,7 @@ color:#fff;
 
 //style end
 const Upload = () => {
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
     let [title, setTitle] = useState<string>();
     let [currentInputTag, setCurrentInputTag] = useState<string>();
     let [tags, setTags] = useState<Array<string>>([]);
@@ -133,58 +134,79 @@ const Upload = () => {
 
     useEffect(() => {
         if (assetSeq) {
-            const fileList: Array<File> = files;
-            fileList.forEach((item) => {
-                const formData = new FormData();
-                formData.append("file", item);
-                formData.append("assetSeq", '' + assetSeq);
+            fileUpload();
+        }
 
-                axios.post(`/api/file`,
-                    formData,
-                    {
-                        headers:{
+    }, [assetSeq, files]);
 
-                        },
-                        onUploadProgress: (ProgressEvent) => {
-                        }
-                    }
-                );
+    const fileUpload = () => {
+        if (files.length!==0) {
+            const fileList: Array<File> = [...files];
+            const formData = new FormData();
+            formData.append("file", fileList[0]);
+            formData.append("assetSeq", '' + assetSeq);
+            axios.post(`/api/file`,
+                formData,
+                {
+                    // 토스트 위치
+                    // onUploadProgress: (ProgressEvent) => {
+                    // }
+                }
+            ).then(() => {
+                fileList.splice(0, 1);
+                if(fileList.length===0){
+                    fileUploadComplete(assetSeq).then(()=>{
+                        setAssetSeq(null);
+                        setFiles(null);
+                    })
+                }
+                setFiles([...fileList]);
             })
-        }
+        }else{
+            console.log('파일이 없어요!')
 
-    }, [assetSeq]);
-
-    function filesReducer(state: any, action: any) {
-        if (action.type === "UPDATE") {
-            return action.payload;
         }
-        if (action.type === "RESET") {
-            return [];
-        }
-        return state;
     }
-    let fileStore = createStore(filesReducer);
+    const fileUploadComplete = (seq:number) =>{
+        return axios.post(`/api/complete`,
+        {assetSeq: seq, tags: tags},
+        {
+            headers: {
+                'Content-type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        })
+    }
+    // const files = (state:Array<File>, action: any) => {
+    //     if (action.type === "UPDATE") {
+    //         return action.payload;
+    //     }
+    //     if (action.type === "RESET") {
+    //         return [];
+    //     }
+    //     return [...state];
+    // }
+    // let fileStore = createStore(files);
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
+        if(files.length!=0){
+            let data = { assetTitle: title }
+            try {
+                const response = await axios.post(`/api/asset`,
+                    data,
+                    {
+                        headers: {
+                            'Content-type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        }
+                    });
+                setAssetSeq(response.data.result.assetSeq);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        }
         // console.log(`title= ${title} files=${fileStore.getState()} tags=${tags}`)
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
-        let data = { assetTitle: title }
-        try {
-            const response = await axios.post(`/api/asset`,
-                data,
-                {
-                    headers: {
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                });
-            setAssetSeq(response.data.result.assetSeq);
-        }
-        catch (err) {
-            console.log(err);
-        }
-
-
     }
 
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -231,9 +253,9 @@ const Upload = () => {
                                 )}
                             </DivTagGroup>
                             <DivInputGroup>
-                                <Provider store={fileStore}>
-                                    <DropZone />
-                                </Provider>
+                                {/* <Provider store={fileStore}> */}
+                                <DropZone setFiles={setFiles} />
+                                {/* </Provider> */}
                             </DivInputGroup>
                             <DivTagGroup>
                                 <button type="submit">저장</button>

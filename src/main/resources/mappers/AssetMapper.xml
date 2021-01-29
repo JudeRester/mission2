@@ -18,4 +18,22 @@
             0
         )
     </insert>
+
+    <insert id="upload">
+        insert into assetfile
+        (asset_seq,
+        asset_origin_name,
+        asset_location,
+        asset_size)
+        values(
+            #{assetSeq},
+            #{assetOriginName},
+            #{assetLocation},
+            #{assetSize}
+        )
+    </insert>
+
+    <update id="completeAsset">
+        update from set 
+    </update>
 </mapper>

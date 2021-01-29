@@ -21,3 +21,9 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 #mybatis setting end
+
+#file upload location
+property:
+  image:
+    location: /Documents/mission2/uploadedImages/
+    temp-location: /Documents/mission2/temp  

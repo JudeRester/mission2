@@ -1,6 +1,7 @@
 package com.malgn.mission2.mapper;
 
 import com.malgn.mission2.domain.Asset;
+import com.malgn.mission2.domain.AssetFile;
 
 import org.apache.ibatis.annotations.Mapper;
 
@@ -8,5 +9,11 @@ import org.apache.ibatis.annotations.Mapper;
 public interface AssetMapper {
 
     public void createAsset(Asset asset);
+
+    public void upload(AssetFile dto);
+
+    public void insertTags(Asset asset);
+
+    public void completeAsset(Asset asset);
 
 }

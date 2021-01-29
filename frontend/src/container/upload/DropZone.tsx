@@ -1,5 +1,5 @@
 import React, { forwardRef, useState, useEffect, useRef, InputHTMLAttributes } from 'react';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 
@@ -140,6 +140,10 @@ const DropZone = (props:any) => {
     //states
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [validFiles, setValidFiles] = useState([]);
+
+    useEffect(()=>{
+        props.setFiles(validFiles);
+    },[validFiles])
     //functions
     const dragOver = (e: DragEvent) => {
         e.preventDefault();
@@ -166,7 +170,7 @@ const DropZone = (props:any) => {
             setSelectedFiles(prevArray => [...prevArray, files[i]]);
         }
     }
-
+    
     const fileSize = (size: number) => {
         if (size === 0) return '0 Bytes';
         const k = 1024;
@@ -193,7 +197,8 @@ const DropZone = (props:any) => {
         // selectedFiles.splice(selectedFileIndex, 1);
         // update selectedFiles array
         setSelectedFiles([...selectedFiles]);
-        props.dispatch({type:'UPDATE',payload:validFiles});
+        // props.dispatch({type:'UPDATE',payload:validFiles});
+        // props.setFiles(validFiles);
     }
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -221,7 +226,7 @@ const DropZone = (props:any) => {
             }
         }, []);
         setValidFiles([...filteredArray]);
-        props.dispatch({type:'UPDATE',payload:filteredArray});
+        // props.setFiles(filteredArray);
     }, [selectedFiles])
 
     return (
@@ -330,4 +335,4 @@ function getStore(state:any){
         state : state
     }
 }
-export default connect(getStore)(DropZone);
+export default DropZone;
