@@ -127,13 +127,13 @@ color:#fff;
 const Upload = () => {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionStorage.getItem("sessionUser")).token;
     let [title, setTitle] = useState<string>();
-    let [currentInputTag, setCurrentInputTag] = useState<string>();
+    let [currentInputTag, setCurrentInputTag] = useState<string>('');
     let [tags, setTags] = useState<Array<string>>([]);
     let [files, setFiles] = useState<Array<File>>([]);
-    let [assetSeq, setAssetSeq] = useState<number>();
+    let [assetSeq, setAssetSeq] = useState<number>(0);
 
     useEffect(() => {
-        if (assetSeq) {
+        if (assetSeq!=0) {
             fileUpload();
         }
 
@@ -156,8 +156,8 @@ const Upload = () => {
                 fileList.splice(0, 1);
                 if(fileList.length===0){
                     fileUploadComplete(assetSeq).then(()=>{
-                        setAssetSeq(null);
-                        setFiles(null);
+                        setAssetSeq(0);
+                        setFiles([]);
                     })
                 }
                 setFiles([...fileList]);

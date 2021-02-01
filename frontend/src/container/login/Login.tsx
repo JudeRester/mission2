@@ -186,14 +186,14 @@ transition: all 0.4s;
 
 //style end
 
-export function loginRequestAction(data) {
+export function loginRequestAction(data: any) {
     return ({
         type: POST_LOGIN_REQUEST,
         payload: data
     })
 }
 
-export function loginReducer(state = {}, action) {
+export function loginReducer(state = {}, action: { type: any; playload: any; }) {
     switch (action.type) {
         case 'POST_LOGIN_REQUEST': return action.playload;
         default: return state;
@@ -213,8 +213,10 @@ function Login() {
             const response = await axios.post(`http://localhost:8080/api/authenticate`,
                 { username: username, password: password },
                 {
-                    'Content-type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    headers:{
+                        'Content-type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
                 });
 
             sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
@@ -234,13 +236,13 @@ function Login() {
                         <DivLoginTitle>
                             <SpanLoginTitle>로그인</SpanLoginTitle>
                         </DivLoginTitle>
-                        <FormLogin>
+                        <FormLogin onSubmit={handleLoginButton}>
                             <DivLoginGroup>
                                 <SpanLoginLabel>아이디</SpanLoginLabel>
                                 <InputLogin type="text" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
                                 <SpanLoginFocus></SpanLoginFocus>
                             </DivLoginGroup>
-                            <DivLoginGroup controlId="formBasicPassword">
+                            <DivLoginGroup>
                                 <SpanLoginLabel>비밀번호</SpanLoginLabel>
                                 <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
                                 <SpanLoginFocus></SpanLoginFocus>
