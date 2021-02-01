@@ -206,7 +206,7 @@ function Login() {
     let history = useHistory();
     let dispatch = useDispatch();
 
-    async function handleLoginButton(e:any) {
+    async function handleLoginButton(e: { preventDefault: () => void; }) {
         e.preventDefault();
 
         try {

@@ -2,12 +2,8 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import styled from 'styled-components'
+import styled from '@emotion/styled'
 
-const POST_LOGIN_REQUEST = 'POST_LOGIN_REQEUST';
-
-
-//style
 
 let DivWrapper = styled.div`
 width:100%;
@@ -40,7 +36,7 @@ position: relative;
 box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.3);
 `;
 let DivLoginTitle = styled.div`
-width: 100%;
+&:first-child{width: 100%;
 position: relative;
 z-index: 1;
 display: -webkit-box;
@@ -69,7 +65,7 @@ padding: 70px 15px 74px 15px;
     left: 0;
     background-color: rgba(54,84,99,0.7);
 }    
-
+}
 `;
 
 let SpanLoginTitle = styled.span`
@@ -91,6 +87,7 @@ width: 100%;
   flex-wrap: wrap;
   justify-content: space-between;
   padding: 43px 88px 93px 190px;
+  box-sizing:border-box;
 `;
 
 const DivLoginGroup = styled.div`
@@ -126,7 +123,7 @@ font-family: Poppins-Regular;
 `;
 
 const SpanLoginFocus = styled.span`
-position: absolute;
+&:first-child{position: absolute;
   display: block;
   width: 100%;
   height: 100%;
@@ -147,6 +144,7 @@ position: absolute;
   ${InputLogin}:focus + &:before{
     width: 100%;
   }
+}
 `;
 
 const DivButtonWrapper = styled.div`
@@ -186,45 +184,26 @@ transition: all 0.4s;
 
 //style end
 
-export function loginRequestAction(data: any) {
-    return ({
-        type: POST_LOGIN_REQUEST,
-        payload: data
-    })
-}
-
-export function loginReducer(state = {}, action: { type: any; playload: any; }) {
-    switch (action.type) {
-        case 'POST_LOGIN_REQUEST': return action.playload;
-        default: return state;
-    }
-}
-
 function Login() {
     let [username, setUsername] = useState("");
     let [password, setPassword] = useState("");
-    let history = useHistory();
-    let dispatch = useDispatch();
 
     async function handleLoginButton(e:any) {
         e.preventDefault();
+        // try {
+        //     const response = await axios.post(`http://localhost:8080/api/authenticate`,
+        //         { username: username, password: password },
+        //         {
+        //             headers:{
+        //                 'Content-type': 'application/json',
+        //                 'Access-Control-Allow-Origin': '*'
+        //             }
+        //         });
 
-        try {
-            const response = await axios.post(`http://localhost:8080/api/authenticate`,
-                { username: username, password: password },
-                {
-                    headers:{
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                });
-
-            sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
-            dispatch(loginRequestAction(response.data));
-            history.push("/main");
-        } catch (err) {
-            console.error(err);
-        }
+        //     sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
+        // } catch (err) {
+        //     console.error(err);
+        // }
 
     }
 
@@ -240,12 +219,12 @@ function Login() {
                             <DivLoginGroup>
                                 <SpanLoginLabel>아이디</SpanLoginLabel>
                                 <InputLogin type="text" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
-                                <SpanLoginFocus></SpanLoginFocus>
+                                {/* <SpanLoginFocus></SpanLoginFocus> */}
                             </DivLoginGroup>
                             <DivLoginGroup>
                                 <SpanLoginLabel>비밀번호</SpanLoginLabel>
                                 <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
-                                <SpanLoginFocus></SpanLoginFocus>
+                                {/* <SpanLoginFocus></SpanLoginFocus> */}
                             </DivLoginGroup>
                             <DivButtonWrapper>
                                 <ButtonLogin onClick={handleLoginButton}>로그인</ButtonLogin>

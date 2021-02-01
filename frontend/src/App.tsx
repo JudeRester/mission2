@@ -22,7 +22,7 @@ function App() {
     <div className="App">
        <Router>
           <Provider store={store}>
-            {!loginedAccount && <Login/>}
+            {/* {!loginedAccount && <Login/>} */}
             <Header />
             <Switch>
               <Route exact path="/" component={Login} />
