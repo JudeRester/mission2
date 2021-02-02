@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import styled from '@emotion/styled'
+import member, { login } from '../../modules/member';
+import { RootState } from '../../modules';
 
 
 let DivWrapper = styled.div`
@@ -157,7 +158,7 @@ display: flex;
 flex-wrap: wrap;
 `;
 
-const ButtonLogin = styled.span`
+const ButtonLogin = styled.button`
 display: flex;
 justify-content: center;
 align-items: center;
@@ -185,56 +186,56 @@ transition: all 0.4s;
 //style end
 
 function Login() {
-    let [username, setUsername] = useState("");
-    let [password, setPassword] = useState("");
-
-    async function handleLoginButton(e:any) {
-        e.preventDefault();
-        // try {
-        //     const response = await axios.post(`http://localhost:8080/api/authenticate`,
-        //         { username: username, password: password },
-        //         {
-        //             headers:{
-        //                 'Content-type': 'application/json',
-        //                 'Access-Control-Allow-Origin': '*'
-        //             }
-        //         });
-
-        //     sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
-        // } catch (err) {
-        //     console.error(err);
-        // }
-
+  let [username, setUsername] = useState("");
+  let [password, setPassword] = useState("");
+  const dispatch = useDispatch();
+  async function handleLoginButton(e: any) {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`http://localhost:8080/api/authenticate`,
+        { username: username, password: password },
+        {
+          headers: {
+            'Content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      // history.push("/main");
+      dispatch(login({userId:'', isLogined:true}))
+      sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-    return (
-        <div>
-            <DivWrapper>
-                <DivLoginContainer>
-                    <DivLoginBox>
-                        <DivLoginTitle>
-                            <SpanLoginTitle>로그인</SpanLoginTitle>
-                        </DivLoginTitle>
-                        <FormLogin onSubmit={handleLoginButton}>
-                            <DivLoginGroup>
-                                <SpanLoginLabel>아이디</SpanLoginLabel>
-                                <InputLogin type="text" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
-                                {/* <SpanLoginFocus></SpanLoginFocus> */}
-                            </DivLoginGroup>
-                            <DivLoginGroup>
-                                <SpanLoginLabel>비밀번호</SpanLoginLabel>
-                                <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
-                                {/* <SpanLoginFocus></SpanLoginFocus> */}
-                            </DivLoginGroup>
-                            <DivButtonWrapper>
-                                <ButtonLogin onClick={handleLoginButton}>로그인</ButtonLogin>
-                            </DivButtonWrapper>
-                        </FormLogin>
-                    </DivLoginBox>
-                </DivLoginContainer>
-            </DivWrapper>
-        </div>
-    );
+  return (
+    <div>
+      <DivWrapper>
+        <DivLoginContainer>
+          <DivLoginBox>
+            <DivLoginTitle>
+              <SpanLoginTitle>로그인</SpanLoginTitle>
+            </DivLoginTitle>
+            <FormLogin onSubmit={handleLoginButton}>
+              <DivLoginGroup>
+                <SpanLoginLabel>아이디</SpanLoginLabel>
+                <InputLogin type="text" className="logininput" value={username} onChange={e => setUsername(e.target.value)} />
+                {/* <SpanLoginFocus></SpanLoginFocus>  */}
+              </DivLoginGroup>
+              <DivLoginGroup>
+                <SpanLoginLabel>비밀번호</SpanLoginLabel>
+                <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
+                {/* <SpanLoginFocus></SpanLoginFocus>  */}
+              </DivLoginGroup>
+              <DivButtonWrapper>
+                <ButtonLogin onClick={handleLoginButton}>로그인</ButtonLogin>
+              </DivButtonWrapper>
+            </FormLogin>
+          </DivLoginBox>
+        </DivLoginContainer>
+      </DivWrapper>
+    </div>
+  );
 }
 
 export default Login;
