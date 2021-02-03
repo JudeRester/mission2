@@ -29,7 +29,6 @@ function fileList(
     state = initialState,
     action: FileAction
 ): File[] {
-    console.log('hi')
     switch(action.type){
         case ADD:
             return [...state, action.file];

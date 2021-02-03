@@ -16,6 +16,7 @@ function App() {
   const store = createStore(rootReducer
     //, devTools
   )
+  console.log(store.getState)
   const token = localStorage.getItem('token');
   
   return (

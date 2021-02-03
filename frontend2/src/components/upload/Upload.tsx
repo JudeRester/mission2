@@ -134,67 +134,62 @@ const Upload = () => {
     let [currentInputTag, setCurrentInputTag] = useState<string>('');
     let [tags, setTags] = useState<Array<string>>([]);
     let [filesState, setFilesState] = useState<Array<File>>([]);
-    let [assetSeq, setAssetSeq] = useState<number>(0);
+    const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
 
-    const dispatch = useDispatch();
-    const fileList = useSelector((state: RootState) => state.fileList)
+    const fileUpload = (seq: number) => {
+        filesState.forEach(async (item, i) => {
+            if (item.size >= CHUNK_SIZE) {
+                const chunks = fileSlicer(item)
+                chunks.forEach(async (item, i) => {
+                    try {
+                        console.log(item)
+                        // await axios.post(`/api/largefile`,
 
+                        // )
+                    } catch (err) {
 
-    // useEffect(() => {
-    //     if (assetSeq!=0) {
-    //         fileUpload();
-    //     }
-
-    // }, [assetSeq, files]);
-
-    const fileUpload = () => {
-        if (filesState.length!==0) {
-            const formData = new FormData();
-            formData.append("file", fileList[0]);
-            formData.append("assetSeq", '' + assetSeq);
-            axios.post(`/api/file`,
-                formData,
-                {
-                    // 토스트 위치
-                    // onUploadProgress: (ProgressEvent) => {
-                    // }
+                    }
+                })
+            } else {
+                try {
+                    const formData = new FormData();
+                    formData.append("file", item);
+                    formData.append("assetSeq", '' + seq);
+                    await axios.post(`/api/file`,
+                        formData
+                    )
+                    if (i === filesState.length - 1) {
+                        await fileUploadComplete(seq)
+                    }
                 }
-            ).then(() => {
-                dispatch(remove(0))
-                if(fileList.length===0){
-                    fileUploadComplete(assetSeq).then(()=>{
-                        setAssetSeq(0);
-                        dispatch(reset)
-                    })
+                catch (err) {
+
                 }
-            })
-        }else{
-            console.log('파일이 없어요!')
-        }
-    }
-    const fileUploadComplete = (seq:number) =>{
-        return axios.post(`/api/complete`,
-        {assetSeq: seq, tags: tags},
-        {
-            headers: {
-                'Content-type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
             }
+
         })
+
     }
-    // const files = (state:Array<File>, action: any) => {
-    //     if (action.type === "UPDATE") {
-    //         return action.payload;
-    //     }
-    //     if (action.type === "RESET") {
-    //         return [];
-    //     }
-    //     return [...state];
-    // }
-    // let fileStore = createStore(files);
+    const fileUploadComplete = async (seq: number) => {
+        try {
+            await axios.post(`/api/complete`,
+                { assetSeq: seq, tags: tags },
+                {
+                    headers: {
+                        'Content-type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                })
+            setFilesState([]);
+        } catch (err) {
+            console.log(err)
+        }
+
+    }
+
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (fileList.length != 0) {
+        if (filesState.length != 0) {
             let data = { assetTitle: title }
             try {
                 const response = await axios.post(`/api/asset`,
@@ -205,9 +200,8 @@ const Upload = () => {
                             'Access-Control-Allow-Origin': '*'
                         }
                     });
-                setAssetSeq(response.data.result.assetSeq);
-                console.log(response.data.result)
-                fileUpload();
+                // setAssetSeq();
+                fileUpload(response.data.result.assetSeq);
             }
             catch (err) {
                 console.log(err);
@@ -216,7 +210,7 @@ const Upload = () => {
     }
 
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
             let inputTag = currentInputTag.trim();
             if (inputTag != "") {
@@ -235,6 +229,22 @@ const Upload = () => {
         setTags([...tags]);
     }
 
+    // 파일을 청크로 나누는 함수
+    const fileSlicer = (target: File) => {
+        let chunks = [];
+        let chunkIndex = 0; // 파일 자를 시작 위치
+        const CHUNK_COUNT = Math.ceil(target.size / CHUNK_SIZE);//청크갯수
+
+        for (let i = 1; i <= CHUNK_COUNT; i++) {
+            if (i == CHUNK_COUNT)
+                chunks.push(target.slice(chunkIndex))
+            else
+                chunks.push(target.slice(chunkIndex, chunkIndex + CHUNK_SIZE))
+            chunkIndex += CHUNK_SIZE;
+        }
+        return chunks
+    }
+
     return (
         <DivWrapper>
             <DivContainer>
@@ -242,7 +252,7 @@ const Upload = () => {
                     <DivTitleContainer>
                         <h2 className="h3 mb-2 text-gray-800">업로드</h2>
                     </DivTitleContainer>
-                    <FormLogin 
+                    <FormLogin
                     // onSubmit={submitFiles}
                     >
                         <DivInputGroup>
@@ -260,7 +270,7 @@ const Upload = () => {
                             )}
                         </DivTagGroup>
                         <DivInputGroup>
-                            <DropZone filesState={filesState} setFilesState={setFilesState}/>
+                            <DropZone filesState={filesState} setFilesState={setFilesState} />
                         </DivInputGroup>
                         <DivTagGroup>
                             <button onClick={submitFiles}>저장</button>

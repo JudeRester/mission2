@@ -33,7 +33,15 @@
         )
     </insert>
 
+    <insert id="insertTags" parameterType="Asset">
+        <foreach collection="tags" item="arr" open="insert all"
+			close="select * from dual" separator=" ">
+			into assettag
+			values(#{arr},#{assetSeq})
+		</foreach>
+    </insert>
+    
     <update id="completeAsset">
-        update from set 
+        update asset set asset_iscomplete = 1 where asset_seq=#{assetSeq}
     </update>
 </mapper>

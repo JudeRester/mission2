@@ -6,15 +6,8 @@ import { RootState } from '../modules';
 import { login } from '../modules/member';
 import Upload from './upload/Upload';
 import Header from './commons/Header';
+import Main from './main';
 
-
-const Main: any = () => {
-    return (
-        <div>
-            <p>hi</p>
-        </div>
-    )
-}
 const Pages = (props: any) => {
     const user = useSelector((state: RootState) => state.member)
     const dispatch = useDispatch();

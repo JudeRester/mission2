@@ -2,6 +2,7 @@ import React, { forwardRef, useState, useEffect, useRef, InputHTMLAttributes } f
 import styled from '@emotion/styled';
 import { RootState } from '../../modules';
 import { add, remove } from '../../modules/fileList';
+import { preProcessFile } from 'typescript';
 
 const DivContainer = styled.div`
 `;
@@ -110,48 +111,37 @@ const InputFileinput = styled.input`
 display:none;
 `;
 
-const DropZone = (props:any) => {
-    const fileList = props.filesList;
+const DropZone = (props: any) => {
+    const fileList: File[] = props.filesState;
+    const setFileList = props.setFilesState;
 
-    const dragOver = (e: DragEvent) => {
+
+    const handleFiles = (files: FileList) => {
+        for (let i = 0; i < files.length; i++) {
+            if (fileList.filter((file: File) => file.name == files[i].name).length <= 0) {
+                setFileList((pre: File[]) => [...pre, files[i]]);
+            }
+        }
+    }
+
+    const dragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     }
 
-    const dragEnter = (e: DragEvent) => {
+    const dragEnter = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     }
 
-    const dragLeave = (e: DragEvent) => {
+    const dragLeave = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     }
 
-    const fileDrop = (e: DragEvent) => {
+    const fileDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         const files: FileList = e.dataTransfer.files;
         if (files.length) {
             handleFiles(files);
         }
-    }
-
-    const handleFiles = (files: FileList) => {
-        for (let i = 0; i < files.length; i++) {
-            let asdf = fileList.filter(file => {
-                return file.name ==files[i].name}).length;
-            if (asdf<= 0) {
-                // dispatch(add(files[i]))
-            }
-            // let filteredArray = fileList.reduce((file, files[i]) => {
-            //     const x = file.find((item: { name: string; }) => item.name === current.name);
-            //     if (!x) {
-            //         return file.concat([current]);
-            //     } else {
-            //         return file;
-            //     }
-            // }, []);
-            // setValidFiles([...filteredArray]);
-        }
-        let a =1;
-        
     }
 
     const fileSize = (size: number) => {
@@ -167,7 +157,10 @@ const DropZone = (props:any) => {
     }
 
     const removeFile = (name: string) => {
-        const targetIndex = fileList.findIndex(e => e.name === name);
+        const targetIndex = fileList.findIndex((e: File) => e.name === name);
+        let tempFileList = [...fileList]
+        tempFileList.splice(targetIndex, 1)
+        setFileList(tempFileList)
         // dispatch(remove(targetIndex))
     }
 
@@ -181,18 +174,8 @@ const DropZone = (props:any) => {
         }
     }
 
-    useEffect(() => {
-        document.getElementById('container').addEventListener('dragenter', dragEnter);
-        document.getElementById('container').addEventListener('dragleave', dragLeave);
-        document.getElementById('container').addEventListener('dragover', dragOver);
-        document.getElementById('container').addEventListener('drop', fileDrop);
-
-        // fileList.forEach(item => console.log(item.name))
-
-    }, [fileList])
-
     return (
-        <DivContainer id="container">
+        <DivContainer id="container" onDrop={fileDrop} onDragLeave={dragLeave} onDragOver={dragOver} onDragEnter={dragEnter}>
             <DivDropConatiner onClick={fileInputClicked}>
                 <DivDropMessage>
                     <DivUploadIcon />
