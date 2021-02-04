@@ -1,17 +1,16 @@
 package com.malgn.mission2.controller;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.UUID;
 
 import com.malgn.mission2.domain.Asset;
 import com.malgn.mission2.domain.AssetFile;
+import com.malgn.mission2.domain.AssetLargeFile;
 import com.malgn.mission2.domain.Response;
 import com.malgn.mission2.domain.UserInfo;
-// import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.service.AssetService;
 
 import org.apache.commons.io.FileUtils;
@@ -97,6 +96,65 @@ public class AssetController {
             log.error("{}", e.getMessage(), e);
         }
         return null;
+    }
+
+    @PostMapping("/api/prelargefile")
+    public Response<AssetLargeFile, Object> preLargeFile(@RequestBody AssetLargeFile assetLargeFile,
+            @Value("${property.image.location}") String path) {
+        Calendar c = Calendar.getInstance();
+        // 운영체제 별 경로
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win"))
+            path = "d:" + path;
+        else if (os.contains("mac"))
+            path = System.getProperty("user.home") + path;
+        // 운영체제 별 경로 end
+        String month = Integer.toString(c.get(c.MONTH) + 1);
+        String date = Integer.toString(c.get(c.DATE));
+
+        if (month.length() == 1)
+            month = "0" + month;
+        if (date.length() == 1)
+            date = "0" + date;
+        String fileOriginName = assetLargeFile.getAssetOriginName();
+        path = path + c.get(c.YEAR) + "/" + month + "/" + date + "/" + assetLargeFile.getAssetSeq() + "/";
+        String fileExt = fileOriginName.substring(fileOriginName.lastIndexOf("."));
+        String fileName = UUID.randomUUID() + fileExt;
+        assetLargeFile.setLocation(path);
+        assetLargeFile.setAssetUuidName(fileName);
+        return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
+    }
+
+    @PostMapping("/api/largefile")
+    public Response<AssetLargeFile, Object> uploadLargeFile(@RequestBody byte[] chunkData,
+            AssetLargeFile assetLargeFile) {
+        log.debug("post...upload large file");
+
+        File file = new File(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
+        File folder = new File(assetLargeFile.getLocation());
+
+        try {
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            log.info("" + chunkData.length);
+            FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
+            lFileOutputStream.write(chunkData);
+            lFileOutputStream.close();
+
+        } catch (Exception e) {
+            log.error("{}", e.getMessage(), e);
+        }
+        if (assetLargeFile.isIsLastChunk()) {
+            AssetFile dto = new AssetFile();
+            dto.setAssetLocation(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
+            dto.setAssetOriginName(assetLargeFile.getAssetOriginName());
+            dto.setAssetSeq(assetLargeFile.getAssetSeq());
+            dto.setAssetSize(assetLargeFile.getAssetSize());
+            service.upload(dto);
+        }
+
+        return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
     }
 
     @PostMapping("/api/complete")

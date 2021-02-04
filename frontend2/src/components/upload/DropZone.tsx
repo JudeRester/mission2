@@ -25,10 +25,11 @@ border: 4px dashed #4aa1f3;
 const DivUploadIcon = styled.div`
 width: 50px;
 height: 50px;
-background: url(../../images/upload.svg) no-repeat center center; 
+background: url(/images/upload.svg) no-repeat center center; 
 background-size: 100%;
 text-align: center;
 margin: 0 auto;
+margin-top: 20px;
 padding-top: 30px;
 `;
 
@@ -179,7 +180,7 @@ const DropZone = (props: any) => {
             <DivDropConatiner onClick={fileInputClicked}>
                 <DivDropMessage>
                     <DivUploadIcon />
-                    Drag & Drop files here or click to upload
+                    파일을 드래그 & 드랍 하거나 클릭하여 업로드
                 </DivDropMessage>
                 <InputFileinput type="file" multiple onChange={filesSelected} ref={fileInputRef} />
             </DivDropConatiner>

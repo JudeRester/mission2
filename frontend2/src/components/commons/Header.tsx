@@ -1,7 +1,6 @@
-import React, { useContext } from 'react';
-import { useHistory } from 'react-router-dom';
-import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
+import React, {  } from 'react';
+import { Navbar, Nav } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
 import { logout } from '../../modules/member';
 
 const Header = () => {

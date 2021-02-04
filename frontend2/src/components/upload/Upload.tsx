@@ -2,9 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import DropZone from './DropZone';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../modules';
-import { remove, reset } from '../../modules/fileList';
+import { useHistory } from 'react-router';
 
 //style 
 
@@ -124,8 +122,10 @@ color:#fff;
 }
 `;
 
+
 //style end
 const Upload = () => {
+    const history = useHistory()
     const sessionUser = sessionStorage.getItem("sessionUser");
     if (sessionUser) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
@@ -138,16 +138,35 @@ const Upload = () => {
 
     const fileUpload = (seq: number) => {
         filesState.forEach(async (item, i) => {
-            if (item.size >= CHUNK_SIZE) {
+            if (item.size > CHUNK_SIZE) {
                 const chunks = fileSlicer(item)
-                chunks.forEach(async (item, i) => {
+                let data = {
+                    "assetSeq": seq,
+                    "assetOriginName": item.name,
+                    "assetSize": item.size,
+                    "assetUuidName": '',
+                    "isLastChunk": false,
+                    "location": '',
+                }
+                const result = await axios.post(`/api/prelargefile`,
+                    data
+                )
+                data["assetUuidName"] = result.data.result.assetUuidName;
+                data["location"] = result.data.result.location;
+                chunks.forEach(async (chunk, i) => {
+                    if((i+1)===chunks.length){
+                        data["isLastChunk"]=true;
+                    }
                     try {
-                        console.log(item)
-                        // await axios.post(`/api/largefile`,
-
-                        // )
+                        await axios.post(`/api/largefile`,
+                            chunk,
+                            {
+                                params:data,
+                                headers:{'Content-Type': 'multipart/form-data'}
+                            }
+                        )
                     } catch (err) {
-
+                        console.log(err);
                     }
                 })
             } else {
@@ -158,15 +177,15 @@ const Upload = () => {
                     await axios.post(`/api/file`,
                         formData
                     )
-                    if (i === filesState.length - 1) {
-                        await fileUploadComplete(seq)
-                    }
+                    
                 }
                 catch (err) {
 
                 }
             }
-
+            if (i === filesState.length - 1) {
+                await fileUploadComplete(seq)
+            }
         })
 
     }
@@ -181,6 +200,8 @@ const Upload = () => {
                     }
                 })
             setFilesState([]);
+
+            history.push('/')
         } catch (err) {
             console.log(err)
         }
@@ -189,7 +210,7 @@ const Upload = () => {
 
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (filesState.length != 0) {
+        if (filesState.length !== 0) {
             let data = { assetTitle: title }
             try {
                 const response = await axios.post(`/api/asset`,
@@ -213,8 +234,8 @@ const Upload = () => {
         if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
             let inputTag = currentInputTag.trim();
-            if (inputTag != "") {
-                if (tags.filter(tag => tag == inputTag).length <= 0) {
+            if (inputTag !== "") {
+                if (tags.filter(tag => tag === inputTag).length <= 0) {
                     let tmp: Array<string> = [...tags].concat(currentInputTag);
                     setTags(tmp);
                 }
@@ -234,9 +255,8 @@ const Upload = () => {
         let chunks = [];
         let chunkIndex = 0; // 파일 자를 시작 위치
         const CHUNK_COUNT = Math.ceil(target.size / CHUNK_SIZE);//청크갯수
-
         for (let i = 1; i <= CHUNK_COUNT; i++) {
-            if (i == CHUNK_COUNT)
+            if (i === CHUNK_COUNT)
                 chunks.push(target.slice(chunkIndex))
             else
                 chunks.push(target.slice(chunkIndex, chunkIndex + CHUNK_SIZE))
@@ -274,7 +294,7 @@ const Upload = () => {
                         </DivInputGroup>
                         <DivTagGroup>
                             <button onClick={submitFiles}>저장</button>
-                            <button>취소</button>
+                            <button type="reset">취소</button>
                         </DivTagGroup>
 
                     </FormLogin>

@@ -2,6 +2,7 @@ package com.malgn.mission2.service;
 
 import com.malgn.mission2.domain.Asset;
 import com.malgn.mission2.domain.AssetFile;
+import com.malgn.mission2.domain.AssetLargeFile;
 import com.malgn.mission2.mapper.AssetMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,4 +26,9 @@ public class AssetService {
         mapper.completeAsset(asset);
         mapper.insertTags(asset);
     }
+
+    public void upload(AssetLargeFile assetLargeFile) {
+        mapper.upload(assetLargeFile);
+    }
+
 }

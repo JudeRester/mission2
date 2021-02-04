@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
-import logo from './logo.svg';
+import React, {  } from 'react';
 import './App.css';
-import Login from './components/login/Login';
 import rootReducer from './modules'
 import { createStore } from 'redux';
-import { Provider, useDispatch } from 'react-redux';
+import { Provider } from 'react-redux';
 import Pages from './components'
-import { BrowserRouter, Route } from 'react-router-dom';
-import { login } from './modules/member';
+import { BrowserRouter } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -16,8 +13,7 @@ function App() {
   const store = createStore(rootReducer
     //, devTools
   )
-  console.log(store.getState)
-  const token = localStorage.getItem('token');
+  console.log(store.getState())
   
   return (
     <div className="App">
