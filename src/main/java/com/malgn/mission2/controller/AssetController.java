@@ -137,7 +137,6 @@ public class AssetController {
             if (!folder.exists()) {
                 folder.mkdirs();
             }
-            log.info("" + chunkData.length);
             FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
             lFileOutputStream.write(chunkData);
             lFileOutputStream.close();
@@ -145,7 +144,7 @@ public class AssetController {
         } catch (Exception e) {
             log.error("{}", e.getMessage(), e);
         }
-        if (assetLargeFile.isIsLastChunk()) {
+        if (assetLargeFile.getIsLastChunk()) {
             AssetFile dto = new AssetFile();
             dto.setAssetLocation(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
             dto.setAssetOriginName(assetLargeFile.getAssetOriginName());

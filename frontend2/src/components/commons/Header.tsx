@@ -12,7 +12,8 @@ const Header = () => {
     }
     
     return (
-        <Navbar className="shadow" bg="light" expand="lg">
+        <div>
+            <Navbar className="shadow" bg="light" expand="lg" style={{zIndex:1201}}>
             <Navbar.Brand>Mission2</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
@@ -32,6 +33,7 @@ const Header = () => {
                 </Nav>
             </Navbar.Collapse>
         </Navbar>
+        </div>
     )
 
 }

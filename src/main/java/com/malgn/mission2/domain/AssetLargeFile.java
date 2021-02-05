@@ -1,12 +1,10 @@
 package com.malgn.mission2.domain;
 
-import java.sql.Blob;
-
 public class AssetLargeFile {
     private int assetSeq;
     private String assetOriginName;
     private String assetUuidName;
-    private int assetSize;
+    private long assetSize;
     private boolean isLastChunk;
     private String location;
 
@@ -34,16 +32,12 @@ public class AssetLargeFile {
         this.assetUuidName = assetUuidName;
     }
 
-    public int getAssetSize() {
+    public long getAssetSize() {
         return this.assetSize;
     }
 
-    public void setAssetSize(int assetSize) {
+    public void setAssetSize(long assetSize) {
         this.assetSize = assetSize;
-    }
-
-    public boolean isIsLastChunk() {
-        return this.isLastChunk;
     }
 
     public boolean getIsLastChunk() {

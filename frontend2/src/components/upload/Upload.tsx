@@ -147,19 +147,22 @@ const Upload = () => {
                     "assetUuidName": '',
                     "isLastChunk": false,
                     "location": '',
+                    "index":0
                 }
                 const result = await axios.post(`/api/prelargefile`,
                     data
                 )
                 data["assetUuidName"] = result.data.result.assetUuidName;
                 data["location"] = result.data.result.location;
-                chunks.forEach(async (chunk, i) => {
+                for(let i=0;i< chunks.length;i++){
                     if((i+1)===chunks.length){
                         data["isLastChunk"]=true;
                     }
                     try {
-                        await axios.post(`/api/largefile`,
-                            chunk,
+                        data["index"]=i;
+                        console.log(data.isLastChunk)
+                        const result = await axios.post(`/api/largefile`,
+                            chunks[i],
                             {
                                 params:data,
                                 headers:{'Content-Type': 'multipart/form-data'}
@@ -168,7 +171,9 @@ const Upload = () => {
                     } catch (err) {
                         console.log(err);
                     }
-                })
+                    console.log(result)
+                }
+               
             } else {
                 try {
                     const formData = new FormData();
