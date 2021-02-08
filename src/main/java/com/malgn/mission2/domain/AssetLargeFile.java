@@ -7,7 +7,7 @@ public class AssetLargeFile {
     private long assetSize;
     private boolean isLastChunk;
     private String location;
-    private String type;
+    private String assetType;
 
     public int getAssetSeq() {
         return this.assetSeq;
@@ -61,20 +61,27 @@ public class AssetLargeFile {
         return this.isLastChunk;
     }
 
-    public String getType() {
-        return this.type;
+
+    public String getAssetType() {
+        return this.assetType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setAssetType(String assetType) {
+        this.assetType = assetType;
     }
 
     @Override
     public String toString() {
-        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
-                + ", assetUuidName='" + getAssetUuidName() + "'" + ", assetSize='" + getAssetSize() + "'"
-                + ", isLastChunk='" + isIsLastChunk() + "'" + ", location='" + getLocation() + "'" + ", type='"
-                + getType() + "'" + "}";
+        return "{" +
+            " assetSeq='" + getAssetSeq() + "'" +
+            ", assetOriginName='" + getAssetOriginName() + "'" +
+            ", assetUuidName='" + getAssetUuidName() + "'" +
+            ", assetSize='" + getAssetSize() + "'" +
+            ", isLastChunk='" + isIsLastChunk() + "'" +
+            ", location='" + getLocation() + "'" +
+            ", assetType='" + getAssetType() + "'" +
+            "}";
     }
+   
 
 }

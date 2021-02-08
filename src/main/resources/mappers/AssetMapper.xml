@@ -21,15 +21,17 @@
 
     <insert id="upload">
         insert into assetfile
-        (asset_seq,
-        asset_origin_name,
-        asset_location,
-        asset_size)
+        (asset_Seq,
+        asset_Origin_name,
+        asset_Location,
+        asset_Size,
+        asset_Type)
         values(
             #{assetSeq},
             #{assetOriginName},
             #{assetLocation},
-            #{assetSize}
+            #{assetSize},
+            #{assetType}
         )
     </insert>
 
@@ -44,4 +46,47 @@
     <update id="completeAsset">
         update asset set asset_iscomplete = 1 where asset_seq=#{assetSeq}
     </update>
+
+    <select id="getAsset" resultType="Asset">
+        select 
+            a.asset_Seq,
+            a.asset_Title,
+            a.asset_Owner,
+            a.asset_Create_Date,
+            a.asset_Update_Date,
+            a.asset_Changer,
+            (select user_Name from assetuser where user_Id=a.asset_Owner) as asset_Owner_Name,
+            (select user_Name from assetuser where user_Id=a.asset_Changer) as asset_Changer_Name,
+            LISTAGG(t.asset_Tag, ', ') within group ( order by t.asset_Tag ) as TAGs
+        from
+            asset a,
+            assetuser u,
+            assettag t
+        where
+            a.asset_Seq=t.asset_Seq(+)
+        and
+            a.asset_Owner=u.user_Id
+        and
+            a.asset_Seq=#{assetSeq}
+        group by
+            a.asset_Seq,
+            a.asset_Title,
+            a.asset_Owner,
+            a.asset_Create_Date,
+            a.asset_Update_Date,
+            a.asset_Changer,
+            u.user_name
+    </select>
+
+    <select id="getFiles" resultType="AssetFile">
+        select
+            asset_origin_name,
+            asset_location,
+            asset_size,
+            asset_type
+        from
+            assetfile
+        where
+            asset_seq=#{assetSeq}
+    </select>
 </mapper>

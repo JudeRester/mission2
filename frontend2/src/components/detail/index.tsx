@@ -14,7 +14,7 @@ const Detail = ({match}:RouteComponentProps<MatchParams>) => {
     return (
         <>
             <Sidebar>
-                <Info/>
+                <Info assetSeq={assetSeq}/>
             </Sidebar>
         </>
     )

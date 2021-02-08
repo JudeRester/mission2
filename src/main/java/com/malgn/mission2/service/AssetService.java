@@ -1,6 +1,7 @@
 package com.malgn.mission2.service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
@@ -70,5 +71,13 @@ public class AssetService {
         File thumbFile = new File(thumbName);
         ImageIO.write(destImg, fileExt.toUpperCase(), thumbFile);
     }
+
+	public Asset getAsset(int assetSeq) {
+		return mapper.getAsset(assetSeq);
+	}
+
+	public ArrayList<Asset> getFiles(int assetSeq) {
+		return mapper.getFiles(assetSeq);
+	}
 
 }

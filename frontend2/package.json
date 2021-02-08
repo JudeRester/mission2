@@ -26,6 +26,7 @@
     "@types/redux-devtools": "^3.0.47",
     "@types/redux-thunk": "^2.1.0",
     "@types/styled-components": "^5.1.7",
+    "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "react": "^17.0.1",
     "react-bootstrap": "^1.4.3",

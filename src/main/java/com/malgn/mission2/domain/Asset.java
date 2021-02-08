@@ -13,9 +13,10 @@ public class Asset {
     private int assetCategory;
     private String assetChanger;
     private String assetChangerName;
-    private ArrayList<String> tags;
+    private String tags;
     private String assetCategoryName;
     private int assetIsComplete;
+    private ArrayList<Asset> assetFiles;
 
     public String getAssetOwner() {
         return this.assetOwner;
@@ -105,13 +106,15 @@ public class Asset {
         this.assetChangerName = assetChangerName;
     }
 
-    public ArrayList<String> getTags() {
+
+    public String getTags() {
         return this.tags;
     }
 
-    public void setTags(ArrayList<String> tags) {
+    public void setTags(String tags) {
         this.tags = tags;
     }
+    
 
     public String getAssetCategoryName() {
         return this.assetCategoryName;
@@ -121,14 +124,34 @@ public class Asset {
         this.assetCategoryName = assetCategoryName;
     }
 
+
+    public ArrayList<Asset> getAssetFiles() {
+        return this.assetFiles;
+    }
+
+    public void setAssetFiles(ArrayList<Asset> assetFiles) {
+        this.assetFiles = assetFiles;
+    }
+  
+
     @Override
     public String toString() {
-        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetTitle='" + getAssetTitle() + "'" + ", assetOwner='"
-                + getAssetOwner() + "'" + ", assetOwnerName='" + getAssetOwnerName() + "'" + ", assetCreateDate='"
-                + getAssetCreateDate() + "'" + ", assetUpdateDate='" + getAssetUpdateDate() + "'" + ", assetCategory='"
-                + getAssetCategory() + "'" + ", assetChanger='" + getAssetChanger() + "'" + ", assetChangerName='"
-                + getAssetChangerName() + "'" + ", tags='" + getTags() + "'" + ", assetCategoryName='"
-                + getAssetCategoryName() + "'" + ", assetIsComplete='" + getAssetIsComplete() + "'" + "}";
+        return "{" +
+            " assetSeq='" + getAssetSeq() + "'" +
+            ", assetTitle='" + getAssetTitle() + "'" +
+            ", assetOwner='" + getAssetOwner() + "'" +
+            ", assetOwnerName='" + getAssetOwnerName() + "'" +
+            ", assetCreateDate='" + getAssetCreateDate() + "'" +
+            ", assetUpdateDate='" + getAssetUpdateDate() + "'" +
+            ", assetCategory='" + getAssetCategory() + "'" +
+            ", assetChanger='" + getAssetChanger() + "'" +
+            ", assetChangerName='" + getAssetChangerName() + "'" +
+            ", tags='" + getTags() + "'" +
+            ", assetCategoryName='" + getAssetCategoryName() + "'" +
+            ", assetIsComplete='" + getAssetIsComplete() + "'" +
+            ", assetFiles='" + getAssetFiles() + "'" +
+            "}";
     }
+
 
 }

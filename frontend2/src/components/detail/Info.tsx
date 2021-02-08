@@ -15,6 +15,7 @@ import { StarBorder, ExpandLess, ExpandMore } from "@material-ui/icons"
 // import { InboxIcon } from '@material-ui/icons/MoveToInbox';
 import React, { useState } from "react"
 import Carousel from "react-material-ui-carousel"
+import axios from "axios";
 
 
 const useStyles = makeStyles(() =>
@@ -29,7 +30,17 @@ const useStyles = makeStyles(() =>
   }),
 );
 
-const Info = () => {
+type MatchParams = {
+    assetSeq:string
+}
+
+const Info = (props:MatchParams) => {
+    const sessionUser = sessionStorage.getItem("sessionUser");
+    if (sessionUser) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+    }
+
+    const assetSeq:string = props.assetSeq;
     const classes = useStyles();
     const [isOpen, setIsOpen] = useState(false);
     const handleClick = () => {
@@ -42,7 +53,10 @@ const Info = () => {
         excerpt: "This is my sixth post with more content inside",
         image: ["https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     }
-
+    axios.get(`/api/asset/${assetSeq}`
+    ).then(result=>{
+        console.log('result',result.data.result)
+    })
     return (
         <div style={{ marginTop: 20, padding: 30 }}>
             <Grid container spacing={2}>

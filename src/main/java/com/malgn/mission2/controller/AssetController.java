@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,6 +78,7 @@ public class AssetController {
         dto.setAssetLocation(path + fileName);
         dto.setAssetSize(mf.getSize());
         dto.setAssetSeq(assetSeq);
+        dto.setAssetType(type);
 
         // List<Tags> tagDTOlist = new ArrayList<Tags>();
         // StringTokenizer tkn = new StringTokenizer(tags, ",");
@@ -152,10 +155,11 @@ public class AssetController {
             dto.setAssetOriginName(assetLargeFile.getAssetOriginName());
             dto.setAssetSeq(assetLargeFile.getAssetSeq());
             dto.setAssetSize(assetLargeFile.getAssetSize());
+            dto.setAssetType(assetLargeFile.getAssetType());
             service.upload(dto);
 
             try {
-                if (assetLargeFile.getType().contains("image")) {
+                if (assetLargeFile.getAssetType().contains("image")) {
                     String fileOriginName = assetLargeFile.getAssetOriginName();
                     service.makeThumbnail(assetLargeFile.getLocation(), assetLargeFile.getAssetUuidName(),
                             fileOriginName.substring(fileOriginName.lastIndexOf(".")));
@@ -175,4 +179,15 @@ public class AssetController {
         service.completeAsset(asset);
         return null;
     }
+
+
+    @GetMapping("/api/asset/{assetSeq}")
+    public Response<Asset, Object> getAsset(@PathVariable("assetSeq") int assetSeq){
+        Asset dto = service.getAsset(assetSeq);
+        dto.setAssetFiles(service.getFiles(assetSeq));
+        Response<Asset,Object> res = new Response<Asset,Object>().success(dto,null);
+        return res;
+    }
+
+
 }
