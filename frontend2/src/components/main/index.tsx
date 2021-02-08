@@ -1,5 +1,5 @@
 import Posts from "./Posts"
-import Sidebar from "./Sidebar"
+import Sidebar from "../commons/Sidebar"
 
 const Main = () => {
     return (

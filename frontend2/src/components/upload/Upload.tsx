@@ -147,7 +147,7 @@ const Upload = () => {
                     "assetUuidName": '',
                     "isLastChunk": false,
                     "location": '',
-                    "index":0
+                    "type":item.type
                 }
                 const result = await axios.post(`/api/prelargefile`,
                     data
@@ -159,7 +159,6 @@ const Upload = () => {
                         data["isLastChunk"]=true;
                     }
                     try {
-                        data["index"]=i;
                         console.log(data.isLastChunk)
                         const result = await axios.post(`/api/largefile`,
                             chunks[i],
@@ -179,6 +178,7 @@ const Upload = () => {
                     const formData = new FormData();
                     formData.append("file", item);
                     formData.append("assetSeq", '' + seq);
+                    formData.append("type",item.type);
                     await axios.post(`/api/file`,
                         formData
                     )

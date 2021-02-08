@@ -5,6 +5,7 @@ public class AssetFile {
     private String assetOriginName;
     private String assetLocation;
     private long assetSize;
+    private String type;
 
     public int getAssetSeq() {
         return this.assetSeq;
@@ -38,10 +39,19 @@ public class AssetFile {
         this.assetSize = assetSize;
     }
 
+    public String getType() {
+        return this.type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     @Override
     public String toString() {
         return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
-                + ", assetLocation='" + getAssetLocation() + "'" + ", assetSize='" + getAssetSize() + "'" + "}";
+                + ", assetLocation='" + getAssetLocation() + "'" + ", assetSize='" + getAssetSize() + "'" + ", type='"
+                + getType() + "'" + "}";
     }
 
 }

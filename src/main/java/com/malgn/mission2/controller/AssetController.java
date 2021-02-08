@@ -46,7 +46,8 @@ public class AssetController {
 
     @PostMapping("/api/file")
     public Response<Object, Object> uploadSmallFile(@RequestParam("file") MultipartFile mf,
-            @RequestParam("assetSeq") int assetSeq, @Value("${property.image.location}") String path) {
+            @RequestParam("assetSeq") int assetSeq, @RequestParam("type") String type,
+            @Value("${property.image.location}") String path) {
         log.debug("post...upload small file");
         Calendar c = Calendar.getInstance();
         // 운영체제 별 경로
@@ -89,8 +90,8 @@ public class AssetController {
             log.debug("image uploaded");
 
             service.upload(dto);
-
-            // service.makeThumbnail(path, fileName, fileExt);
+            if (type.contains("image"))
+                service.makeThumbnail(path, fileName, fileExt);
 
         } catch (Exception e) {
             log.error("{}", e.getMessage(), e);
@@ -144,6 +145,7 @@ public class AssetController {
         } catch (Exception e) {
             log.error("{}", e.getMessage(), e);
         }
+
         if (assetLargeFile.getIsLastChunk()) {
             AssetFile dto = new AssetFile();
             dto.setAssetLocation(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
@@ -151,6 +153,18 @@ public class AssetController {
             dto.setAssetSeq(assetLargeFile.getAssetSeq());
             dto.setAssetSize(assetLargeFile.getAssetSize());
             service.upload(dto);
+
+            try {
+                if (assetLargeFile.getType().contains("image")) {
+                    String fileOriginName = assetLargeFile.getAssetOriginName();
+                    service.makeThumbnail(assetLargeFile.getLocation(), assetLargeFile.getAssetUuidName(),
+                            fileOriginName.substring(fileOriginName.lastIndexOf(".")));
+                }
+
+            } catch (Exception e) {
+                log.error("{}", e.getMessage(), e);
+            }
+
         }
 
         return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);

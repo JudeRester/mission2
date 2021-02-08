@@ -1,71 +1,83 @@
 import {
   Grid,
-  Paper,
   Typography,
-  CardActionArea,
   Card,
   CardActions,
   CardContent,
-  CardMedia,
   Button,
   GridList,
   GridListTile,
-  makeStyles
+  makeStyles,
+  GridListTileBar
 } from '@material-ui/core'
-import Sidebar from './Sidebar';
+import { useHistory } from 'react-router';
 
 const useStyles = makeStyles(() => ({
   gridList: {
     width: 500,
     height: 500,
   },
-  root: {
-    height:500
+  imageCountLessEqualTwo: {
+    height: '100%!important'
   },
-  '.MuiGridListTile-root': {
-
+  imageCountOverTwo:{
+    height: '50%!important'
   }
 }))
+
+
+
 
 const Posts = () => {
   const contents = [
 
     {
+      assetSeq : 1,
       title: "My first post",
       excerpt: "This is my first post with more content inside",
       image: ["https://bit.ly/2WNi2Ml"]
     },
 
     {
+      assetSeq : 2,
       title: "My second post",
       excerpt: "This is my second post with more content inside",
       image: ["https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     },
 
     {
+      assetSeq : 3,
       title: "My third post",
       excerpt: "This is my third post with more content inside",
       image: ["https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     },
 
     {
+      assetSeq : 4,
       title: "My fourth post",
       excerpt: "This is my fourth post with more content inside",
       image: ["https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     },
 
     {
+      assetSeq : 5,
       title: "My fifth post",
       excerpt: "This is my fifth post with more content inside",
-      image: ["https://bit.ly/2WNi2Ml"]
+      image: ["https://bit.ly/2WNi2Ml","https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     },
 
     {
+      assetSeq : 6,
       title: "My sixth post",
       excerpt: "This is my sixth post with more content inside",
-      image: ["https://bit.ly/2WNi2Ml"]
+      image: ["https://bit.ly/2WNi2Ml","https://bit.ly/2WNi2Ml","https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml", "https://bit.ly/2WNi2Ml"]
     }
   ]
+
+  const history = useHistory();
+  const toAssetDetail=(assetSeq:number)=>{
+    history.push('detail/'+assetSeq)
+  }
   const classes = useStyles();
   return (
     <div style={{ marginTop: 20, padding: 30 }}>
@@ -73,13 +85,23 @@ const Posts = () => {
         {contents.map(post => (
           <Grid item key={post.title}>
             <Card>
-              <CardActionArea>
                 <GridList className={classes.gridList}>
                   {
                     post.image.map((imgUrl, i) => (
-                      <GridListTile key={i} cols={(post.image.length % 2 != 0 && i == 0) ? 2 : 1} className={classes.root}>
-                        <img src={imgUrl} alt=""/>
-                      </GridListTile>
+                      (post.image.length < 3) ?
+                        <GridListTile key={i} cols={(post.image.length % 2 != 0 && i == 0) ? 2 : 1} classes={{ root: classes.imageCountLessEqualTwo }}>
+                          <img src={imgUrl} alt="" />
+
+                        </GridListTile>
+                        : 
+                        i<=3?
+                        <GridListTile key={i} cols={(post.image.length % 2 != 0 && i == 0 && post.image.length<=3) ? 2 : 1} classes={{root:classes.imageCountOverTwo}}>
+                          <img src={imgUrl} alt="" />
+                          {(post.image.length>4 && i==3)?
+                          <GridListTileBar title={post.image.length-(i+1)+'개 더보기'} classes={{root:classes.imageCountLessEqualTwo}}/>
+                          : null}
+                        </GridListTile>:
+                        null
                     ))
                   }
                 </GridList>
@@ -90,9 +112,8 @@ const Posts = () => {
                   </Typography>
                   <Typography component="p">{post.excerpt}</Typography>
                 </CardContent>
-              </CardActionArea>
               <CardActions>
-                <Button size="small" color="primary">
+                <Button size="small" color="primary" onClick={()=>{toAssetDetail(post.assetSeq)}}>
                   Share
                 </Button>
                 <Button size="small" color="primary">
