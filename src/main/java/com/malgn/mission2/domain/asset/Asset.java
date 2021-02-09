@@ -1,4 +1,4 @@
-package com.malgn.mission2.domain;
+package com.malgn.mission2.domain.asset;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,6 +17,8 @@ public class Asset {
     private String assetCategoryName;
     private int assetIsComplete;
     private ArrayList<Asset> assetFiles;
+    private String locations;
+    private String[] locationArray;
 
     public String getAssetOwner() {
         return this.assetOwner;
@@ -106,7 +108,6 @@ public class Asset {
         this.assetChangerName = assetChangerName;
     }
 
-
     public String getTags() {
         return this.tags;
     }
@@ -114,7 +115,6 @@ public class Asset {
     public void setTags(String tags) {
         this.tags = tags;
     }
-    
 
     public String getAssetCategoryName() {
         return this.assetCategoryName;
@@ -124,7 +124,6 @@ public class Asset {
         this.assetCategoryName = assetCategoryName;
     }
 
-
     public ArrayList<Asset> getAssetFiles() {
         return this.assetFiles;
     }
@@ -132,26 +131,33 @@ public class Asset {
     public void setAssetFiles(ArrayList<Asset> assetFiles) {
         this.assetFiles = assetFiles;
     }
-  
+
+    public String getLocations() {
+        return this.locations;
+    }
+
+    public void setLocations(String locations) {
+        this.locations = locations;
+    }
+
+    public String[] getLocationArray() {
+        return this.locationArray;
+    }
+
+    public void setLocationArray(String[] locationArray) {
+        this.locationArray = locationArray;
+    }
 
     @Override
     public String toString() {
-        return "{" +
-            " assetSeq='" + getAssetSeq() + "'" +
-            ", assetTitle='" + getAssetTitle() + "'" +
-            ", assetOwner='" + getAssetOwner() + "'" +
-            ", assetOwnerName='" + getAssetOwnerName() + "'" +
-            ", assetCreateDate='" + getAssetCreateDate() + "'" +
-            ", assetUpdateDate='" + getAssetUpdateDate() + "'" +
-            ", assetCategory='" + getAssetCategory() + "'" +
-            ", assetChanger='" + getAssetChanger() + "'" +
-            ", assetChangerName='" + getAssetChangerName() + "'" +
-            ", tags='" + getTags() + "'" +
-            ", assetCategoryName='" + getAssetCategoryName() + "'" +
-            ", assetIsComplete='" + getAssetIsComplete() + "'" +
-            ", assetFiles='" + getAssetFiles() + "'" +
-            "}";
+        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetTitle='" + getAssetTitle() + "'" + ", assetOwner='"
+                + getAssetOwner() + "'" + ", assetOwnerName='" + getAssetOwnerName() + "'" + ", assetCreateDate='"
+                + getAssetCreateDate() + "'" + ", assetUpdateDate='" + getAssetUpdateDate() + "'" + ", assetCategory='"
+                + getAssetCategory() + "'" + ", assetChanger='" + getAssetChanger() + "'" + ", assetChangerName='"
+                + getAssetChangerName() + "'" + ", tags='" + getTags() + "'" + ", assetCategoryName='"
+                + getAssetCategoryName() + "'" + ", assetIsComplete='" + getAssetIsComplete() + "'" + ", assetFiles='"
+                + getAssetFiles() + "'" + ", locations='" + getLocations() + "'" + ", locationArray='"
+                + getLocationArray() + "'" + "}";
     }
-
 
 }

@@ -1,4 +1,4 @@
-package com.malgn.mission2.domain;
+package com.malgn.mission2.domain.asset;
 
 public class AssetFile {
     private int assetSeq;
@@ -39,7 +39,6 @@ public class AssetFile {
         this.assetSize = assetSize;
     }
 
-
     public String getAssetType() {
         return this.assetType;
     }
@@ -47,17 +46,12 @@ public class AssetFile {
     public void setAssetType(String assetType) {
         this.assetType = assetType;
     }
-  
 
     @Override
     public String toString() {
-        return "{" +
-            " assetSeq='" + getAssetSeq() + "'" +
-            ", assetOriginName='" + getAssetOriginName() + "'" +
-            ", assetLocation='" + getAssetLocation() + "'" +
-            ", assetSize='" + getAssetSize() + "'" +
-            ", assetType='" + getAssetType() + "'" +
-            "}";
+        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
+                + ", assetLocation='" + getAssetLocation() + "'" + ", assetSize='" + getAssetSize() + "'"
+                + ", assetType='" + getAssetType() + "'" + "}";
     }
 
 }

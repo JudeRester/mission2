@@ -1,9 +1,12 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import DropZone from './DropZone';
 import { useHistory } from 'react-router';
-
+import arrayToTree from 'array-to-tree';
+import { ExpandMore, ChevronRight } from '@material-ui/icons'
+import { makeStyles } from '@material-ui/core';
+import { TreeItem, TreeView } from '@material-ui/lab';
 //style 
 
 let DivWrapper = styled.div`
@@ -134,7 +137,47 @@ const Upload = () => {
     let [currentInputTag, setCurrentInputTag] = useState<string>('');
     let [tags, setTags] = useState<Array<string>>([]);
     let [filesState, setFilesState] = useState<Array<File>>([]);
+    let [categories, setCategories] = useState([]);
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
+
+    useEffect(() => {
+        axios.get(`/api/category/list`)
+            .then(response => {
+                setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
+            })
+    }, [])
+    useEffect(() => {
+        console.log(categories)
+    }, [categories])
+    interface TreeViews {
+        children?: TreeViews[];
+        categoryName: string;
+        categoryId: string;
+    }
+
+    interface CategoryProps {
+        category: TreeViews
+    }
+
+    const renderTrees = (nodes: TreeViews) => (
+        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId} label={nodes.categoryName}>
+            {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
+        </TreeItem>
+    );
+
+    const Category = ({ category }: CategoryProps) => {
+        useEffect(() => {
+
+        }, [category]);
+        return renderTrees(category);
+    }
+
+    const handleToggle = (event: any, nodeIds: string[]) => {
+        event.persist()
+    };
+    const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
+        console.log(nodeId);
+    };
 
     const fileUpload = (seq: number) => {
         filesState.forEach(async (item, i) => {
@@ -147,42 +190,40 @@ const Upload = () => {
                     "assetUuidName": '',
                     "isLastChunk": false,
                     "location": '',
-                    "type":item.type
+                    "assetType": item.type
                 }
                 const result = await axios.post(`/api/prelargefile`,
                     data
                 )
                 data["assetUuidName"] = result.data.result.assetUuidName;
                 data["location"] = result.data.result.location;
-                for(let i=0;i< chunks.length;i++){
-                    if((i+1)===chunks.length){
-                        data["isLastChunk"]=true;
+                for (let i = 0; i < chunks.length; i++) {
+                    if ((i + 1) === chunks.length) {
+                        data["isLastChunk"] = true;
                     }
                     try {
                         console.log(data.isLastChunk)
                         const result = await axios.post(`/api/largefile`,
                             chunks[i],
                             {
-                                params:data,
-                                headers:{'Content-Type': 'multipart/form-data'}
+                                params: data,
+                                headers: { 'Content-Type': 'multipart/form-data' }
                             }
                         )
                     } catch (err) {
                         console.log(err);
                     }
-                    console.log(result)
                 }
-               
             } else {
                 try {
                     const formData = new FormData();
                     formData.append("file", item);
                     formData.append("assetSeq", '' + seq);
-                    formData.append("type",item.type);
+                    formData.append("assetType", item.type);
                     await axios.post(`/api/file`,
                         formData
                     )
-                    
+
                 }
                 catch (err) {
 
@@ -197,7 +238,7 @@ const Upload = () => {
     const fileUploadComplete = async (seq: number) => {
         try {
             await axios.post(`/api/complete`,
-                { assetSeq: seq, tags: tags },
+                { assetSeq: seq, tags: tags.toString() },
                 {
                     headers: {
                         'Content-type': 'application/json',
@@ -269,43 +310,69 @@ const Upload = () => {
         }
         return chunks
     }
-
+    const useStyles = makeStyles({
+        root: {
+            height: 240,
+            flexGrow: 1,
+            maxWidth: 400,
+        },
+    });
+    const classes = useStyles();
     return (
-        <DivWrapper>
-            <DivContainer>
-                <DivBox>
-                    <DivTitleContainer>
-                        <h2 className="h3 mb-2 text-gray-800">업로드</h2>
-                    </DivTitleContainer>
-                    <FormLogin
-                    // onSubmit={submitFiles}
-                    >
-                        <DivInputGroup>
-                            <SpanInputLabel>재목</SpanInputLabel>
-                            <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
-                        </DivInputGroup>
-                        <DivInputGroup>
-                            <SpanInputLabel>태그</SpanInputLabel>
-                            <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
-                        </DivInputGroup>
-                        <DivTagGroup>
+        <>
 
-                            {tags.map((data, i) =>
-                                <SpanTag key={i}>{data}<SpanTimes onClick={() => { removeTag(data) }}>×</SpanTimes></SpanTag>
-                            )}
-                        </DivTagGroup>
-                        <DivInputGroup>
-                            <DropZone filesState={filesState} setFilesState={setFilesState} />
-                        </DivInputGroup>
-                        <DivTagGroup>
-                            <button onClick={submitFiles}>저장</button>
-                            <button type="reset">취소</button>
-                        </DivTagGroup>
+            <DivWrapper>
+                <DivContainer>
+                    <DivBox>
+                        <DivTitleContainer>
+                            <h2 className="h3 mb-2 text-gray-800">업로드</h2>
+                        </DivTitleContainer>
+                        <FormLogin
+                        // onSubmit={submitFiles}
+                        >
+                            <DivInputGroup>
+                                <SpanInputLabel>재목</SpanInputLabel>
+                                <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
+                            </DivInputGroup>
+                                {categories.length > 0 && (
+                                <TreeView
+                                    onNodeToggle={handleToggle}
+                                    onNodeSelect={handleNodeSelect}
+                                    className={classes.root}
+                                    defaultCollapseIcon={<ExpandMore />}
+                                    defaultExpandIcon={<ChevronRight />}
+                                    // expanded={categories.map((group: TreeViews) => group.categoryId + '')}
+                                >
+                                    <div>
+                                        {categories.map((category: TreeViews) => {
+                                            return <Category key={category.categoryId} category={category} />
+                                        })}
+                                    </div>
+                                </TreeView>
+                                )}
+                            <DivInputGroup>
+                                <SpanInputLabel>태그</SpanInputLabel>
+                                <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
+                            </DivInputGroup>
+                            <DivTagGroup>
 
-                    </FormLogin>
-                </DivBox>
-            </DivContainer>
-        </DivWrapper>
+                                {tags.map((data, i) =>
+                                    <SpanTag key={i}>{data}<SpanTimes onClick={() => { removeTag(data) }}>×</SpanTimes></SpanTag>
+                                )}
+                            </DivTagGroup>
+                            <DivInputGroup>
+                                <DropZone filesState={filesState} setFilesState={setFilesState} />
+                            </DivInputGroup>
+                            <DivTagGroup>
+                                <button onClick={submitFiles}>저장</button>
+                                <button type="reset">취소</button>
+                            </DivTagGroup>
+
+                        </FormLogin>
+                    </DivBox>
+                </DivContainer>
+            </DivWrapper>
+        </>
     )
 }
 

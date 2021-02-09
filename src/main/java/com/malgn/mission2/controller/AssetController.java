@@ -3,13 +3,18 @@ package com.malgn.mission2.controller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.UUID;
 
-import com.malgn.mission2.domain.Asset;
-import com.malgn.mission2.domain.AssetFile;
-import com.malgn.mission2.domain.AssetLargeFile;
-import com.malgn.mission2.domain.Response;
+import com.malgn.mission2.domain.asset.Asset;
+import com.malgn.mission2.domain.asset.AssetFile;
+import com.malgn.mission2.domain.asset.AssetLargeFile;
+import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.common.Criteria;
+import com.malgn.mission2.domain.common.Page;
+import com.malgn.mission2.domain.common.Response;
 import com.malgn.mission2.domain.UserInfo;
 import com.malgn.mission2.service.AssetService;
 
@@ -24,18 +29,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
+@RequestMapping("/api")
 public class AssetController {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private AssetService service;
 
-    @PostMapping("/api/asset")
+    @PostMapping("/asset")
     public Response<Asset, Object> createAsset(@RequestBody Asset asset, Authentication auth) {
         log.debug("post...createAsset");
         UserInfo user = (UserInfo) auth.getPrincipal();
@@ -46,9 +53,9 @@ public class AssetController {
         return res;
     }
 
-    @PostMapping("/api/file")
+    @PostMapping("/file")
     public Response<Object, Object> uploadSmallFile(@RequestParam("file") MultipartFile mf,
-            @RequestParam("assetSeq") int assetSeq, @RequestParam("type") String type,
+            @RequestParam("assetSeq") int assetSeq, @RequestParam("assetType") String type,
             @Value("${property.image.location}") String path) {
         log.debug("post...upload small file");
         Calendar c = Calendar.getInstance();
@@ -102,7 +109,7 @@ public class AssetController {
         return null;
     }
 
-    @PostMapping("/api/prelargefile")
+    @PostMapping("/prelargefile")
     public Response<AssetLargeFile, Object> preLargeFile(@RequestBody AssetLargeFile assetLargeFile,
             @Value("${property.image.location}") String path) {
         Calendar c = Calendar.getInstance();
@@ -129,7 +136,7 @@ public class AssetController {
         return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
     }
 
-    @PostMapping("/api/largefile")
+    @PostMapping("/largefile")
     public Response<AssetLargeFile, Object> uploadLargeFile(@RequestBody byte[] chunkData,
             AssetLargeFile assetLargeFile) {
         log.debug("post...upload large file");
@@ -174,20 +181,39 @@ public class AssetController {
         return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
     }
 
-    @PostMapping("/api/complete")
+    @PostMapping("/complete")
     public Response<Object, Object> completeAsset(@RequestBody Asset asset) {
         service.completeAsset(asset);
         return null;
     }
 
-
-    @GetMapping("/api/asset/{assetSeq}")
-    public Response<Asset, Object> getAsset(@PathVariable("assetSeq") int assetSeq){
+    @GetMapping("/asset/{assetSeq}")
+    public Response<Asset, Object> getAsset(@PathVariable("assetSeq") int assetSeq) {
         Asset dto = service.getAsset(assetSeq);
         dto.setAssetFiles(service.getFiles(assetSeq));
-        Response<Asset,Object> res = new Response<Asset,Object>().success(dto,null);
+        Response<Asset, Object> res = new Response<Asset, Object>().success(dto, null);
         return res;
     }
 
+    @GetMapping("/list/{pageNum}")
+    public Response<List<Asset>, Object> getAssetList(@PathVariable("pageNum") int pageNum) {
+        Criteria crt = new Criteria();
+        crt.setPageNum(pageNum);
+        List<Asset> list = service.getAssetList(crt);
+        for (Asset a : list) {
+            a.setLocationArray(a.getLocations().trim().split("\\s*,\\s*"));
+        }
+        Response<List<Asset>, Object> res = new Response<>();
+        res = res.success(list, new Page(crt, service.total()));
+        return res;
+    }
 
+    @GetMapping("/category/list")
+    public Response<List<Category>, Object> categoryList() {
+        log.debug("get...categoryList");
+        List<Category> list = service.getCategoryList();
+        Response<List<Category>, Object> res = new Response<>();
+        res = res.success(list, null);
+        return res;
+    }
 }

@@ -1,4 +1,4 @@
-package com.malgn.mission2.domain;
+package com.malgn.mission2.domain.asset;
 
 public class AssetLargeFile {
     private int assetSeq;
@@ -61,7 +61,6 @@ public class AssetLargeFile {
         return this.isLastChunk;
     }
 
-
     public String getAssetType() {
         return this.assetType;
     }
@@ -72,16 +71,10 @@ public class AssetLargeFile {
 
     @Override
     public String toString() {
-        return "{" +
-            " assetSeq='" + getAssetSeq() + "'" +
-            ", assetOriginName='" + getAssetOriginName() + "'" +
-            ", assetUuidName='" + getAssetUuidName() + "'" +
-            ", assetSize='" + getAssetSize() + "'" +
-            ", isLastChunk='" + isIsLastChunk() + "'" +
-            ", location='" + getLocation() + "'" +
-            ", assetType='" + getAssetType() + "'" +
-            "}";
+        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
+                + ", assetUuidName='" + getAssetUuidName() + "'" + ", assetSize='" + getAssetSize() + "'"
+                + ", isLastChunk='" + isIsLastChunk() + "'" + ", location='" + getLocation() + "'" + ", assetType='"
+                + getAssetType() + "'" + "}";
     }
-   
 
 }

@@ -1,4 +1,4 @@
-package com.malgn.mission2.domain;
+package com.malgn.mission2.domain.common;
 
 public class Response<T, E> {
     private T result;

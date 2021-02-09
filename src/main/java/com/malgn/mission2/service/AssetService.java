@@ -2,12 +2,17 @@ package com.malgn.mission2.service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-import com.malgn.mission2.domain.Asset;
-import com.malgn.mission2.domain.AssetFile;
-import com.malgn.mission2.domain.AssetLargeFile;
+import com.malgn.mission2.domain.asset.Asset;
+import com.malgn.mission2.domain.asset.AssetFile;
+import com.malgn.mission2.domain.asset.AssetLargeFile;
+import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.asset.Tags;
+import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.mapper.AssetMapper;
 
 import org.imgscalr.Scalr;
@@ -30,7 +35,15 @@ public class AssetService {
 
     public void completeAsset(Asset asset) {
         mapper.completeAsset(asset);
-        mapper.insertTags(asset);
+        List<Tags> tagDTOlist = new ArrayList<Tags>();
+        String tags = asset.getTags();
+        StringTokenizer tkn = new StringTokenizer(tags, ",");
+        if (!"".equals(tags) && !",".equals(tags)) {
+            while (tkn.hasMoreTokens()) {
+                tagDTOlist.add(new Tags(asset.getAssetSeq(), tkn.nextToken().trim()));
+            }
+        }
+        mapper.insertTags(tagDTOlist);
     }
 
     public void upload(AssetLargeFile assetLargeFile) {
@@ -41,7 +54,7 @@ public class AssetService {
         // 저장된 원본파일로부터 BufferedImage 객체를 생성합니다.
         BufferedImage srcImg = ImageIO.read(new File(path + fileName));
         // 썸네일의 너비와 높이 입니다.
-        int dw = 250, dh = 150;
+        int dw = 500, dh = 500;
         // 원본 이미지의 너비와 높이 입니다.
         int ow = srcImg.getWidth();
         int oh = srcImg.getHeight();
@@ -66,18 +79,29 @@ public class AssetService {
         if (!folder.exists()) {
             folder.mkdirs();
         }
-        // 썸네일을 저장합니다. 이미지 이름 앞에 "THUMB_" 를 붙여 표시했습니다.
-        String thumbName = thumbPath + "THUMB_" + fileName;
+        String thumbName = thumbPath + fileName;
         File thumbFile = new File(thumbName);
         ImageIO.write(destImg, fileExt.toUpperCase(), thumbFile);
     }
 
-	public Asset getAsset(int assetSeq) {
-		return mapper.getAsset(assetSeq);
-	}
+    public Asset getAsset(int assetSeq) {
+        return mapper.getAsset(assetSeq);
+    }
 
-	public ArrayList<Asset> getFiles(int assetSeq) {
-		return mapper.getFiles(assetSeq);
-	}
+    public ArrayList<Asset> getFiles(int assetSeq) {
+        return mapper.getFiles(assetSeq);
+    }
+
+    public List<Asset> getAssetList(Criteria crt) {
+        return mapper.getAssetList(crt);
+    }
+
+    public int total() {
+        return mapper.total();
+    }
+
+    public List<Category> getCategoryList() {
+        return mapper.getCategoryList();
+    }
 
 }

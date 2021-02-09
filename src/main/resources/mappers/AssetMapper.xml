@@ -35,11 +35,11 @@
         )
     </insert>
 
-    <insert id="insertTags" parameterType="Asset">
-        <foreach collection="tags" item="arr" open="insert all"
+    <insert id="insertTags" parameterType="Tags">
+        <foreach collection="list" item="arr" open="insert all"
 			close="select * from dual" separator=" ">
 			into assettag
-			values(#{arr},#{assetSeq})
+			values(#{arr.assetTag},#{arr.assetSeq})
 		</foreach>
     </insert>
     
@@ -88,5 +88,81 @@
             assetfile
         where
             asset_seq=#{assetSeq}
+    </select>
+
+    <select id="getAssetList" resultType="Asset">
+    select * from
+        (select r.*, rownum as record from
+            (SELECT  r.asset_Seq,
+                r.asset_Title,
+                r.asset_Owner,
+                r.asset_Create_Date,
+                r.asset_Update_Date,
+                r.asset_Changer, 
+                r.asset_owner_name,
+                r.asset_changer_name,
+                r.tags,
+            LISTAGG(f.ASSET_LOCATION,', ') WITHIN GROUP (ORDER BY f.ASSET_TYPE,f.asset_location) AS locations 
+            from(
+                select 
+                    a.asset_Seq,
+                    a.asset_Title,
+                    a.asset_Owner,
+                    a.asset_Create_Date,
+                    a.asset_Update_Date,
+                    a.asset_Changer,
+                    (select user_Name from assetuser where user_Id=a.asset_Owner) as asset_Owner_Name,
+                    (select user_Name from assetuser where user_Id=a.asset_Changer) as asset_Changer_Name,
+                    LISTAGG(t.asset_Tag, ', ') within group ( order by t.asset_Tag)  as TAGs
+                from
+                    asset a,
+                    assetuser u,
+                    assettag t
+                where
+                    a.asset_Seq=t.asset_Seq(+)
+                and
+                    a.asset_Owner=u.user_Id
+                AND
+                    a.asset_isComplete=1
+                group by
+                    a.asset_Seq,
+                    a.asset_Title,
+                    a.asset_Owner,
+                    a.asset_Create_Date,
+                    a.asset_Update_Date,
+                    a.asset_Changer,
+                    u.user_name
+                order by 
+                    asset_seq DESC
+                )r, assetfile f
+            WHERE r.asset_seq=f.asset_seq
+            GROUP BY 
+            r.asset_Seq,
+                r.asset_Title,
+                r.asset_Owner,
+                r.asset_Create_Date,
+                r.asset_Update_Date,
+                r.asset_Changer,
+                r.asset_owner_name,
+                r.asset_changer_name,
+                r.tags) r
+            ORDER BY
+				r.asset_seq desc
+        )
+    where 
+        record between
+        (#{pageNum}-1)*#{amount}+1 and #{pageNum}*#{amount}
+    </select>
+
+    <select id="total" resultType="Integer">
+        select count(*) from asset where asset_isComplete=1
+    </select>
+
+    <select id="getCategoryList" resultType="Category">
+        SELECT LEVEL,categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER
+		FROM category
+		START WITH categoryparent IS NULL
+		CONNECT BY PRIOR categoryid = CategoryPARENT
+		ORDER SIBLINGS BY CategoryORDER
     </select>
 </mapper>
