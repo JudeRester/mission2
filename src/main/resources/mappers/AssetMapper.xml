@@ -57,17 +57,22 @@
             a.asset_Create_Date,
             a.asset_Update_Date,
             a.asset_Changer,
+            a.asset_category,
+            (select categoryName from category where categoryId=a.asset_category) as asset_category_name,
             (select user_Name from assetuser where user_Id=a.asset_Owner) as asset_Owner_Name,
             (select user_Name from assetuser where user_Id=a.asset_Changer) as asset_Changer_Name,
             LISTAGG(t.asset_Tag, ', ') within group ( order by t.asset_Tag ) as TAGs
         from
             asset a,
             assetuser u,
-            assettag t
+            assettag t,
+            category c
         where
             a.asset_Seq=t.asset_Seq(+)
         and
             a.asset_Owner=u.user_Id
+        and
+            a.asset_category=c.categoryId(+)
         and
             a.asset_Seq=#{assetSeq}
         group by
@@ -77,11 +82,13 @@
             a.asset_Create_Date,
             a.asset_Update_Date,
             a.asset_Changer,
+            a.asset_category,
             u.user_name
     </select>
 
     <select id="getFiles" resultType="AssetFile">
         select
+            asset_seq,
             asset_origin_name,
             asset_location,
             asset_size,
@@ -94,7 +101,8 @@
 
     <select id="getAssetList" resultType="Asset">
         select * from
-        (select r.*, rownum as record from
+        (select r.* , rownum as record  FROM 
+        (select * from
             (SELECT  r.asset_Seq,
                 r.asset_Title,
                 r.asset_Owner,
@@ -160,6 +168,7 @@
                 r.tags) r
             ORDER BY
 				r.asset_seq desc
+        ) r
         )
     where 
         record between
