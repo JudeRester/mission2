@@ -10,11 +10,13 @@
         (asset_seq,
         asset_title,
         asset_owner,
+        asset_category,
         asset_iscomplete)
         values(
             #{assetSeq},
             #{assetTitle},
             #{assetOwner},
+            #{assetCategory},
             0
         )
     </insert>
@@ -91,7 +93,7 @@
     </select>
 
     <select id="getAssetList" resultType="Asset">
-    select * from
+        select * from
         (select r.*, rownum as record from
             (SELECT  r.asset_Seq,
                 r.asset_Title,
@@ -101,6 +103,8 @@
                 r.asset_Changer, 
                 r.asset_owner_name,
                 r.asset_changer_name,
+                r.asset_category,
+                r.asset_category_name,
                 r.tags,
             LISTAGG(f.ASSET_LOCATION,', ') WITHIN GROUP (ORDER BY f.ASSET_TYPE,f.asset_location) AS locations 
             from(
@@ -111,18 +115,23 @@
                     a.asset_Create_Date,
                     a.asset_Update_Date,
                     a.asset_Changer,
+                    a.asset_category,
+                    (select categoryName from category where categoryId=a.asset_category) as asset_category_name,
                     (select user_Name from assetuser where user_Id=a.asset_Owner) as asset_Owner_Name,
                     (select user_Name from assetuser where user_Id=a.asset_Changer) as asset_Changer_Name,
                     LISTAGG(t.asset_Tag, ', ') within group ( order by t.asset_Tag)  as TAGs
                 from
                     asset a,
                     assetuser u,
-                    assettag t
+                    assettag t,
+                    category c
                 where
                     a.asset_Seq=t.asset_Seq(+)
                 and
                     a.asset_Owner=u.user_Id
                 AND
+                    a.asset_category=c.categoryId(+)
+                and
                     a.asset_isComplete=1
                 group by
                     a.asset_Seq,
@@ -131,6 +140,7 @@
                     a.asset_Create_Date,
                     a.asset_Update_Date,
                     a.asset_Changer,
+                     a.asset_category,
                     u.user_name
                 order by 
                     asset_seq DESC
@@ -145,6 +155,8 @@
                 r.asset_Changer,
                 r.asset_owner_name,
                 r.asset_changer_name,
+                 r.asset_category,
+                 r.asset_category_name,
                 r.tags) r
             ORDER BY
 				r.asset_seq desc

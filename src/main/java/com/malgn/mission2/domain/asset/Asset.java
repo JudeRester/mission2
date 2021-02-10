@@ -60,14 +60,6 @@ public class Asset {
         this.assetTitle = assetTitle;
     }
 
-    public String getAssetOwn() {
-        return this.assetOwner;
-    }
-
-    public void setAssetOwn(String assetOwn) {
-        this.assetOwner = assetOwn;
-    }
-
     public LocalDateTime getAssetCreateDate() {
         return this.assetCreateDate;
     }

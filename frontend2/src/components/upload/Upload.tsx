@@ -5,8 +5,10 @@ import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
 import { ExpandMore, ChevronRight } from '@material-ui/icons'
-import { makeStyles } from '@material-ui/core';
+import { Button, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, makeStyles } from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../modules';
 //style 
 
 let DivWrapper = styled.div`
@@ -129,7 +131,8 @@ color:#fff;
 //style end
 const Upload = () => {
     const history = useHistory()
-    const sessionUser = sessionStorage.getItem("sessionUser");
+    let sessionUser = sessionStorage.getItem("sessionUser");
+    const user = useSelector((state: RootState) => state.member)
     if (sessionUser) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
     }
@@ -138,16 +141,36 @@ const Upload = () => {
     let [tags, setTags] = useState<Array<string>>([]);
     let [filesState, setFilesState] = useState<Array<File>>([]);
     let [categories, setCategories] = useState([]);
+    let [selectedCategory, setSelectedCategory] = useState<string>();
+    let [categoriesHavingChild, setCategoriesHavingChild] = useState<Array<string>>();
+    let [isTagDuplicated, setIsTagDuplicated] = useState<boolean>(false);
+    let [alertOpen, setAlertOpen] = useState<boolean>(false);
+
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
 
     useEffect(() => {
+        sessionUser = sessionStorage.getItem("sessionUser");
+        if (sessionUser) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+        }
         axios.get(`/api/category/list`)
             .then(response => {
                 setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
             })
-    }, [])
+        console.log(user)
+    }, [user])
     useEffect(() => {
-        console.log(categories)
+        let tempArray: Array<string> = [];
+        async function getParents(array: Array<TreeViews>) {
+            await array.map((node: TreeViews) => {
+                if (node.children) {
+                    tempArray.push(node.categoryId + '');
+                    getParents(node.children);
+                }
+            });
+            setCategoriesHavingChild(tempArray)
+        };
+        getParents(categories);
     }, [categories])
     interface TreeViews {
         children?: TreeViews[];
@@ -160,7 +183,7 @@ const Upload = () => {
     }
 
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId} label={nodes.categoryName}>
+        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId + ''} label={nodes.categoryName} classes={{ label: classes.label }}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
@@ -173,11 +196,18 @@ const Upload = () => {
     }
 
     const handleToggle = (event: any, nodeIds: string[]) => {
-        event.persist()
+        event.preventDefault()
     };
     const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
-        console.log(nodeId);
+        setSelectedCategory(nodeId)
     };
+
+    const handleAlertOpen = () => {
+        setAlertOpen(true)
+    }
+    const handleAlertClose = () => {
+        setAlertOpen(false)
+    }
 
     const fileUpload = (seq: number) => {
         filesState.forEach(async (item, i) => {
@@ -190,7 +220,8 @@ const Upload = () => {
                     "assetUuidName": '',
                     "isLastChunk": false,
                     "location": '',
-                    "assetType": item.type
+                    "assetType": item.type,
+                    "category": selectedCategory
                 }
                 const result = await axios.post(`/api/prelargefile`,
                     data
@@ -220,6 +251,7 @@ const Upload = () => {
                     formData.append("file", item);
                     formData.append("assetSeq", '' + seq);
                     formData.append("assetType", item.type);
+                    formData.append("category", selectedCategory)
                     await axios.post(`/api/file`,
                         formData
                     )
@@ -256,8 +288,8 @@ const Upload = () => {
 
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (filesState.length !== 0) {
-            let data = { assetTitle: title }
+        if (filesState.length!=0 && title && selectedCategory) {
+            let data = { assetTitle: title, assetCategory:selectedCategory }
             try {
                 const response = await axios.post(`/api/asset`,
                     data,
@@ -273,6 +305,8 @@ const Upload = () => {
             catch (err) {
                 console.log(err);
             }
+        } else {
+            handleAlertOpen();
         }
     }
 
@@ -282,8 +316,11 @@ const Upload = () => {
             let inputTag = currentInputTag.trim();
             if (inputTag !== "") {
                 if (tags.filter(tag => tag === inputTag).length <= 0) {
+                    setIsTagDuplicated(false);
                     let tmp: Array<string> = [...tags].concat(currentInputTag);
                     setTags(tmp);
+                } else {
+                    setIsTagDuplicated(true)
                 }
             }
             setCurrentInputTag('');
@@ -315,6 +352,10 @@ const Upload = () => {
             height: 240,
             flexGrow: 1,
             maxWidth: 400,
+            display: 'contents',
+        },
+        label: {
+            textAlign: 'left'
         },
     });
     const classes = useStyles();
@@ -331,30 +372,40 @@ const Upload = () => {
                         // onSubmit={submitFiles}
                         >
                             <DivInputGroup>
-                                <SpanInputLabel>재목</SpanInputLabel>
+                                <SpanInputLabel>제목</SpanInputLabel>
                                 <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
                             </DivInputGroup>
-                                {categories.length > 0 && (
-                                <TreeView
-                                    onNodeToggle={handleToggle}
-                                    onNodeSelect={handleNodeSelect}
-                                    className={classes.root}
-                                    defaultCollapseIcon={<ExpandMore />}
-                                    defaultExpandIcon={<ChevronRight />}
-                                    // expanded={categories.map((group: TreeViews) => group.categoryId + '')}
-                                >
-                                    <div>
-                                        {categories.map((category: TreeViews) => {
-                                            return <Category key={category.categoryId} category={category} />
-                                        })}
-                                    </div>
-                                </TreeView>
-                                )}
+                            {categories.length > 0 && (
+                                <DivInputGroup>
+                                    <SpanInputLabel>카테고리</SpanInputLabel>
+                                    <TreeView
+                                        onNodeToggle={handleToggle}
+                                        onNodeSelect={handleNodeSelect}
+                                        className={classes.root}
+                                        // defaultCollapseIcon={<ExpandMore />}
+                                        // defaultExpandIcon={<ChevronRight />}
+                                        expanded={categoriesHavingChild}
+                                    >
+                                        <div>
+                                            {categories.map((category: TreeViews) => {
+                                                return <Category key={category.categoryId} category={category} />
+                                            })}
+                                        </div>
+                                    </TreeView>
+                                </DivInputGroup>
+
+                            )}
                             <DivInputGroup>
                                 <SpanInputLabel>태그</SpanInputLabel>
                                 <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
                             </DivInputGroup>
                             <DivTagGroup>
+                                {
+                                    isTagDuplicated ?
+                                        <div style={{ color: 'red' }}>
+                                            중복된 태그입니다.
+                                    </div> : null
+                                }
 
                                 {tags.map((data, i) =>
                                     <SpanTag key={i}>{data}<SpanTimes onClick={() => { removeTag(data) }}>×</SpanTimes></SpanTag>
@@ -372,6 +423,25 @@ const Upload = () => {
                     </DivBox>
                 </DivContainer>
             </DivWrapper>
+
+            <Dialog
+                open={alertOpen}
+                onClose={handleAlertClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"입력정보를 확인해주세요"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        (제목, 카테고리, 파일첨부는 필수요소 입니다.)
+          </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleAlertClose} color="primary">
+                        확인
+          </Button>
+                </DialogActions>
+            </Dialog>
         </>
     )
 }

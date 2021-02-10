@@ -29,7 +29,7 @@ const useStyles = makeStyles(() => ({
 
 type Asset = {
   assetSeq:number,
-  assetOwn:string,
+  assetOwner:string,
   assetOwnName:string,
   assetTitle:string,
   assetCreateDate:Date,
@@ -39,10 +39,17 @@ type Asset = {
   locationArray:Array<string>
 }
 
+type Page = {
+  startPage:number,
+  endPage:number,
+  prev:false,
+  next:false,
+  total:number
+}
 
 
 const Posts = () => {
-  const sessionUser = sessionStorage.getItem("sessionUser");
+  let sessionUser = sessionStorage.getItem("sessionUser");
     if (sessionUser) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
     }
@@ -93,20 +100,26 @@ const Posts = () => {
 
   const [contents, setContents] = useState<Array<Asset>>([]);
   const [pageNum, setPageNum] = useState(1);
+  const [pageInfo, setPageInfo] = useState<Page>();
   const history = useHistory();
   const toAssetDetail=(assetSeq:number)=>{
     history.push('detail/'+assetSeq)
   }
   const classes = useStyles();
   async function loadContents(){
+    sessionUser = sessionStorage.getItem("sessionUser");
+    if (sessionUser) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+    }
     const response = await axios.get(`/api/list/${pageNum}`)
     const list:Array<Asset> = response.data.result
+    setPageInfo(response.data.reference)
     setContents(list)
+    console.log(contents, pageInfo);
   };
   useEffect(()=>{
     loadContents();
-    console.log(contents);
-  },[]);
+  },[pageNum]);
   
   return (
     <div style={{ marginTop: 20, padding: 30 }}>

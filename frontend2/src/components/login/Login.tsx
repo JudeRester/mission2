@@ -188,6 +188,7 @@ transition: all 0.4s;
 function Login() {
   let [username, setUsername] = useState("");
   let [password, setPassword] = useState("");
+  let [isLoginSuccess,setIsLoginSuccess]=useState(true);
   const dispatch = useDispatch();
   async function handleLoginButton(e: any) {
     e.preventDefault();
@@ -204,7 +205,7 @@ function Login() {
       dispatch(login({userId:'', isLogined:true}))
       sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
     } catch (err) {
-      console.error(err);
+      setIsLoginSuccess(false)
     }
   }
 
@@ -227,6 +228,12 @@ function Login() {
                 <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
                 {/* <SpanLoginFocus></SpanLoginFocus>  */}
               </DivLoginGroup>
+                {!isLoginSuccess ? 
+                  <div style={{color:'red'}}>
+                    로그인에 실패했습니다.
+                  </div> :
+                  null
+                }
               <DivButtonWrapper>
                 <ButtonLogin onClick={handleLoginButton}>로그인</ButtonLogin>
               </DivButtonWrapper>

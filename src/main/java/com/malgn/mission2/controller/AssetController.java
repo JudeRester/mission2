@@ -46,7 +46,7 @@ public class AssetController {
     public Response<Asset, Object> createAsset(@RequestBody Asset asset, Authentication auth) {
         log.debug("post...createAsset");
         UserInfo user = (UserInfo) auth.getPrincipal();
-        asset.setAssetOwn(user.getUserId());
+        asset.setAssetOwner(user.getUserId());
         service.createAsset(asset);
         Response<Asset, Object> res = new Response<>();
         res = res.success(asset, null);
