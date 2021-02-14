@@ -56,3 +56,4 @@ build/
 /frontend/yarn-debug.log*
 /frontend/yarn-error.log*
 /frontend/.eslintcache
+frontend2/.eslintcache

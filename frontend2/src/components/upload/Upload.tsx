@@ -5,7 +5,7 @@ import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
 import { ExpandMore, ChevronRight } from '@material-ui/icons'
-import { Button, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, makeStyles } from '@material-ui/core';
+import { Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, makeStyles } from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
@@ -375,9 +375,10 @@ const Upload = () => {
                                 <SpanInputLabel>제목</SpanInputLabel>
                                 <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
                             </DivInputGroup>
-                            {categories.length > 0 && (
+                            
                                 <DivInputGroup>
                                     <SpanInputLabel>카테고리</SpanInputLabel>
+                                    {categories.length > 0 ? (
                                     <TreeView
                                         onNodeToggle={handleToggle}
                                         onNodeSelect={handleNodeSelect}
@@ -392,9 +393,12 @@ const Upload = () => {
                                             })}
                                         </div>
                                     </TreeView>
+                                    ):
+                                    ( <CircularProgress />)
+                                }
                                 </DivInputGroup>
 
-                            )}
+                            
                             <DivInputGroup>
                                 <SpanInputLabel>태그</SpanInputLabel>
                                 <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />

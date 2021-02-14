@@ -13,13 +13,19 @@ import {
     GridList,
     GridListTile,
     GridListTileBar,
+    Table,
+    TableRow,
+    TableCell,
+    Checkbox,
+    ListItemSecondaryAction,
+    IconButton,
 } from "@material-ui/core"
-import { StarBorder, ExpandLess, ExpandMore } from "@material-ui/icons"
+import { StarBorder, ExpandLess, ExpandMore,Comment } from "@material-ui/icons"
 // import { InboxIcon } from '@material-ui/icons/MoveToInbox';
 import React, { useEffect, useState } from "react"
 import Carousel from "react-material-ui-carousel"
 import axios from "axios";
-
+import moment from 'moment';
 
 const useStyles = makeStyles(() =>
 ({
@@ -36,7 +42,7 @@ const useStyles = makeStyles(() =>
 type Asset = {
     assetSeq: number,
     assetOwner: string,
-    assetOwnName: string,
+    assetOwnerName: string,
     assetChanger: string,
     assetChangerName: string,
     assetTitle: string,
@@ -59,6 +65,13 @@ type MatchParams = {
     assetSeq: string
 }
 
+type Category = {
+    categoryId: number,
+	categoryName:string,
+	categoryParent:number,
+	categoryOrder:number
+}
+
 const Info = (props: MatchParams) => {
     const sessionUser = sessionStorage.getItem("sessionUser");
     if (sessionUser) {
@@ -69,6 +82,8 @@ const Info = (props: MatchParams) => {
     const classes = useStyles();
     const [isOpen, setIsOpen] = useState(false);
     const [assetInfo, setAssetInfo] = useState<Asset>();
+    const [parentCategory,setParentCategory] =useState<string>();
+    const [checked, setChecked] = useState<Array<string>>([]);
     const handleClick = () => {
         setIsOpen(!isOpen);
     };
@@ -84,11 +99,45 @@ const Info = (props: MatchParams) => {
         ).then(result => {
             setAssetInfo(result.data.result);
             console.log(assetInfo)
+            axios.get(`/api/category/list`)
+            .then(response=>{
+                setParentCategory(findParent(result.data.result.assetCategory,response.data.result))
+            })
         })
     }, [assetSeq])
 
+    const findParent = (target:number, categories:Category[]) =>{
+        let pStr="";
+        categories.forEach(element => {
+            if(element.categoryId == target){
+                if(element.categoryParent != 0){
+                    pStr = findParent(element.categoryParent,categories) + '>' + element.categoryName
+                    return
+                }else{
+                    pStr = element.categoryName
+                    return
+                }
+            }
+        });
+        return pStr;
+    }
+    
+    const handleToggle = (value:string) => () => {
+        const currentIndex = checked.indexOf(value);
+        const newChecked = [...checked];
+    
+        if (currentIndex === -1) {
+          newChecked.push(value);
+        } else {
+          newChecked.splice(currentIndex, 1);
+        }
+    
+        setChecked(newChecked);
+    };
+
     return (
         <div style={{ marginTop: 20, padding: 30 }}>
+            {assetInfo&&
             <Grid container spacing={2}>
                 <Grid item xs={8}>
                     <Carousel
@@ -128,13 +177,27 @@ const Info = (props: MatchParams) => {
                 </Grid>
                 <Divider orientation="vertical" flexItem />
                 <Grid item xs={3}>
-                    <h1>메타데이터 위치</h1>
-                    <p>{items.title}</p>
-                    <p>{items.excerpt}</p>
-                    <p>{items.title}</p>
-                    <p>{items.title}</p>
-                    <button>수정</button>
-                    <button>삭제</button>
+                    <h1>{assetInfo.assetTitle}</h1>
+                    <Table aria-label="simple table">
+                        <TableRow>
+                            <TableCell align="right" style={{color:"grey"}}>등록일:{moment(assetInfo.assetCreateDate).format('YYYY-MM-DD HH:mm:ss')}
+                            {assetInfo.assetCreateDate!==assetInfo.assetUpdateDate ? <><br/>수정일:{moment(assetInfo.assetCreateDate).format('YYYY-MM-DD HH:mm:ss')}</> : null}</TableCell>
+                            
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>작성자:{assetInfo.assetOwnerName}{assetInfo.assetChanger&& <>최종수정자:{assetInfo.assetChangerName}</>}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                카테고리:{parentCategory}
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                태그:{assetInfo.tags}
+                            </TableCell>
+                        </TableRow>
+                    </Table>
                 </Grid>
                 <Grid item xs={12}>
                     <Divider />
@@ -146,13 +209,33 @@ const Info = (props: MatchParams) => {
                     </ListItem>
                     <Collapse in={isOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <ListItem>
-                                <ListItemText primary="Starred" className={classes.nested} />
-                            </ListItem>
+                            {assetInfo.assetFiles.map((file,i)=>{
+                                const labelId = `checkbox-list-label-${i}`;
+                                     return (
+                                        <ListItem key={i} role={undefined} dense button onClick={handleToggle(file.assetLocation)}>
+                                          <ListItemIcon>
+                                            <Checkbox
+                                              edge="start"
+                                              checked={checked.indexOf(file.assetLocation) !== -1}
+                                              tabIndex={-1}
+                                              disableRipple
+                                              inputProps={{ 'aria-labelledby': labelId }}
+                                            />
+                                          </ListItemIcon>
+                                          <ListItemText id={labelId} primary={`${file.assetOriginName}`} />
+                                          <ListItemSecondaryAction>
+                                            <IconButton edge="end" aria-label="comments">
+                                              <Comment />
+                                            </IconButton>
+                                          </ListItemSecondaryAction>
+                                        </ListItem>
+                                      );
+                                })}
                         </List>
                     </Collapse>
                 </Grid>
             </Grid>
+}
         </div>
     )
 }
