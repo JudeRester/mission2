@@ -45,8 +45,8 @@ public class AssetService {
             while (tkn.hasMoreTokens()) {
                 tagDTOlist.add(new Tags(asset.getAssetSeq(), tkn.nextToken().trim()));
             }
+            mapper.insertTags(tagDTOlist);
         }
-        mapper.insertTags(tagDTOlist);
     }
 
     public void upload(AssetLargeFile assetLargeFile) {

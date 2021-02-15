@@ -1,11 +1,11 @@
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useState, FormEvent, useEffect, useRef } from 'react';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
 import { ExpandMore, ChevronRight } from '@material-ui/icons'
-import { Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, makeStyles } from '@material-ui/core';
+import { Avatar, Box, Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, LinearProgress, List, ListItem, ListItemAvatar, ListItemText, makeStyles, Typography } from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
@@ -145,8 +145,11 @@ const Upload = () => {
     let [categoriesHavingChild, setCategoriesHavingChild] = useState<Array<string>>();
     let [isTagDuplicated, setIsTagDuplicated] = useState<boolean>(false);
     let [alertOpen, setAlertOpen] = useState<boolean>(false);
-
+    let [uploadOpen, setUploadOpen] = useState<boolean>(false);
+    let [progresses, setProgresses] = useState<Array<number>>([0]);
+    let [newProgresses, setNewProgresses] = useState<Array<number>>([0]);
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
+    let temp: number[]
 
     useEffect(() => {
         sessionUser = sessionStorage.getItem("sessionUser");
@@ -172,12 +175,24 @@ const Upload = () => {
         };
         getParents(categories);
     }, [categories])
+
+    useEffect(() => {
+        setProgresses(pre => {
+            return new Array(filesState.length).fill(0)
+        })
+        setNewProgresses(pre => {
+            return new Array(filesState.length).fill(0)
+        })
+    }, [filesState])
+
+    useEffect(() => {
+        console.log(progresses)
+    }, [newProgresses])
     interface TreeViews {
         children?: TreeViews[];
         categoryName: string;
         categoryId: string;
     }
-
     interface CategoryProps {
         category: TreeViews
     }
@@ -208,65 +223,85 @@ const Upload = () => {
     const handleAlertClose = () => {
         setAlertOpen(false)
     }
-
+    const handlerUploadOpen = () => {
+        setUploadOpen(true);
+    }
+    const handlerUploadClose = () => {
+        setUploadOpen(false);
+    }
     const fileUpload = (seq: number) => {
-        filesState.forEach(async (item, i) => {
-            if (item.size > CHUNK_SIZE) {
-                const chunks = fileSlicer(item)
-                let data = {
-                    "assetSeq": seq,
-                    "assetOriginName": item.name,
-                    "assetSize": item.size,
-                    "assetUuidName": '',
-                    "isLastChunk": false,
-                    "location": '',
-                    "assetType": item.type,
-                    "category": selectedCategory
-                }
-                const result = await axios.post(`/api/prelargefile`,
-                    data
-                )
-                data["assetUuidName"] = result.data.result.assetUuidName;
-                data["location"] = result.data.result.location;
-                for (let i = 0; i < chunks.length; i++) {
-                    if ((i + 1) === chunks.length) {
-                        data["isLastChunk"] = true;
+        handlerUploadOpen();
+
+        (async function () {
+            for (let index = 0; index < filesState.length; index++) {
+                if (filesState[index].size > CHUNK_SIZE) {
+                    const chunks = fileSlicer(filesState[index])
+                    let data = {
+                        "assetSeq": seq,
+                        "assetOriginName": filesState[index].name,
+                        "assetSize": filesState[index].size,
+                        "assetUuidName": '',
+                        "isLastChunk": false,
+                        "location": '',
+                        "assetType": filesState[index].type,
+                        "category": selectedCategory
                     }
+                    const result = await axios.post(`/api/prelargefile`,
+                        data
+                    )
+                    data["assetUuidName"] = result.data.result.assetUuidName;
+                    data["location"] = result.data.result.location;
+                    for (let i = 0; i < chunks.length; i++) {
+                        if ((i + 1) === chunks.length) {
+                            data["isLastChunk"] = true;
+                        }
+                        try {
+                            setProgresses(pre => { pre[index] = Math.round(100 / chunks.length * i); return pre })
+                            setNewProgresses([...progresses])
+                            const result = await axios.post(`/api/largefile`,
+                                chunks[i],
+                                {
+                                    params: data,
+                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                }
+                            )
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    }
+                } else {
                     try {
-                        console.log(data.isLastChunk)
-                        const result = await axios.post(`/api/largefile`,
-                            chunks[i],
+                        const formData = new FormData();
+                        formData.append("file", filesState[index]);
+                        formData.append("assetSeq", '' + seq);
+                        formData.append("assetType", filesState[index].type);
+                        formData.append("category", selectedCategory)
+                        await axios.post(`/api/file`,
+                            formData,
                             {
-                                params: data,
-                                headers: { 'Content-Type': 'multipart/form-data' }
+                                onUploadProgress: ProgressEvent => {
+                                    const percentage = Math.round(
+                                        ProgressEvent.loaded * 100 / ProgressEvent.total
+                                    )
+                                    setProgresses(pre => { pre[index] = percentage; return pre })
+                                    setNewProgresses([...progresses])
+                                }
                             }
                         )
-                    } catch (err) {
-                        console.log(err);
+
+                    }
+                    catch (err) {
+
                     }
                 }
-            } else {
-                try {
-                    const formData = new FormData();
-                    formData.append("file", item);
-                    formData.append("assetSeq", '' + seq);
-                    formData.append("assetType", item.type);
-                    formData.append("category", selectedCategory)
-                    await axios.post(`/api/file`,
-                        formData
-                    )
-
-                }
-                catch (err) {
-
+                if (index === filesState.length - 1) {
+                    await fileUploadComplete(seq)
                 }
             }
-            if (i === filesState.length - 1) {
-                await fileUploadComplete(seq)
-            }
-        })
-
+            // }
+        })();
     }
+   
     const fileUploadComplete = async (seq: number) => {
         try {
             await axios.post(`/api/complete`,
@@ -288,8 +323,8 @@ const Upload = () => {
 
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (filesState.length!=0 && title && selectedCategory) {
-            let data = { assetTitle: title, assetCategory:selectedCategory }
+        if (filesState.length != 0 && title && selectedCategory) {
+            let data = { assetTitle: title, assetCategory: selectedCategory }
             try {
                 const response = await axios.post(`/api/asset`,
                     data,
@@ -300,6 +335,7 @@ const Upload = () => {
                         }
                     });
                 // setAssetSeq();
+
                 fileUpload(response.data.result.assetSeq);
             }
             catch (err) {
@@ -375,10 +411,10 @@ const Upload = () => {
                                 <SpanInputLabel>제목</SpanInputLabel>
                                 <InputText type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="logininput" />
                             </DivInputGroup>
-                            
-                                <DivInputGroup>
-                                    <SpanInputLabel>카테고리</SpanInputLabel>
-                                    {categories.length > 0 ? (
+
+                            <DivInputGroup>
+                                <SpanInputLabel>카테고리</SpanInputLabel>
+                                {categories.length > 0 ? (
                                     <TreeView
                                         onNodeToggle={handleToggle}
                                         onNodeSelect={handleNodeSelect}
@@ -393,12 +429,12 @@ const Upload = () => {
                                             })}
                                         </div>
                                     </TreeView>
-                                    ):
-                                    ( <CircularProgress />)
+                                ) :
+                                    (<CircularProgress />)
                                 }
-                                </DivInputGroup>
+                            </DivInputGroup>
 
-                            
+
                             <DivInputGroup>
                                 <SpanInputLabel>태그</SpanInputLabel>
                                 <InputText type="text" value={currentInputTag} onChange={(e) => { setCurrentInputTag(e.target.value) }} onKeyPress={(e) => { addTag(e) }} placeholder="태그 입력 후 엔터" />
@@ -444,6 +480,45 @@ const Upload = () => {
                     <Button onClick={handleAlertClose} color="primary">
                         확인
           </Button>
+                </DialogActions>
+            </Dialog>
+
+
+            <Dialog
+                open={uploadOpen}
+                // onClose={handlerUploadClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"업로드"}</DialogTitle>
+                <DialogContent>
+                    <List className={classes.root}>
+                        {filesState.map((file, mapIndex) =>
+                            <ListItem alignItems="flex-start">
+                                <ListItemText
+                                    primary={file.name}
+                                    secondary={
+                                        <React.Fragment>
+                                            <Box display="flex" alignItems="center">
+                                                <Box width="100%" mr={1}>
+                                                    <LinearProgress variant="determinate" value={newProgresses[mapIndex]} />
+                                                </Box>
+                                                <Box minWidth={35}>
+                                                    <Typography variant="body2" color="textSecondary">{`${Math.round(newProgresses[mapIndex])}%`}</Typography>
+                                                </Box>
+                                            </Box>
+                                        </React.Fragment>
+                                    }
+                                />
+                            </ListItem>
+                        )}
+
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handlerUploadClose} color="primary">
+                        창닫기
+                     </Button>
                 </DialogActions>
             </Dialog>
         </>
