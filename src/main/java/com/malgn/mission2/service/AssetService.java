@@ -96,7 +96,22 @@ public class AssetService {
     }
 
     public List<Asset> getAssetList(Criteria crt) {
-        return mapper.getAssetList(crt);
+        List<Asset> list =mapper.getAssetList(crt);
+        List<Integer> seqList = new ArrayList<>();
+        for(Asset a : list){
+            seqList.add(a.getAssetSeq());
+        }
+        List<AssetFile> afiles = mapper.getFileList(seqList);
+        for(int i=0;i<list.size();i++){
+            ArrayList<AssetFile> assetFiles = new ArrayList<>();
+            for(int j =0;j<afiles.size();j++){
+                if(list.get(i).getAssetSeq()==afiles.get(j).getAssetSeq()){
+                    assetFiles.add(afiles.get(j));
+                }
+            }
+            list.get(i).setAssetFiles(assetFiles);
+        }
+        return list ;
     }
 
     public int total() {

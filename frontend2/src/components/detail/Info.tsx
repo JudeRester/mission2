@@ -246,7 +246,7 @@ const Info = (props: MatchParams) => {
                                                         <video style={{ maxWidth: '1000px' }} controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
                                                         :
                                                         item.assetType.includes("audio") ?
-                                                            <audio src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
+                                                            <audio controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
                                                             : <div>
                                                                 <img src={"/images/unsupportedFile.png"} alt="" />
                                                                 <GridListTileBar title={"미리보기가 지원되지 않는 형식"} />

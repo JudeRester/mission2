@@ -455,8 +455,7 @@ const Upload = () => {
                                 <DropZone filesState={filesState} setFilesState={setFilesState} />
                             </DivInputGroup>
                             <DivTagGroup>
-                                <button onClick={submitFiles}>저장</button>
-                                <button type="reset">취소</button>
+                                <Button size="large" color="primary" onClick={submitFiles}>저장</Button>
                             </DivTagGroup>
 
                         </FormLogin>

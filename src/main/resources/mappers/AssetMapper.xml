@@ -38,13 +38,12 @@
     </insert>
 
     <insert id="insertTags" parameterType="Tags">
-        <foreach collection="list" item="arr" open="insert all"
-			close="select * from dual" separator=" ">
+        <foreach collection="list" item="arr" open="insert all" close="select * from dual" separator=" ">
 			into assettag
 			values(#{arr.assetTag},#{arr.assetSeq})
 		</foreach>
     </insert>
-    
+
     <update id="completeAsset">
         update asset set asset_iscomplete = 1 where asset_seq=#{assetSeq}
     </update>
@@ -187,15 +186,24 @@
 		ORDER SIBLINGS BY CategoryORDER
     </select>
 
+    <select id="getFileList" resultType="AssetFile">
+        select asset_seq, asset_origin_name, asset_location, asset_size, asset_type
+        from assetfile
+        where asset_seq in
+        <foreach collection="list" item="arr" open="(" close=")" separator=", ">
+            #{arr}
+        </foreach>
+    </select>
+
     <delete id="deleteTag">
 		delete from assetTag where asset_tag=#{assetTag} and
 		asset_seq=#{assetSeq}
 	</delete>
 
-	<insert id="insertTag">
+    <insert id="insertTag">
 		insert into assetTag values(#{assetTag},#{assetSeq})
     </insert>
-    
+
     <select id="getAssetTagList" resultType="String">
         SELECT LISTAGG(asset_Tag, ',') within group ( order by asset_Tag)  as TAGs FROM assettag WHERE asset_seq=#{assetSeq}
     </select>
@@ -215,7 +223,7 @@
         delete from assetfile
         where asset_seq = #{assetSeq}
     </delete>
-    
+
     <delete id="deleteAsset">
         delete from asset
         where asset_seq=#{assetSeq}

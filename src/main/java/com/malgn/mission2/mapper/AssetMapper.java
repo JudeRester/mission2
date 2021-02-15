@@ -49,4 +49,6 @@ public interface AssetMapper {
 
     public void deleteFile(AssetFile assetFile);
 
+	public List<AssetFile> getFileList(List<Integer> seqList);
+
 }
