@@ -186,4 +186,43 @@
 		CONNECT BY PRIOR categoryid = CategoryPARENT
 		ORDER SIBLINGS BY CategoryORDER
     </select>
+
+    <delete id="deleteTag">
+		delete from assetTag where asset_tag=#{assetTag} and
+		asset_seq=#{assetSeq}
+	</delete>
+
+	<insert id="insertTag">
+		insert into assetTag values(#{assetTag},#{assetSeq})
+    </insert>
+    
+    <select id="getAssetTagList" resultType="String">
+        SELECT LISTAGG(asset_Tag, ',') within group ( order by asset_Tag)  as TAGs FROM assettag WHERE asset_seq=#{assetSeq}
+    </select>
+
+    <update id="assetUpdate">
+        update asset
+        set
+        asset_title=#{assetTitle},
+        asset_category=#{assetCategory},
+        asset_changer=#{assetChanger},
+        asset_update_date=sysdate
+        where
+        asset_seq=#{assetSeq}
+    </update>
+
+    <delete id="deleteAssetFiles">
+        delete from assetfile
+        where asset_seq = #{assetSeq}
+    </delete>
+    
+    <delete id="deleteAsset">
+        delete from asset
+        where asset_seq=#{assetSeq}
+    </delete>
+
+    <delete id="deleteFile">
+        delete from assetfile
+        where asset_location=#{assetLocation}
+    </delete>
 </mapper>

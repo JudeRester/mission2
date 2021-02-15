@@ -14,32 +14,34 @@ public class Tags {
         this.assetTag = tagName;
     }
 
-    public String getTagName() {
-        return assetTag;
+    public Integer getAssetSeq() {
+        return this.assetSeq;
     }
 
-    public void setTagName(String tagName) {
-        this.assetTag = tagName;
+    public void setAssetSeq(Integer assetSeq) {
+        this.assetSeq = assetSeq;
+    }
+
+    public String getAssetTag() {
+        return this.assetTag;
+    }
+
+    public void setAssetTag(String assetTag) {
+        this.assetTag = assetTag;
+    }
+
+    public int getCount() {
+        return this.count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 
     @Override
     public String toString() {
-        return "Tags [tagImg=" + assetSeq + ", tagName=" + assetTag + ", count=" + count + "]";
+        return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetTag='" + getAssetTag() + "'" + ", count='"
+                + getCount() + "'" + "}";
     }
 
-    public int getTagImg() {
-        return assetSeq;
-    }
-
-    public void setTagImg(Integer tagImg) {
-        this.assetSeq = tagImg;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
-    }
 }

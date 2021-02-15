@@ -6,12 +6,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.domain.asset.AssetFile;
 import com.malgn.mission2.domain.asset.AssetLargeFile;
 import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.asset.Tags;
 import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.domain.common.Page;
 import com.malgn.mission2.domain.common.Response;
@@ -25,14 +27,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import jdk.nashorn.internal.ir.RuntimeNode.Request;
 
 @RestController
 @RequestMapping("/api")
@@ -107,6 +113,16 @@ public class AssetController {
             log.error("{}", e.getMessage(), e);
         }
         return null;
+    }
+
+    @DeleteMapping("/file")
+    public Response<Object, Object> deleteFile(@RequestParam("assetLocation") String assetLocation) {
+        Response<Object, Object> res = new Response<>();
+        AssetFile assetFile = new AssetFile();
+        assetFile.setAssetLocation(assetLocation);
+        service.deleteFile(assetFile);
+        res = res.success(null, null);
+        return res;
     }
 
     @PostMapping("/prelargefile")
@@ -195,6 +211,28 @@ public class AssetController {
         return res;
     }
 
+    @PutMapping("/asset")
+    public Response<Object, Object> updateAsset(@RequestBody Asset dto, Authentication auth) {
+        UserInfo user = (UserInfo) auth.getPrincipal();
+        dto.setAssetChanger(user.getUserId());
+        service.assetUpdate(dto);
+        return null;
+    }
+
+    @DeleteMapping("/asset/{assetSeq}")
+    public Response<Object, Object> deleteAsset(@PathVariable("assetSeq") int assetSeq, @RequestParam String assetOwner,
+            Authentication auth) {
+        UserInfo user = (UserInfo) auth.getPrincipal();
+        Response<Object, Object> res = new Response<>();
+        if (user.getUserId().equals(assetOwner)) {
+            service.deleteAsset(assetSeq);
+            res = res.success("삭제 성공", null);
+        } else {
+            res.failed("권한이 없습니다", null);
+        }
+        return res;
+    }
+
     @GetMapping("/list/{pageNum}")
     public Response<List<Asset>, Object> getAssetList(@PathVariable("pageNum") int pageNum) {
         Criteria crt = new Criteria();
@@ -213,6 +251,32 @@ public class AssetController {
         log.debug("get...categoryList");
         List<Category> list = service.getCategoryList();
         Response<List<Category>, Object> res = new Response<>();
+        res = res.success(list, null);
+        return res;
+    }
+
+    @DeleteMapping("/tag")
+    public Response<String, Object> deleteTag(@RequestParam("assetTag") String assetTag,
+            @RequestParam("assetSeq") int assetSeq) {
+        Response<String, Object> res = new Response<>();
+        Tags dto = new Tags();
+        dto.setAssetSeq(assetSeq);
+        dto.setAssetTag(assetTag);
+        service.deleteTag(dto);
+        String list = service.getAssetTagList(dto.getAssetSeq());
+        res = res.success(list, null);
+        return res;
+    }
+
+    @PostMapping("/tag")
+    public Response<String, Object> insertTag(@RequestParam("assetTag") String assetTag,
+            @RequestParam("assetSeq") int assetSeq) {
+        Response<String, Object> res = new Response<>();
+        Tags dto = new Tags();
+        dto.setAssetSeq(assetSeq);
+        dto.setAssetTag(assetTag);
+        service.insertTag(dto);
+        String list = service.getAssetTagList(dto.getAssetSeq());
         res = res.success(list, null);
         return res;
     }

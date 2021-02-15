@@ -27,12 +27,26 @@ public interface AssetMapper {
 
     public Asset getAsset(int assetSeq);
 
-    public ArrayList<Asset> getFiles(int assetSeq);
+    public ArrayList<AssetFile> getFiles(int assetSeq);
 
     public List<Asset> getAssetList(Criteria crt);
 
     public int total();
 
     public List<Category> getCategoryList();
+
+    public void deleteTag(Tags dto);
+
+    public String getAssetTagList(int assetSeq);
+
+    public void insertTag(Tags dto);
+
+    public void assetUpdate(Asset dto);
+
+    public void deleteAsset(int assetSeq);
+
+    public void deleteAssetFiles(int assetSeq);
+
+    public void deleteFile(AssetFile assetFile);
 
 }

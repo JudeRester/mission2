@@ -16,7 +16,7 @@ public class Asset {
     private String tags;
     private String assetCategoryName;
     private int assetIsComplete;
-    private ArrayList<Asset> assetFiles;
+    private ArrayList<AssetFile> assetFiles;
     private String locations;
     private String[] locationArray;
 
@@ -116,11 +116,11 @@ public class Asset {
         this.assetCategoryName = assetCategoryName;
     }
 
-    public ArrayList<Asset> getAssetFiles() {
+    public ArrayList<AssetFile> getAssetFiles() {
         return this.assetFiles;
     }
 
-    public void setAssetFiles(ArrayList<Asset> assetFiles) {
+    public void setAssetFiles(ArrayList<AssetFile> assetFiles) {
         this.assetFiles = assetFiles;
     }
 

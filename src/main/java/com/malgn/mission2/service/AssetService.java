@@ -16,11 +16,14 @@ import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.mapper.AssetMapper;
 
 import org.imgscalr.Scalr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AssetService {
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private AssetMapper mapper;
@@ -88,7 +91,7 @@ public class AssetService {
         return mapper.getAsset(assetSeq);
     }
 
-    public ArrayList<Asset> getFiles(int assetSeq) {
+    public ArrayList<AssetFile> getFiles(int assetSeq) {
         return mapper.getFiles(assetSeq);
     }
 
@@ -102,6 +105,59 @@ public class AssetService {
 
     public List<Category> getCategoryList() {
         return mapper.getCategoryList();
+    }
+
+    public void deleteTag(Tags dto) {
+        mapper.deleteTag(dto);
+    }
+
+    public String getAssetTagList(int assetSeq) {
+        return mapper.getAssetTagList(assetSeq);
+    }
+
+    public void insertTag(Tags dto) {
+        mapper.insertTag(dto);
+    }
+
+    public void assetUpdate(Asset dto) {
+        mapper.assetUpdate(dto);
+    }
+
+    public void deleteFile(AssetFile assetFile) {
+        try {
+            File file = new File(assetFile.getAssetLocation());
+            if (file.exists())
+                file.delete();
+        } catch (Exception e) {
+            log.error("{}", e.getMessage(), e);
+        } finally {
+            mapper.deleteFile(assetFile);
+        }
+    }
+
+    public void deleteAsset(int assetSeq) {
+
+        ArrayList<AssetFile> list = mapper.getFiles(assetSeq);
+        try {
+            for (AssetFile assetFile : list) {
+                File file = new File(assetFile.getAssetLocation());
+                if (file.exists()) {
+                    if (file.delete()) {
+                        // 파일 삭제
+                    } else {
+                        // 삭제 실패
+                    }
+                } else {
+                    // 파일이 존재하지 않음
+                }
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+        } finally {
+            mapper.deleteAssetFiles(assetSeq);
+            mapper.deleteAsset(assetSeq);
+        }
+
     }
 
 }

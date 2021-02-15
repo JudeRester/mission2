@@ -8,6 +8,7 @@ import Upload from './upload/Upload';
 import Header from './commons/Header';
 import Main from './main';
 import Detail from './detail';
+import Modify from './modify';
 
 const Pages = (props: any) => {
     const user = useSelector((state: RootState) => state.member)
@@ -31,6 +32,7 @@ const Pages = (props: any) => {
                 <Route exact path="/" component={Main} />
                 <Route path="/upload" component={Upload}/>
                 <Route path="/detail/:assetSeq" component={Detail}/>
+                <Route path="/modify/:assetSeq" component={Modify}/>
             </BrowserRouter>
         )
 }

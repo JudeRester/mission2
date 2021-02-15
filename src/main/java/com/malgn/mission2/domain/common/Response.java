@@ -13,6 +13,10 @@ public class Response<T, E> {
         return new Response<T, E>(result, reference, "성공", 200);
     }
 
+    public Response<T, E> failed(T result, E reference) {
+        return new Response<T, E>(result, reference, "실패", 002);
+    }
+
     public Response(T result, E reference, String message, int code) {
         this.result = result;
         this.reference = reference;
