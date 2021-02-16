@@ -1,10 +1,16 @@
 import Posts from "./Posts"
 import Sidebar from "../commons/Sidebar"
+import { RouteComponentProps } from "react-router-dom"
 
-const Main = () => {
+type MatchParams = {
+    pageNum: string
+}
+
+const Main = ({ match }: RouteComponentProps<MatchParams>) => {
+    const {pageNum} = match.params
     return (
         <div>
-                <Posts />
+                <Posts pageNum={pageNum}/>
         </div>
     )
 }

@@ -160,7 +160,6 @@ const Upload = () => {
             .then(response => {
                 setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
             })
-        console.log(user)
     }, [user])
     useEffect(() => {
         let tempArray: Array<string> = [];
@@ -185,9 +184,6 @@ const Upload = () => {
         })
     }, [filesState])
 
-    useEffect(() => {
-        console.log(progresses)
-    }, [newProgresses])
     interface TreeViews {
         children?: TreeViews[];
         categoryName: string;

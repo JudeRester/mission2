@@ -195,6 +195,13 @@
         </foreach>
     </select>
 
+    <select id="getTagList" resultType="Tags">
+		SELECT 0 AS asset_seq,asset_tag,
+		count(*) as count
+		FROM assettag
+		GROUP BY asset_tag
+	</select>
+
     <delete id="deleteTag">
 		delete from assetTag where asset_tag=#{assetTag} and
 		asset_seq=#{assetSeq}
@@ -233,4 +240,136 @@
         delete from assetfile
         where asset_location=#{assetLocation}
     </delete>
+
+    <select id="search" parameterType="Search" resultType="Asset">
+        select * from
+        (select r.* , rownum as record  FROM 
+        (select * from
+            (SELECT  r.asset_Seq,
+                r.asset_Title,
+                r.asset_Owner,
+                r.asset_Create_Date,
+                r.asset_Update_Date,
+                r.asset_Changer, 
+                r.asset_owner_name,
+                r.asset_changer_name,
+                r.asset_category,
+                r.asset_category_name,
+                r.tags,
+            LISTAGG(f.ASSET_LOCATION,', ') WITHIN GROUP (ORDER BY f.ASSET_TYPE,f.asset_location) AS locations 
+            from(
+                select 
+                    a.asset_Seq,
+                    a.asset_Title,
+                    a.asset_Owner,
+                    a.asset_Create_Date,
+                    a.asset_Update_Date,
+                    a.asset_Changer,
+                    a.asset_category,
+                    (select categoryName from category where categoryId=a.asset_category) as asset_category_name,
+                    (select user_Name from assetuser where user_Id=a.asset_Owner) as asset_Owner_Name,
+                    (select user_Name from assetuser where user_Id=a.asset_Changer) as asset_Changer_Name,
+                    LISTAGG(t.asset_Tag, ', ') within group ( order by t.asset_Tag)  as TAGs
+                from
+                    asset a,
+                    assetuser u,
+                    assettag t,
+                    category c
+                where
+                    a.asset_Seq=t.asset_Seq(+)
+                and
+                    a.asset_Owner=u.user_Id
+                AND
+                    a.asset_category=c.categoryId(+)
+                and
+                    a.asset_isComplete=1
+        <if test='tag != null'>
+            AND (
+            <foreach collection="tag" item="tag" separator="and">
+				a.asset_SEQ in
+				(SELECT asset_seq FROM assettag WHERE asset_tag=#{tag})
+			</foreach>
+            )
+        </if>
+        <if test="category != null">
+            and (
+            <foreach collection="category" item="category" separator="or">
+				a.asset_category = #{category}
+			</foreach>
+            )
+        </if>
+        <if test='keyword != null'>
+			and(
+			a.asset_Title like '%'||#{keyword}||'%'
+			)
+		</if>
+        group by
+                    a.asset_Seq,
+                    a.asset_Title,
+                    a.asset_Owner,
+                    a.asset_Create_Date,
+                    a.asset_Update_Date,
+                    a.asset_Changer,
+                     a.asset_category,
+                    u.user_name
+                order by 
+                    asset_seq DESC
+                )r, assetfile f
+            WHERE r.asset_seq=f.asset_seq
+            GROUP BY 
+            r.asset_Seq,
+                r.asset_Title,
+                r.asset_Owner,
+                r.asset_Create_Date,
+                r.asset_Update_Date,
+                r.asset_Changer,
+                r.asset_owner_name,
+                r.asset_changer_name,
+                 r.asset_category,
+                 r.asset_category_name,
+                r.tags) r
+            ORDER BY
+				r.asset_seq desc
+        ) r
+        )
+    where 
+        record between
+        (#{crt.pageNum}-1)*#{crt.amount}+1 and
+		#{crt.pageNum}*#{crt.amount}
+    </select>
+
+    <select id="searchTotal" parameterType="Search" resultType="int">
+        SELECT count(*)
+		FROM asset
+		WHERE asset_SEQ IN
+            (SELECT a.asset_seq
+            FROM asset a,
+            assetTAG t,
+            CATEGORY c
+            WHERE
+            a.asset_seq=t.asset_seq
+            AND a.asset_CATEGORY=c.categoryid
+            <if test='tag != null'>
+                AND (
+                <foreach collection="tag" item="tag" separator="and">
+                    a.asset_SEQ  in
+                    (SELECT asset_seq FROM assettag WHERE asset_tag=#{tag})
+                </foreach>
+                )
+            </if>
+            <if test="category != null">
+                and (
+                <foreach collection="category" item="category" separator="or">
+                    a.asset_category = #{category}
+                </foreach>
+                )
+            </if>
+            <if test='keyword != null'>
+                and(
+                asset_Title like '%'||#{keyword}||'%'
+                )
+            </if>
+            )
+    </select>
+
 </mapper>

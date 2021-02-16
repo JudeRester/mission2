@@ -293,7 +293,10 @@ const ModInfo = (props: MatchParams) => {
                     axios.post(`/api/tag`, null,
                         { params: { assetTag: inputTag, assetSeq: assetSeq } }
                     ).then(result => {
-                        setTags(result.data.result.split(','))
+                        if(result.data.result)
+                            setTags(result.data.result.split(','))
+                        else
+                            setTags([])
                     })
                 } else {
                     setIsTagDuplicated(true)
@@ -307,7 +310,10 @@ const ModInfo = (props: MatchParams) => {
         axios.delete(`/api/tag`,
             { params: { assetTag: targetTag.trim(), assetSeq: assetSeq } }
         ).then(result => {
-            setTags(result.data.result.split(','))
+            if(result.data.result)
+                setTags(result.data.result.split(','))
+            else
+                setTags([])
         })
     }
 

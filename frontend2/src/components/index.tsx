@@ -21,10 +21,6 @@ const Pages = (props: any) => {
             dispatch(login({ userId: '', isLogined: true }));
         }
     }, [user])
-
-
-    console.log(user.isLogined)
-
     return !user.isLogined ? (
         <Login />
     ) : (

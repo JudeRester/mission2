@@ -91,14 +91,12 @@ const Info = (props: MatchParams) => {
     const history = useHistory();
     const assetSeq: string = props.assetSeq;
     const classes = useStyles();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(true);
     const [assetInfo, setAssetInfo] = useState<Asset>();
     const [parentCategory, setParentCategory] = useState<string>();
     const [checked, setChecked] = useState<Array<string>>([]);
     const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
     const [downloadOpen, setDownloadOpen] = useState<boolean>(false)
-    const [progress, setProgress] = useState<number>(0);
-    const [wholeProgress, setWholeProgress]=useState<number>(0)
     const handleClick = () => {
         setIsOpen(!isOpen);
     };
@@ -192,13 +190,13 @@ const Info = (props: MatchParams) => {
                 await axios.get(`${fileInfo[0]}`,
                     {
                         responseType: 'blob',
-                        onDownloadProgress:ProgressEvent=>{
-                            const percentage=Math.round(
-                                ProgressEvent.loaded*100/ProgressEvent.total
-                            )
-                            setProgress(percentage);
-                            setWholeProgress(progress/checked.length)
-                        }
+                        // onDownloadProgress:ProgressEvent=>{
+                        //     const percentage=Math.round(
+                        //         ProgressEvent.loaded*100/ProgressEvent.total
+                        //     )
+                        //     setProgress(percentage);
+                        //     setWholeProgress(progress/checked.length)
+                        // }
                     })
                     .then(response => {
                         zip.file(fileInfo[1],response.data);
@@ -206,16 +204,12 @@ const Info = (props: MatchParams) => {
             }
             resolve(zip)
         });
-        var nStart = new Date().getTime(); 
         makeZip.then((value:any)=>{
-            var nEnd =  new Date().getTime(); 
-            console.log(nEnd-nStart)
-            setProgress(0)
             value.generateAsync({ type: "blob" })
             .then(function (content:any) {
-                console.log('hi')
                 // see FileSaver.js
                 saveAs(content, assetInfo.assetTitle + ".zip");
+                setDownloadOpen(false)
             })
         })
     }
@@ -241,9 +235,9 @@ const Info = (props: MatchParams) => {
                                                 </div>
                                                 :
                                                 item.assetType.includes("image") ?
-                                                    <img style={{ maxWidth: '1000px' }} src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} alt="" />
+                                                    <img style={{ maxWidth: '600px',maxHeight:'600px' }} src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} alt="" />
                                                     : item.assetType.includes("video") ?
-                                                        <video style={{ maxWidth: '1000px' }} controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
+                                                        <video style={{ maxWidth: '600px',maxHeight:'600px' }} controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
                                                         :
                                                         item.assetType.includes("audio") ?
                                                             <audio controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
@@ -359,8 +353,8 @@ const Info = (props: MatchParams) => {
             >
                 <DialogTitle id="alert-dialog-title">{"다운로드를 준비중입니다."}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                     <CircularProgress variant="determinate" value={wholeProgress} />
+                    <DialogContentText id="alert-dialog-description" style={{textAlign:'center'}}>
+                         <CircularProgress />
                      </DialogContentText>
                 </DialogContent>
                 <DialogActions>

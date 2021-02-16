@@ -4,6 +4,7 @@ import axios from 'axios';
 import styled from '@emotion/styled'
 import member, { login } from '../../modules/member';
 import { RootState } from '../../modules';
+import { useHistory } from 'react-router';
 
 
 let DivWrapper = styled.div`
@@ -186,6 +187,7 @@ transition: all 0.4s;
 //style end
 
 function Login() {
+  const history = useHistory();
   let [username, setUsername] = useState("");
   let [password, setPassword] = useState("");
   let [isLoginSuccess,setIsLoginSuccess]=useState(true);
@@ -201,7 +203,7 @@ function Login() {
             'Access-Control-Allow-Origin': '*'
           }
         });
-      // history.push("/main");
+      history.push("/");
       dispatch(login({userId:'', isLogined:true}))
       sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
     } catch (err) {

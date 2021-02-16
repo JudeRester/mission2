@@ -7,6 +7,7 @@ import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.domain.asset.AssetFile;
 import com.malgn.mission2.domain.asset.AssetLargeFile;
 import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.asset.Search;
 import com.malgn.mission2.domain.asset.Tags;
 import com.malgn.mission2.domain.common.Criteria;
 
@@ -49,6 +50,12 @@ public interface AssetMapper {
 
     public void deleteFile(AssetFile assetFile);
 
-	public List<AssetFile> getFileList(List<Integer> seqList);
+    public List<AssetFile> getFileList(List<Integer> seqList);
+
+    public List<Tags> getTagList();
+
+    public List<Asset> search(Search src);
+
+    public int searchTotal(Search src);
 
 }

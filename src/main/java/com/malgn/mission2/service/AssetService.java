@@ -11,6 +11,7 @@ import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.domain.asset.AssetFile;
 import com.malgn.mission2.domain.asset.AssetLargeFile;
 import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.asset.Search;
 import com.malgn.mission2.domain.asset.Tags;
 import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.mapper.AssetMapper;
@@ -96,22 +97,22 @@ public class AssetService {
     }
 
     public List<Asset> getAssetList(Criteria crt) {
-        List<Asset> list =mapper.getAssetList(crt);
+        List<Asset> list = mapper.getAssetList(crt);
         List<Integer> seqList = new ArrayList<>();
-        for(Asset a : list){
+        for (Asset a : list) {
             seqList.add(a.getAssetSeq());
         }
         List<AssetFile> afiles = mapper.getFileList(seqList);
-        for(int i=0;i<list.size();i++){
+        for (int i = 0; i < list.size(); i++) {
             ArrayList<AssetFile> assetFiles = new ArrayList<>();
-            for(int j =0;j<afiles.size();j++){
-                if(list.get(i).getAssetSeq()==afiles.get(j).getAssetSeq()){
+            for (int j = 0; j < afiles.size(); j++) {
+                if (list.get(i).getAssetSeq() == afiles.get(j).getAssetSeq()) {
                     assetFiles.add(afiles.get(j));
                 }
             }
             list.get(i).setAssetFiles(assetFiles);
         }
-        return list ;
+        return list;
     }
 
     public int total() {
@@ -173,6 +174,35 @@ public class AssetService {
             mapper.deleteAsset(assetSeq);
         }
 
+    }
+
+    public List<Tags> getTagList() {
+        return mapper.getTagList();
+    }
+
+    public List<Asset> search(Search src) {
+        List<Asset> list = mapper.search(src);
+        List<Integer> seqList = new ArrayList<>();
+        for (Asset a : list) {
+            seqList.add(a.getAssetSeq());
+        }
+        if (seqList.size() > 0) {
+            List<AssetFile> afiles = mapper.getFileList(seqList);
+            for (int i = 0; i < list.size(); i++) {
+                ArrayList<AssetFile> assetFiles = new ArrayList<>();
+                for (int j = 0; j < afiles.size(); j++) {
+                    if (list.get(i).getAssetSeq() == afiles.get(j).getAssetSeq()) {
+                        assetFiles.add(afiles.get(j));
+                    }
+                }
+                list.get(i).setAssetFiles(assetFiles);
+            }
+        }
+        return list;
+    }
+
+    public int searchTotal(Search src) {
+        return mapper.searchTotal(src);
     }
 
 }

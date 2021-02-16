@@ -13,6 +13,7 @@ import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.domain.asset.AssetFile;
 import com.malgn.mission2.domain.asset.AssetLargeFile;
 import com.malgn.mission2.domain.asset.Category;
+import com.malgn.mission2.domain.asset.Search;
 import com.malgn.mission2.domain.asset.Tags;
 import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.domain.common.Page;
@@ -37,8 +38,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import jdk.nashorn.internal.ir.RuntimeNode.Request;
 
 @RestController
 @RequestMapping("/api")
@@ -278,6 +277,25 @@ public class AssetController {
         service.insertTag(dto);
         String list = service.getAssetTagList(dto.getAssetSeq());
         res = res.success(list, null);
+        return res;
+    }
+
+    @GetMapping("/tag/list")
+    public Response<List<Tags>, Object> getTagList() {
+        Response<List<Tags>, Object> res = new Response<>();
+        res = res.success(service.getTagList(), null);
+        return res;
+    }
+
+    @GetMapping("/search")
+    public Response<List<Asset>, Object> search(Criteria crt, Search src) {
+        src.setCrt(crt);
+        List<Asset> list = service.search(src);
+        for (Asset a : list) {
+            a.setLocationArray(a.getLocations().trim().split("\\s*,\\s*"));
+        }
+        Response<List<Asset>, Object> res = new Response<>();
+        res = res.success(list, new Page(crt, service.searchTotal(src)));
         return res;
     }
 }
