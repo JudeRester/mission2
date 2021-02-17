@@ -195,7 +195,7 @@ function Login() {
   async function handleLoginButton(e: any) {
     e.preventDefault();
     try {
-      const response = await axios.post(`http://localhost:8080/api/authenticate`,
+      const response = await axios.post(`/api/authenticate`,
         { username: username, password: password },
         {
           headers: {

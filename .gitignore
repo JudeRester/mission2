@@ -57,3 +57,5 @@ build/
 /frontend/yarn-error.log*
 /frontend/.eslintcache
 frontend2/.eslintcache
+frontend2 가상본
+frontend2/static 가상본

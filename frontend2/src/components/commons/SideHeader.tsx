@@ -176,7 +176,7 @@ export default function SideHeader(props: any) {
   const [crt, setCrt] = useState({ pageNum: 1, amount: 10 })
   const [isSearch, setIsSearch] = useState<boolean>(false)
   const [contents, setContents] = useState<Array<Asset>>([]);
-  const [pageNum, setPageNum] = useState<number>(1);
+  const [pageNum, setPageNum] = useState<number>();
   const [pageInfo, setPageInfo] = useState<Page>();
   const [searchWindowOpen, setSearchWindowOpen] = useState<boolean>(false)
   const handleCheck = (value: string) => () => {
@@ -240,8 +240,14 @@ export default function SideHeader(props: any) {
   const searchInputKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      setIsSearch(true);
       setPageNum(1)
+      
     }
+  }
+  const handlerSearchButtonClick = () =>{
+    setIsSearch(true);
+    setPageNum(1)
   }
   const search = () => {
     let categoryList: Array<string> = [];
@@ -252,7 +258,6 @@ export default function SideHeader(props: any) {
         axios.get(`/api/search?${setData()}`)
           .then(response => {
             setContents(response.data.result)
-            setIsSearch(true);
             setSearchWindowOpen(true)
             setPageInfo(response.data.reference)
           })
@@ -402,7 +407,7 @@ export default function SideHeader(props: any) {
         <List>
           <ListItem key={0}>
             <Paper component="form" className={searchClasses.root}>
-              <IconButton onClick={search} className={searchClasses.iconButton} aria-label="search">
+              <IconButton onClick={handlerSearchButtonClick} className={searchClasses.iconButton} aria-label="search">
                 <Search />
               </IconButton>
               <InputBase

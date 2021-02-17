@@ -85,7 +85,7 @@ const SearchWindow = (props: Props) => {
     const [contents, setContents] = useState<Array<Asset>>([]);
     const history = useHistory();
     const toAssetDetail = (assetSeq: number) => {
-        history.push('detail/' + assetSeq)
+        history.push('/detail/' + assetSeq)
         setSearchWindowOpen(false)
     }
 

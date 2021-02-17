@@ -37,6 +37,7 @@ import { useHistory } from "react-router";
 import { saveAs } from 'file-saver';
 import JSZip from "jszip";
 import { promises } from "fs";
+import fileDownload from "js-file-download";
 
 const useStyles = makeStyles(() =>
 ({
@@ -163,16 +164,19 @@ const Info = (props: MatchParams) => {
             }
         )
             .then(response => {
-                history.goBack();
+                history.push("/");
             })
     }
 
     const handleSingleDownload = (fileLocation: string, fileOriginName: string) => () => {
-        axios.get(`${fileLocation}`, {
+        axios.get(`/api/download`, {
             responseType: 'blob',
+            params:{
+                fileLocation
+            }
         })
             .then(response => {
-                saveAs(response.data, fileOriginName);
+                fileDownload(response.data, fileOriginName);
             })
     }
 
@@ -289,28 +293,28 @@ const Info = (props: MatchParams) => {
                         </ListItem>
                         <Collapse in={isOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <ListItem key="download" role="selected-download" style={{ height: 42, textAlign: 'center' }}>
+                                {/* <ListItem key="download" role="selected-download" style={{ height: 42, textAlign: 'center' }}>
                                     <ListItemText>
                                         <Button endIcon={<GetApp />} size="large" onClick={handleMultiDownloadAsZip}>선택파일 다운로드</Button>
                                     </ListItemText>
-                                </ListItem>
+                                </ListItem> */}
                                 {assetInfo.assetFiles.map((file, i) => {
                                     const labelId = `checkbox-list-label-${i}`;
                                     const fileLocation = file.assetLocation.substring(file.assetLocation.lastIndexOf("/uploadedImages"));
                                     return (
                                         <ListItem key={i} role={undefined} dense button onClick={handleToggle(`${fileLocation},${file.assetOriginName}`)}>
-                                            <ListItemIcon>
+                                            {/* <ListItemIcon>
                                                 <Checkbox
                                                     edge="start"
                                                     checked={checked.indexOf(`${fileLocation},${file.assetOriginName}`) !== -1}
                                                     tabIndex={-1}
                                                     disableRipple
                                                     inputProps={{ 'aria-labelledby': labelId }}
-                                                />
-                                            </ListItemIcon>
+                                                /> 
+                                            </ListItemIcon> */}
                                             <ListItemText id={labelId} primary={`${file.assetOriginName}`} />
                                             <ListItemSecondaryAction>
-                                                <IconButton edge="end" aria-label="comments" onClick={handleSingleDownload(fileLocation, file.assetOriginName)}>
+                                                <IconButton edge="end" aria-label="comments" onClick={handleSingleDownload(file.assetLocation, file.assetOriginName)}>
                                                     <GetApp />
                                                 </IconButton>
                                             </ListItemSecondaryAction>

@@ -1,13 +1,17 @@
 package com.malgn.mission2.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.servlet.http.HttpServletResponse;
 
 import com.malgn.mission2.domain.asset.Asset;
 import com.malgn.mission2.domain.asset.AssetFile;
@@ -39,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.OutputStream;
+
 @RestController
 @RequestMapping("/api")
 public class AssetController {
@@ -67,7 +73,7 @@ public class AssetController {
         // 운영체제 별 경로
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win"))
-            path = "d:" + path;
+            path = "c:" + path;
         else if (os.contains("mac"))
             path = System.getProperty("user.home") + path;
         // 운영체제 별 경로 end
@@ -131,7 +137,7 @@ public class AssetController {
         // 운영체제 별 경로
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win"))
-            path = "d:" + path;
+            path = "c:" + path;
         else if (os.contains("mac"))
             path = System.getProperty("user.home") + path;
         // 운영체제 별 경로 end
@@ -297,5 +303,29 @@ public class AssetController {
         Response<List<Asset>, Object> res = new Response<>();
         res = res.success(list, new Page(crt, service.searchTotal(src)));
         return res;
+    }
+
+    @GetMapping(path = "/download")
+    public void downloadFile(@RequestParam("fileLocation") String fileLocation, HttpServletResponse response)
+            throws IOException {
+        response.setHeader("Content-Transfer-Encoding", "binary");
+        response.setHeader("Content-Type", "application/octet-stream");
+        // response.setHeader("Content-Length", fileLength);
+        response.setHeader("Pragma", "no-cache;");
+        response.setHeader("Expires", "-1;");
+
+        OutputStream os = response.getOutputStream();
+        FileInputStream fis = new FileInputStream(fileLocation);
+
+        int readCount = 0;
+        byte[] buffer = new byte[1024];
+
+        while ((readCount = fis.read(buffer)) != -1) {
+            os.write(buffer, 0, readCount);
+        }
+
+        fis.close();
+        os.close();
+
     }
 }
