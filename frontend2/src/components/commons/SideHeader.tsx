@@ -408,7 +408,7 @@ export default function SideHeader(props: any) {
                 onClose={handleAdminMenuClose}
                 TransitionComponent={Fade}
               >
-                <MenuItem onClick={handleAdminMenuClose}><Link to="/upload" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
+                <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/member" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
                 <MenuItem onClick={handleAdminMenuClose}>Logout</MenuItem>
               </Menu></>:null}
             <Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button>

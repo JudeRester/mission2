@@ -11,6 +11,7 @@ import Detail from './detail';
 import Modify from './modify';
 import Drawer from './commons/SideHeader';
 import SideHeader from './commons/SideHeader';
+import MemberManager from './admin/MemberManager';
 
 const Pages = (props: any) => {
     const user = useSelector((state: RootState) => state.member)
@@ -32,6 +33,10 @@ const Pages = (props: any) => {
                     <Route path="/upload" component={Upload} />
                     <Route path="/detail/:assetSeq" component={Detail} />
                     <Route path="/modify/:assetSeq" component={Modify} />
+                    {sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')).userRole === "ROLE_ADMIN" && <>
+                        <Route path="/admin/member" component={MemberManager} />
+                        <Route path="/admin/category"/>
+                    </> : null}
                 </SideHeader>
             </BrowserRouter>
         )
