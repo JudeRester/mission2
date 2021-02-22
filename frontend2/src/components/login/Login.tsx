@@ -205,6 +205,7 @@ function Login() {
         });
       history.push("/");
       dispatch(login({userId:'', isLogined:true}))
+      sessionStorage.setItem("userInfo",`{"userId":"${response.headers.userid}", "userRole":"${response.headers.userrole}"}`)
       sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
     } catch (err) {
       setIsLoginSuccess(false)

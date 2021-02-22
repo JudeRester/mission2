@@ -38,6 +38,8 @@ import { saveAs } from 'file-saver';
 import JSZip from "jszip";
 import { promises } from "fs";
 import fileDownload from "js-file-download";
+import { useSelector } from "react-redux";
+import { RootState } from "../../modules";
 
 const useStyles = makeStyles(() =>
 ({
@@ -98,6 +100,12 @@ const Info = (props: MatchParams) => {
     const [checked, setChecked] = useState<Array<string>>([]);
     const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
     const [downloadOpen, setDownloadOpen] = useState<boolean>(false)
+    const [alertOpen, setAlertOpen] = useState<boolean>(false)
+    const [alertMessage, setAlertMessage] = useState<string>('')
+    let user;
+    if(sessionStorage.getItem('userInfo')){
+        user = JSON.parse(sessionStorage.getItem('userInfo'))
+    }
     const handleClick = () => {
         setIsOpen(!isOpen);
     };
@@ -154,6 +162,13 @@ const Info = (props: MatchParams) => {
     const handleDeleteClose = () => {
         setDeleteOpen(false)
     }
+    const handleAlertOpen = () => {
+        setAlertOpen(true)
+    }
+
+    const handleAlertClose = () => {
+        setAlertOpen(false)
+    }
 
     const handleDeleteConfirm = () => {
         axios.delete(`/api/asset/${assetSeq}`,
@@ -164,7 +179,14 @@ const Info = (props: MatchParams) => {
             }
         )
             .then(response => {
-                history.push("/");
+                const data = response.data;
+                if(data.code === 403){
+                    setDeleteOpen(false)
+                    setAlertMessage(data.result)
+                    setAlertOpen(true)
+                }else{
+                    history.push("/");
+                }
             })
     }
 
@@ -281,7 +303,7 @@ const Info = (props: MatchParams) => {
                             </TableRow>
                         </Table>
                         <Button onClick={goModify} color="primary">수정</Button>
-                        <Button onClick={handleDeleteOpen} color="secondary">삭제</Button>
+                        {(user.userRole==="ROLE_ADMIN" || user.userId === assetInfo.assetOwner) && <Button onClick={handleDeleteOpen} color="secondary">삭제</Button>}
                     </Grid>
                     <Grid item xs={12}>
                         <Divider />
@@ -363,6 +385,21 @@ const Info = (props: MatchParams) => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleDownloadClose} color="secondary">
+                        확인
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={alertOpen}
+                onClose={handleAlertOpen}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{alertMessage}</DialogTitle>
+               
+                <DialogActions>
+                    <Button onClick={handleAlertClose} color="secondary">
                         확인
                     </Button>
                 </DialogActions>

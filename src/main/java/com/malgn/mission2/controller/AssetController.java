@@ -229,11 +229,11 @@ public class AssetController {
             Authentication auth) {
         UserInfo user = (UserInfo) auth.getPrincipal();
         Response<Object, Object> res = new Response<>();
-        if (user.getUserId().equals(assetOwner)) {
+        if (user.getUserId().equals(assetOwner) || user.getUserRole().equals("ROLE_ADMIN")) {
             service.deleteAsset(assetSeq);
             res = res.success("삭제 성공", null);
         } else {
-            res.failed("권한이 없습니다", null);
+            res = res.failed("권한이 없습니다", null);
         }
         return res;
     }

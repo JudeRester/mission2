@@ -7,6 +7,8 @@ import com.malgn.mission2.domain.UserInfo;
 import com.malgn.mission2.service.JwtUserDetailsService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,7 +38,12 @@ public class JwtAuthenticationController {
         final UserInfo userDetails = (UserInfo) userDetailsService
                 .loadUserByUsername(authenticationRequest.getUsername());
         final String token = jwtTokenUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new JwtResponse(token));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("userId", userDetails.getUserId());
+        headers.add("userRole", userDetails.getUserRole());
+
+        return new ResponseEntity<>(new JwtResponse(token), headers, HttpStatus.OK);
     }
 
     private void authenticate(String username, String password) throws Exception {

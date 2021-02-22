@@ -14,7 +14,7 @@ public class Response<T, E> {
     }
 
     public Response<T, E> failed(T result, E reference) {
-        return new Response<T, E>(result, reference, "실패", 002);
+        return new Response<T, E>(result, reference, "실패", 403);
     }
 
     public Response(T result, E reference, String message, int code) {

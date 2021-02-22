@@ -14,7 +14,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, InputBase, ListItemSecondaryAction, Paper } from '@material-ui/core';
+import { Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fade, InputBase, ListItemSecondaryAction, Menu, MenuItem, Paper } from '@material-ui/core';
 import SearchWindow from './SearchWindow';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -179,6 +179,17 @@ export default function SideHeader(props: any) {
   const [pageNum, setPageNum] = useState<number>(1);
   const [pageInfo, setPageInfo] = useState<Page>();
   const [searchWindowOpen, setSearchWindowOpen] = useState<boolean>(false)
+  const [adminMenuAnchorEl, setAdminMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+  const adminMenuOpen = Boolean(adminMenuAnchorEl);
+
+  const handleAdminMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAdminMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleAdminMenuClose = () => {
+    setAdminMenuAnchorEl(null);
+  };
+
   const handleCheck = (value: string) => () => {
     const currentIndex = checkedTags.indexOf(value);
     const newChecked = [...checkedTags];
@@ -192,10 +203,10 @@ export default function SideHeader(props: any) {
     setCheckedTags(newChecked);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     search()
-  },[pageNum])
-  
+  }, [pageNum])
+
   useEffect(() => {
     sessionUser = sessionStorage.getItem("sessionUser");
     if (sessionUser) {
@@ -225,9 +236,9 @@ export default function SideHeader(props: any) {
     getParents(categories);
   }, [categories])
 
-  useEffect(()=>{
-    window.onpopstate = (event:any) => { 
-      if(isSearch){
+  useEffect(() => {
+    window.onpopstate = (event: any) => {
+      if (isSearch) {
         setSearchWindowOpen(true)
       }
     }
@@ -241,13 +252,13 @@ export default function SideHeader(props: any) {
     if (e.key === "Enter") {
       e.preventDefault();
       setIsSearch(true);
-      setPageNum(pre=>{return 1})
+      setPageNum(pre => { return 1 })
       search()
     }
   }
-  const handlerSearchButtonClick = () =>{
+  const handlerSearchButtonClick = () => {
     setIsSearch(true);
-    setPageNum(pre=>{return 1})
+    setPageNum(pre => { return 1 })
     search()
   }
   const search = () => {
@@ -275,9 +286,9 @@ export default function SideHeader(props: any) {
           data += `tag=${element}&`
         })
       }
-      if(keyword)
+      if (keyword)
         data += `keyword=${keyword}&`
-      data+=`pageNum=${pageNum}`      
+      data += `pageNum=${pageNum}`
       return data
     }
   }
@@ -336,17 +347,17 @@ export default function SideHeader(props: any) {
     event.preventDefault()
   };
   const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
-    if(nodeId==selectedCategory){
+    if (nodeId == selectedCategory) {
       setSelectedCategory('')
-    }else
+    } else
       setSelectedCategory(nodeId)
   };
 
-  const handleSearchReset = () =>{
+  const handleSearchReset = () => {
     setIsSearch(false)
     setSearchWindowOpen(false)
     setContents([])
-    handleNodeSelect(null,selectedCategory)
+    handleNodeSelect(null, selectedCategory)
     setSelectedCategory('')
     setCheckedTags([])
   }
@@ -356,6 +367,7 @@ export default function SideHeader(props: any) {
     handleSearchReset()
     dispatch(logout());
     sessionStorage.setItem("sessionUser", '');
+    sessionStorage.setItem("userInfo", '');
     console.log('logout');
   }
 
@@ -384,6 +396,21 @@ export default function SideHeader(props: any) {
           <Typography style={{ marginLeft: "auto" }}>
             <Link to="/"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>Home</Button></Link>
             <Link to="/upload"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>파일 업로드</Button></Link>
+            {sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')).userRole==="ROLE_ADMIN" && <>
+              <Button aria-controls="fade-menu" aria-haspopup="true" classes={{text:classes.linkButton}} onClick={handleAdminMenuClick}>
+                관리자 메뉴
+              </Button>
+              <Menu
+                id="fade-menu"
+                anchorEl={adminMenuAnchorEl}
+                keepMounted
+                open={adminMenuOpen}
+                onClose={handleAdminMenuClose}
+                TransitionComponent={Fade}
+              >
+                <MenuItem onClick={handleAdminMenuClose}><Link to="/upload" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
+                <MenuItem onClick={handleAdminMenuClose}>Logout</MenuItem>
+              </Menu></>:null}
             <Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button>
           </Typography>
 
@@ -418,9 +445,9 @@ export default function SideHeader(props: any) {
                 onChange={(e) => { setKeyword(e.target.value) }}
               />
               {isSearch &&
-              <IconButton onClick={handleSearchReset} aria-label="search">
-                <Clear />
-              </IconButton>}
+                <IconButton onClick={handleSearchReset} aria-label="search">
+                  <Clear />
+                </IconButton>}
             </Paper>
           </ListItem>
         </List>
@@ -474,7 +501,7 @@ export default function SideHeader(props: any) {
       >
         <div className={classes.drawerHeader} />
         {!searchWindowOpen ? props.children : (
-          <SearchWindow contents={contents} setSearchWindowOpen={setSearchWindowOpen} setPageNum={setPageNum} pageNum={pageNum} pageInfo={pageInfo}/>
+          <SearchWindow contents={contents} setSearchWindowOpen={setSearchWindowOpen} setPageNum={setPageNum} pageNum={pageNum} pageInfo={pageInfo} />
         )}
       </main>
     </div>
