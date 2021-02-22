@@ -176,7 +176,7 @@ export default function SideHeader(props: any) {
   const [crt, setCrt] = useState({ pageNum: 1, amount: 10 })
   const [isSearch, setIsSearch] = useState<boolean>(false)
   const [contents, setContents] = useState<Array<Asset>>([]);
-  const [pageNum, setPageNum] = useState<number>();
+  const [pageNum, setPageNum] = useState<number>(1);
   const [pageInfo, setPageInfo] = useState<Page>();
   const [searchWindowOpen, setSearchWindowOpen] = useState<boolean>(false)
   const handleCheck = (value: string) => () => {
@@ -241,13 +241,14 @@ export default function SideHeader(props: any) {
     if (e.key === "Enter") {
       e.preventDefault();
       setIsSearch(true);
-      setPageNum(1)
-      
+      setPageNum(pre=>{return 1})
+      search()
     }
   }
   const handlerSearchButtonClick = () =>{
     setIsSearch(true);
-    setPageNum(1)
+    setPageNum(pre=>{return 1})
+    search()
   }
   const search = () => {
     let categoryList: Array<string> = [];
