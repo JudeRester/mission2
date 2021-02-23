@@ -133,10 +133,10 @@ type MatchParams = {
 //style end
 const ModInfo = (props: MatchParams) => {
     const history = useHistory()
-    let sessionUser = sessionStorage.getItem("sessionUser");
+    let token = sessionStorage.getItem("sessionUser");
     const user = useSelector((state: RootState) => state.member)
-    if (sessionUser) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+    if (token) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }
 
     const assetSeq: string = props.assetSeq;
@@ -156,9 +156,9 @@ const ModInfo = (props: MatchParams) => {
     let [assetInfo, setAssetInfo] = useState<Asset>();
 
     useEffect(() => {
-        sessionUser = sessionStorage.getItem("sessionUser");
-        if (sessionUser) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+        token = sessionStorage.getItem("sessionUser");
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
         }
         axios.get(`/api/category/list`)
             .then(response => {

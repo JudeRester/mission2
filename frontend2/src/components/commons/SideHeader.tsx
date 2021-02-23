@@ -112,6 +112,15 @@ const useStylesForSearch = makeStyles((theme: Theme) =>
   }),
 );
 
+function parseJwt(token: string) {
+  var base64Url = token.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+
+  return JSON.parse(jsonPayload);
+};
 
 export default function SideHeader(props: any) {
 
@@ -146,10 +155,10 @@ export default function SideHeader(props: any) {
     assetType: string,
   }
 
-  let sessionUser = sessionStorage.getItem("sessionUser");
+  let token = sessionStorage.getItem("sessionUser");
   const user = useSelector((state: RootState) => state.member)
-  if (sessionUser) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   }
   const useTreeStyles = makeStyles({
     root: {
@@ -208,9 +217,9 @@ export default function SideHeader(props: any) {
   }, [pageNum])
 
   useEffect(() => {
-    sessionUser = sessionStorage.getItem("sessionUser");
-    if (sessionUser) {
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+    token = sessionStorage.getItem("sessionUser");
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }
     axios.get(`/api/category/list`)
       .then(response => {
@@ -262,34 +271,36 @@ export default function SideHeader(props: any) {
     search()
   }
   const search = () => {
-    let categoryList: Array<string> = [];
-    axios.get(`/api/category/list`)
-      .then(response => {
-        if (selectedCategory)
-          categoryList = (findChild(parseStringToNumber(selectedCategory), response.data.result).split('>'));
-        axios.get(`/api/search?${setData()}`)
-          .then(response => {
-            setContents(response.data.result)
-            setSearchWindowOpen(true)
-            setPageInfo(response.data.reference)
+    if (isSearch) {
+      let categoryList: Array<string> = [];
+      axios.get(`/api/category/list`)
+        .then(response => {
+          if (selectedCategory)
+            categoryList = (findChild(parseStringToNumber(selectedCategory), response.data.result).split('>'));
+          axios.get(`/api/search?${setData()}`)
+            .then(response => {
+              setContents(response.data.result)
+              setSearchWindowOpen(true)
+              setPageInfo(response.data.reference)
+            })
+        })
+      const setData = () => {
+        let data: string = ''
+        if (categoryList) {
+          categoryList.forEach((element: any) => {
+            data += `category=${element}&`
           })
-      })
-    const setData = () => {
-      let data: string = ''
-      if (categoryList) {
-        categoryList.forEach((element: any) => {
-          data += `category=${element}&`
-        })
+        }
+        if (checkedTags) {
+          checkedTags.forEach((element: any) => {
+            data += `tag=${element}&`
+          })
+        }
+        if (keyword)
+          data += `keyword=${keyword}&`
+        data += `pageNum=${pageNum}`
+        return data
       }
-      if (checkedTags) {
-        checkedTags.forEach((element: any) => {
-          data += `tag=${element}&`
-        })
-      }
-      if (keyword)
-        data += `keyword=${keyword}&`
-      data += `pageNum=${pageNum}`
-      return data
     }
   }
   const parseStringToNumber = (target: string) => {
@@ -396,8 +407,8 @@ export default function SideHeader(props: any) {
           <Typography style={{ marginLeft: "auto" }}>
             <Link to="/"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>Home</Button></Link>
             <Link to="/upload"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>파일 업로드</Button></Link>
-            {sessionStorage.getItem('userInfo') ? JSON.parse(sessionStorage.getItem('userInfo')).userRole==="ROLE_ADMIN" && <>
-              <Button aria-controls="fade-menu" aria-haspopup="true" classes={{text:classes.linkButton}} onClick={handleAdminMenuClick}>
+            {token ? parseJwt(token).userRole === "ROLE_ADMIN" && <>
+              <Button aria-controls="fade-menu" aria-haspopup="true" classes={{ text: classes.linkButton }} onClick={handleAdminMenuClick}>
                 관리자 메뉴
               </Button>
               <Menu
@@ -409,9 +420,9 @@ export default function SideHeader(props: any) {
                 TransitionComponent={Fade}
               >
                 <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/member" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
-                <MenuItem onClick={handleAdminMenuClose}>Logout</MenuItem>
-              </Menu></>:null}
-            <Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button>
+                <MenuItem onClick={handleAdminMenuClose}><Link to="/" onClick={handleSearchReset}>카테고리 관리</Link></MenuItem>
+              </Menu></> : null}
+              <Link to="/"><Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button></Link>
           </Typography>
 
         </Toolbar>

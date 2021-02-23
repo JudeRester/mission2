@@ -11,5 +11,21 @@
 		user_id=#{userId}
 	</select>
 	
+	<select id="getList" resultType="User">
+		SELECT * FROM (select user_id, user_name, user_email,user_phone, rownum AS record
+		from
+		(select user_id, user_name, user_email,user_phone from assetuser
+		where user_role!='ROLE_ADMIN' order by user_create_date desc))
+		where record between
+		(#{pageNum}-1)*#{amount}+1 and #{pageNum}*#{amount}
+	</select>
+	
+	<select id="total" resultType="Integer">
+		select count(user_id) from assetuser where user_role!='ROLE_ADMIN'
+	</select>
 
+	<insert id="addUser">
+		insert into assetuser(user_id,user_pass,user_name,user_role,user_email,user_phone)
+		values(#{userId},#{userPass},#{userName},'ROLE_USER',#{userEmail},#{userPhone})
+	</insert>
 </mapper>

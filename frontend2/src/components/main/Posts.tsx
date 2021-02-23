@@ -80,9 +80,9 @@ type MatchParams = {
 
 
 const Posts = (props: MatchParams) => {
-  let sessionUser = sessionStorage.getItem("sessionUser");
-  if (sessionUser) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+  let token = sessionStorage.getItem("sessionUser");
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   }
 
   const [contents, setContents] = useState<Array<Asset>>([]);
@@ -96,10 +96,6 @@ const Posts = (props: MatchParams) => {
 
   const classes = useStyles();
   async function loadContents() {
-    sessionUser = sessionStorage.getItem("sessionUser");
-    if (sessionUser) {
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
-    }
     const response = await axios.get(`/api/list/${pageNum}`)
     const list: Array<Asset> = response.data.result
     setPageInfo(response.data.reference)

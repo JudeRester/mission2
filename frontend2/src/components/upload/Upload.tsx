@@ -131,10 +131,10 @@ color:#fff;
 //style end
 const Upload = () => {
     const history = useHistory()
-    let sessionUser = sessionStorage.getItem("sessionUser");
+    let token = sessionStorage.getItem("sessionUser");
     const user = useSelector((state: RootState) => state.member)
-    if (sessionUser) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+    if (token) {
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }
     let [title, setTitle] = useState<string>();
     let [currentInputTag, setCurrentInputTag] = useState<string>('');
@@ -152,9 +152,9 @@ const Upload = () => {
     let temp: number[]
 
     useEffect(() => {
-        sessionUser = sessionStorage.getItem("sessionUser");
-        if (sessionUser) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + JSON.parse(sessionUser).token;
+        token = sessionStorage.getItem("sessionUser");
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
         }
         axios.get(`/api/category/list`)
             .then(response => {

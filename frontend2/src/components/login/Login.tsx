@@ -5,6 +5,7 @@ import styled from '@emotion/styled'
 import member, { login } from '../../modules/member';
 import { RootState } from '../../modules';
 import { useHistory } from 'react-router';
+import { Switch } from '@material-ui/core';
 
 
 let DivWrapper = styled.div`
@@ -190,7 +191,7 @@ function Login() {
   const history = useHistory();
   let [username, setUsername] = useState("");
   let [password, setPassword] = useState("");
-  let [isLoginSuccess,setIsLoginSuccess]=useState(true);
+  let [isLoginSuccess, setIsLoginSuccess] = useState(true);
   const dispatch = useDispatch();
   async function handleLoginButton(e: any) {
     e.preventDefault();
@@ -204,14 +205,14 @@ function Login() {
           }
         });
       history.push("/");
-      dispatch(login({userId:'', isLogined:true}))
-      sessionStorage.setItem("userInfo",`{"userId":"${response.headers.userid}", "userRole":"${response.headers.userrole}"}`)
-      sessionStorage.setItem("sessionUser", JSON.stringify(response.data));
+      dispatch(login({ userId: '', isLogined: true }))
+      console.log('로그인처리')
+      sessionStorage.setItem("sessionUser", response.data.token);
     } catch (err) {
       setIsLoginSuccess(false)
     }
   }
-
+  
   return (
     <div>
       <DivWrapper>
@@ -231,12 +232,12 @@ function Login() {
                 <InputLogin type="password" className="logininput" value={password} onChange={e => setPassword(e.target.value)} />
                 {/* <SpanLoginFocus></SpanLoginFocus>  */}
               </DivLoginGroup>
-                {!isLoginSuccess ? 
-                  <div style={{color:'red'}}>
-                    로그인에 실패했습니다.
+              {!isLoginSuccess ?
+                <div style={{ color: 'red' }}>
+                  로그인에 실패했습니다.
                   </div> :
-                  null
-                }
+                null
+              }
               <DivButtonWrapper>
                 <ButtonLogin onClick={handleLoginButton}>로그인</ButtonLogin>
               </DivButtonWrapper>
