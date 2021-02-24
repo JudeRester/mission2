@@ -133,7 +133,7 @@ type MatchParams = {
 //style end
 const ModInfo = (props: MatchParams) => {
     const history = useHistory()
-    let token = sessionStorage.getItem("sessionUser");
+    let token = sessionStorage.getItem("current_user_token");
     const user = useSelector((state: RootState) => state.member)
     if (token) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
@@ -156,7 +156,7 @@ const ModInfo = (props: MatchParams) => {
     let [assetInfo, setAssetInfo] = useState<Asset>();
 
     useEffect(() => {
-        token = sessionStorage.getItem("sessionUser");
+        token = sessionStorage.getItem("current_user_token");
         if (token) {
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
         }
@@ -264,7 +264,6 @@ const ModInfo = (props: MatchParams) => {
     }
 
     const handleFileDelete = () => {
-        console.log(fileList[deleteTargetFileIndex])
         axios.delete(`/api/file`,
             {
                 params: {
@@ -324,7 +323,6 @@ const ModInfo = (props: MatchParams) => {
             assetTitle: title,
             assetCategory: selectedCategory
         }
-        console.log(data)
         axios.put(`/api/asset`,
             data
         ).then(result=>{

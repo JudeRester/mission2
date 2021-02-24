@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.malgn.mission2.domain.User;
 import com.malgn.mission2.domain.UserInfo;
+import com.malgn.mission2.domain.UserSearch;
 import com.malgn.mission2.domain.common.Criteria;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -17,4 +18,16 @@ public interface MemberMapper {
     int total();
 
     int addUser(User dto);
+
+    int updateUser(User dto);
+
+    int updateUserNoPass(User dto);
+
+    Integer getHowManyAssetUserHave(String userId);
+
+    int deleteUser(String userId);
+
+    List<User> search(UserSearch src);
+
+    int searchTotal(UserSearch src);
 }

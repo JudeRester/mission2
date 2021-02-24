@@ -24,6 +24,7 @@ import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 
+
 const useStyles = makeStyles(() => ({
   gridList: {
     width: 400,
@@ -80,7 +81,7 @@ type MatchParams = {
 
 
 const Posts = (props: MatchParams) => {
-  let token = sessionStorage.getItem("sessionUser");
+  let token = sessionStorage.getItem("current_user_token");
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   }
@@ -96,6 +97,10 @@ const Posts = (props: MatchParams) => {
 
   const classes = useStyles();
   async function loadContents() {
+    token = sessionStorage.getItem("current_user_token");
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+    }
     const response = await axios.get(`/api/list/${pageNum}`)
     const list: Array<Asset> = response.data.result
     setPageInfo(response.data.reference)
@@ -104,7 +109,7 @@ const Posts = (props: MatchParams) => {
   useEffect(() => {
     loadContents();
   }, [pageNum]);
-  
+
   return (
     <div style={{
       // marginTop: 20, 
@@ -172,7 +177,7 @@ const Posts = (props: MatchParams) => {
             </Card>
           </Grid>
         ))
-        :  (<CircularProgress />)}
+          : (<CircularProgress />)}
       </Grid>
       <Grid>
         {pageInfo && <Pagination classes={{ ul: classes.ul }}
@@ -180,7 +185,7 @@ const Posts = (props: MatchParams) => {
           hidePrevButton={!pageInfo.prev}
           count={pageInfo.endPage}
           page={pageNum}
-         onChange={(e:React.ChangeEvent<unknown>,value:number)=>{setPageNum(value)}}
+          onChange={(e: React.ChangeEvent<unknown>, value: number) => { setPageNum(value) }}
           shape="rounded" />}
       </Grid>
     </div>

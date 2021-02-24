@@ -24,8 +24,72 @@
 		select count(user_id) from assetuser where user_role!='ROLE_ADMIN'
 	</select>
 
+	<select id="getHowManyAssetUserHave" resultType="Integer">
+		select count(*) from asset where asset_owner=#{userId}
+	</select>
+
+	<select id="search" resultType="User">
+		select user_id, user_name, user_email,user_phone, record from
+			(select user_id, user_name, user_email,user_phone,rownum as record from 
+				(select user_id, user_name,
+				user_email,user_phone from assetuser
+				where 
+				user_role!='ROLE_ADMIN' 
+				and
+					<if test='condition != null and "userId".equals(condition)'>
+						user_Id LIKE '%'||#{keyword}||'%'
+					</if>
+					<if test='condition != null and "userName".equals(condition)'>
+						user_Name LIKE '%'||#{keyword}||'%'
+					</if>
+					<if test='condition != null and "userEmail".equals(condition)'>
+						user_Email LIKE '%'||#{keyword}||'%'
+					</if>
+				order by user_create_date desc)
+			)
+		WHERE
+		record BETWEEN
+		(#{crt.pageNum}-1)*#{crt.amount}+1 and #{crt.pageNum}*#{crt.amount}
+	</select>
+	
+	<select id="searchTotal" resultType="Integer">
+		select count(user_id) from assetuser
+		where 
+		user_role!='ROLE_ADMIN' 
+		and
+			<if test='condition != null and "userId".equals(condition)'>
+				user_Id LIKE '%'||#{keyword}||'%'
+			</if>
+			<if test='condition != null and "userName".equals(condition)'>
+				user_Name LIKE '%'||#{keyword}||'%'
+			</if>
+			<if test='condition != null and "userEmail".equals(condition)'>
+				user_Email LIKE '%'||#{keyword}||'%'
+			</if>
+	</select>
+	
+	
 	<insert id="addUser">
 		insert into assetuser(user_id,user_pass,user_name,user_role,user_email,user_phone)
 		values(#{userId},#{userPass},#{userName},'ROLE_USER',#{userEmail},#{userPhone})
 	</insert>
+
+	<update id="updateUser">
+		update assetuser set
+		user_pass=#{userPass}
+		,user_name=#{userName}
+		,user_email=#{userEmail}
+		,user_phone=#{userPhone}
+		where user_id=#{userId}
+	</update>
+	<update id="updateUserNoPass">
+		update assetuser set
+		user_name=#{userName}
+		,user_email=#{userEmail}
+		,user_phone=#{userPhone}
+		where user_id=#{userId}
+	</update>
+	<update id="deleteUser">
+		delete assetuser WHERE user_id=#{userId}
+	</update>
 </mapper>

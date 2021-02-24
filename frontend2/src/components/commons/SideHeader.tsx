@@ -155,7 +155,7 @@ export default function SideHeader(props: any) {
     assetType: string,
   }
 
-  let token = sessionStorage.getItem("sessionUser");
+  let token = sessionStorage.getItem("current_user_token");
   const user = useSelector((state: RootState) => state.member)
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
@@ -217,7 +217,7 @@ export default function SideHeader(props: any) {
   }, [pageNum])
 
   useEffect(() => {
-    token = sessionStorage.getItem("sessionUser");
+    token = sessionStorage.getItem("current_user_token");
     if (token) {
       axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }
@@ -377,9 +377,7 @@ export default function SideHeader(props: any) {
   const logoutHandler = () => {
     handleSearchReset()
     dispatch(logout());
-    sessionStorage.setItem("sessionUser", '');
-    sessionStorage.setItem("userInfo", '');
-    console.log('logout');
+    sessionStorage.setItem("current_user_token", '');
   }
 
   return (
@@ -420,7 +418,7 @@ export default function SideHeader(props: any) {
                 TransitionComponent={Fade}
               >
                 <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/member" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
-                <MenuItem onClick={handleAdminMenuClose}><Link to="/" onClick={handleSearchReset}>카테고리 관리</Link></MenuItem>
+                <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/category" onClick={handleSearchReset}>카테고리 관리</Link></MenuItem>
               </Menu></> : null}
               <Link to="/"><Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button></Link>
           </Typography>

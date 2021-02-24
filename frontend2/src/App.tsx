@@ -13,7 +13,6 @@ function App() {
   const store = createStore(rootReducer
     //, devTools
   )
-  console.log(store.getState())
   
   return (
     <div className="App">

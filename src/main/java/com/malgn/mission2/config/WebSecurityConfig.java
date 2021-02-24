@@ -64,7 +64,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers("/").permitAll().and().authorizeRequests()
                 .antMatchers("/api/authenticate").permitAll().
                 // all other requests need to be authenticated
-                and().authorizeRequests().antMatchers("/api/**").authenticated().and().
+                and().authorizeRequests().antMatchers("/api/member/**").hasRole("ADMIN").and().authorizeRequests()
+                .antMatchers("/api/**").authenticated().and().
                 // stateless session
                 exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

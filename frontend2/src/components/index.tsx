@@ -12,6 +12,7 @@ import Modify from './modify';
 import Drawer from './commons/SideHeader';
 import SideHeader from './commons/SideHeader';
 import MemberManager from './admin/MemberManager';
+import CategoryManager from './admin/CategoryManager';
 function parseJwt(token: string) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -25,11 +26,11 @@ const Pages = (props: any) => {
     const user = useSelector((state: RootState) => state.member)
     const dispatch = useDispatch();
     const [isAdminLogined, setIsAdminLogined] = useState(false)
-    let token = sessionStorage.getItem('sessionUser')
+    let token = sessionStorage.getItem('current_user_token')
     useEffect(() => {
         if (token && !user.isLogined) {
-            dispatch(login({ userId: '', isLogined: true }));
-            token = sessionStorage.getItem('sessionUser')
+            token = sessionStorage.getItem('current_user_token')
+            dispatch(login({ userId: '',userRole: parseJwt(token).userRole , isLogined: true }));
         }
     }, [user])
     return !user.isLogined ? (
@@ -42,10 +43,10 @@ const Pages = (props: any) => {
                     <Route path="/upload" component={Upload} />
                     <Route path="/detail/:assetSeq" component={Detail} />
                     <Route path="/modify/:assetSeq" component={Modify} />
-                    { token ? parseJwt(token).userRole === "ROLE_ADMIN" && <>
+                    { user.userRole === "ROLE_ADMIN" && <>
                         <Route path="/admin/member" component={MemberManager} />
-                        <Route path="/admin/category"/>
-                    </> : null}
+                        <Route path="/admin/category" component={CategoryManager}/>
+                    </>}
                 </SideHeader>
             </BrowserRouter>
         )

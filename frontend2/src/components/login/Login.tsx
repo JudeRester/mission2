@@ -186,7 +186,15 @@ transition: all 0.4s;
 
 
 //style end
+function parseJwt(token: string) {
+  var base64Url = token.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
 
+  return JSON.parse(jsonPayload);
+};
 function Login() {
   const history = useHistory();
   let [username, setUsername] = useState("");
@@ -204,10 +212,9 @@ function Login() {
             'Access-Control-Allow-Origin': '*'
           }
         });
+      dispatch(login({ userId: parseJwt(response.data.token).sub ,userRole: parseJwt(response.data.token).userRole, isLogined: true }))
+      sessionStorage.setItem("current_user_token", response.data.token);
       history.push("/");
-      dispatch(login({ userId: '', isLogined: true }))
-      console.log('로그인처리')
-      sessionStorage.setItem("sessionUser", response.data.token);
     } catch (err) {
       setIsLoginSuccess(false)
     }

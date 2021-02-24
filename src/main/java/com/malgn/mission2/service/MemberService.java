@@ -5,6 +5,7 @@ import java.util.List;
 import com.malgn.mission2.mapper.MemberMapper;
 import com.malgn.mission2.domain.User;
 import com.malgn.mission2.domain.UserInfo;
+import com.malgn.mission2.domain.UserSearch;
 import com.malgn.mission2.domain.common.Criteria;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,4 +40,28 @@ public class MemberService {
         return mapper.addUser(dto);
     }
 
+    public int updateUser(User dto) {
+        dto.setUserPass(passwordEncoder().encode(dto.getUserPass()));
+        return mapper.updateUser(dto);
+    }
+
+    public int updateUserNoPass(User dto) {
+        return mapper.updateUserNoPass(dto);
+    }
+
+    public Integer getHowManyAssetUserHave(String userId) {
+        return mapper.getHowManyAssetUserHave(userId);
+    }
+
+    public int deleteUser(String userId) {
+        return mapper.deleteUser(userId);
+    }
+
+    public List<User> search(UserSearch src) {
+        return mapper.search(src);
+    }
+
+    public int searchTotal(UserSearch src) {
+        return mapper.searchTotal(src);
+    }
 }

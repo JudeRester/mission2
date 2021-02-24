@@ -97,7 +97,7 @@ function parseJwt(token: string) {
   };
 
 const Info = (props: MatchParams) => {
-    const token = sessionStorage.getItem("sessionUser");
+    const token = sessionStorage.getItem("current_user_token");
     if (token) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }

@@ -7,8 +7,7 @@ const Header = () => {
     const dispatch = useDispatch()
     const logoutHandler = () =>{
         dispatch(logout());
-        sessionStorage.setItem("sessionUser", '');
-        console.log('logout');
+        sessionStorage.setItem("current_user_token", '');
     }
     
     return (

@@ -131,7 +131,7 @@ color:#fff;
 //style end
 const Upload = () => {
     const history = useHistory()
-    let token = sessionStorage.getItem("sessionUser");
+    let token = sessionStorage.getItem("current_user_token");
     const user = useSelector((state: RootState) => state.member)
     if (token) {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
@@ -152,7 +152,7 @@ const Upload = () => {
     let temp: number[]
 
     useEffect(() => {
-        token = sessionStorage.getItem("sessionUser");
+        token = sessionStorage.getItem("current_user_token");
         if (token) {
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
         }
