@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "../../../util/api";
 
 import {
     Card,
@@ -86,8 +87,12 @@ const Categories = () => {
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     }
     useEffect(()=>{
-         axios.get(`/api/category/list`)
+         api({
+                url: '/category/list',
+                method: 'get'
+            })
         .then(response => {
+            console.log(response)
             setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
         })
     })
