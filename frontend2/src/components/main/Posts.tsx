@@ -21,8 +21,11 @@ import { Pagination, PaginationItem, PaginationItemTypeMap } from '@material-ui/
 import axios from 'axios';
 import moment from 'moment';
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
+import { RootState } from '../../modules';
+import api, { BASE_API_URL } from '../../util/api';
 
 
 const useStyles = makeStyles(() => ({
@@ -81,15 +84,13 @@ type MatchParams = {
 
 
 const Posts = (props: MatchParams) => {
-  let token = sessionStorage.getItem("current_user_token");
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-  }
 
   const [contents, setContents] = useState<Array<Asset>>([]);
   const [pageNum, setPageNum] = useState<number>(1);
   const [pageInfo, setPageInfo] = useState<Page>();
   const history = useHistory();
+  const user = useSelector((state:RootState)=>state.member)
+  api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
   const toAssetDetail = (assetSeq: number) => {
     history.push('/detail/' + assetSeq)
   }
@@ -97,11 +98,7 @@ const Posts = (props: MatchParams) => {
 
   const classes = useStyles();
   async function loadContents() {
-    token = sessionStorage.getItem("current_user_token");
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
-    const response = await axios.get(`/api/list/${pageNum}`)
+    const response = await api.get(`/list/${pageNum}`)
     const list: Array<Asset> = response.data.result
     setPageInfo(response.data.reference)
     setContents(list)
@@ -124,17 +121,17 @@ const Posts = (props: MatchParams) => {
                   post.assetFiles.map((assetFile, i) => {
                     let type = assetFile.assetType
                     let location = assetFile.assetLocation
-                    let imgUrl;
+                    let imgUrl=BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'));
                     if (!type) {
-                      imgUrl = '/images/unsupportedFile.png'
+                      imgUrl += '/images/unsupportedFile.png'
                     } else if (type.includes('image')) {
-                      imgUrl = `/uploadedImages/thumb${location.substring(location.lastIndexOf("/uploadedImages") + 15)}`
+                      imgUrl += `/uploadedImages/thumb${location.substring(location.lastIndexOf("/uploadedImages") + 15)}`
                     } else if (type.includes('video')) {
-                      imgUrl = '/images/videoFile.png'
+                      imgUrl += '/images/videoFile.png'
                     } else if (type.includes('audio')) {
-                      imgUrl = '/images/audioFile.png'
+                      imgUrl += '/images/audioFile.png'
                     } else {
-                      imgUrl = '/images/unsupportedFile.png'
+                      imgUrl += '/images/unsupportedFile.png'
                     }
                     return (
                       (post.locationArray.length < 3) ?

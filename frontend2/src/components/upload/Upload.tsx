@@ -9,6 +9,7 @@ import { Avatar, Box, Button, CircularProgress, colors, Dialog, DialogActions, D
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
+import api from '../../util/api';
 //style 
 
 let DivWrapper = styled.div`
@@ -131,11 +132,8 @@ color:#fff;
 //style end
 const Upload = () => {
     const history = useHistory()
-    let token = sessionStorage.getItem("current_user_token");
     const user = useSelector((state: RootState) => state.member)
-    if (token) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
     let [title, setTitle] = useState<string>();
     let [currentInputTag, setCurrentInputTag] = useState<string>('');
     let [tags, setTags] = useState<Array<string>>([]);
@@ -152,11 +150,8 @@ const Upload = () => {
     let temp: number[]
 
     useEffect(() => {
-        token = sessionStorage.getItem("current_user_token");
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-        }
-        axios.get(`/api/category/list`)
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+        api.get(`/category/list`)
             .then(response => {
                 setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
             })
@@ -242,7 +237,7 @@ const Upload = () => {
                         "assetType": filesState[index].type,
                         "category": selectedCategory
                     }
-                    const result = await axios.post(`/api/prelargefile`,
+                    const result = await api.post(`/prelargefile`,
                         data
                     )
                     data["assetUuidName"] = result.data.result.assetUuidName;
@@ -254,7 +249,7 @@ const Upload = () => {
                         try {
                             setProgresses(pre => { pre[index] = Math.round(100 / chunks.length * i); return pre })
                             setNewProgresses([...progresses])
-                            const result = await axios.post(`/api/largefile`,
+                            const result = await api.post(`/largefile`,
                                 chunks[i],
                                 {
                                     params: data,
@@ -272,7 +267,7 @@ const Upload = () => {
                         formData.append("assetSeq", '' + seq);
                         formData.append("assetType", filesState[index].type);
                         formData.append("category", selectedCategory)
-                        await axios.post(`/api/file`,
+                        await api.post(`/file`,
                             formData,
                             {
                                 onUploadProgress: ProgressEvent => {
@@ -300,7 +295,7 @@ const Upload = () => {
    
     const fileUploadComplete = async (seq: number) => {
         try {
-            await axios.post(`/api/complete`,
+            await api.post(`/complete`,
                 { assetSeq: seq, tags: tags.toString() },
                 {
                     headers: {
@@ -322,7 +317,7 @@ const Upload = () => {
         if (filesState.length != 0 && title && selectedCategory) {
             let data = { assetTitle: title, assetCategory: selectedCategory }
             try {
-                const response = await axios.post(`/api/asset`,
+                const response = await api.post(`/asset`,
                     data,
                     {
                         headers: {

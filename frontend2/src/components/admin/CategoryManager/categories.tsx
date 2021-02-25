@@ -1,23 +1,23 @@
-import axios from "axios";
 import api from "../../../util/api";
 
 import {
     Card,
     CardHeader,
-    Button,
     Paper,
     makeStyles,
     CardContent,
-    TableContainer,
     Grid,
     ListItem,
     List,
-    CircularProgress
+    CircularProgress,
+    fade,
 } from "@material-ui/core";
 import arrayToTree from "array-to-tree";
 import React, { useEffect, useState } from "react";
 import { TreeItem, TreeView } from "@material-ui/lab";
-import { Category } from "@material-ui/icons";
+import { ChevronRight, ExpandMore, SubdirectoryArrowRight } from "@material-ui/icons";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../modules";
 
 const useStyles = makeStyles(() => ({
     addButton: {
@@ -36,8 +36,8 @@ const useStyles = makeStyles(() => ({
     },
     root: {
         padding: '2px 4px',
-        display: 'flex',
         alignItems: 'center',
+        // display:'flex',
         width: 400,
     },
     input: {
@@ -58,6 +58,22 @@ const useStyles = makeStyles(() => ({
     selectEmpty: {
         marginTop: 2,
     },
+    elevation4: {
+        boxShadow: "inset 0px 2px 4px -1px rgb(0 0 0 / 20%), inset 0px 4px 5px 0px rgb(0 0 0 / 14%), inset 0px 1px 10px 0px rgb(0 0 0 / 12%) !important"
+    },
+    paperRoot: {
+        padding: 10,
+        width: '100%',
+        minHeight: '500px',
+        overflow: "scroll"
+    },
+    paperInfo: {
+        margin: 10,
+        padding: 10,
+        width: '100%',
+        minHeight: '230px',
+        overflow: "scroll"
+    },
 }))
 
 interface TreeViews {
@@ -67,7 +83,7 @@ interface TreeViews {
 }
 interface CategoryProps {
     category: TreeViews
-  }
+}
 const useTreeStyles = makeStyles({
     root: {
         height: 240,
@@ -78,73 +94,111 @@ const useTreeStyles = makeStyles({
     label: {
         textAlign: 'left'
     },
+    group: {
+        marginLeft: 7,
+        paddingLeft: 18,
+        borderLeft: `1px dashed ${fade('#000000', 0.4)}`,
+    },
+    iconContainer: {
+        "& svg": {
+            marginLeft: 10
+        }
+    }
 });
 
 
 const Categories = () => {
-    let token = sessionStorage.getItem("current_user_token");
-    if (token) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
-    useEffect(()=>{
-         api({
-                url: '/category/list',
-                method: 'get'
-            })
-        .then(response => {
-            console.log(response)
-            setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
-        })
-    })
-   
+    useEffect(() => {
+        loadCategories()
+    }, [])
 
-    let [categories, setCategories] = useState([]);
+    const user = useSelector((state: RootState) => state.member)
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+    let [arrayCategories, setArrayCategories] = useState([]);
+    let [treeCategories, setTreeCategories] = useState([]);
     let [selectedCategory, setSelectedCategory] = useState<string>();
-    let [categoriesHavingChild, setCategoriesHavingChild] = useState<Array<string>>();
+    let [expendedCategory, setExpendedCategory] = useState<Array<string>>();
 
     const treeClasses = useTreeStyles();
     const classes = useStyles();
-    
+
+    const loadCategories = async () => {
+        const response = await api.get('/category/list')
+        setArrayCategories(response.data.result)
+    }
+
     useEffect(() => {
         let tempArray: Array<string> = [];
         async function getParents(array: Array<TreeViews>) {
-          await array.map((node: TreeViews) => {
-            if (node.children) {
-              tempArray.push(node.categoryId + '');
-              getParents(node.children);
-            }
-          });
-          setCategoriesHavingChild(tempArray)
+            await array.map((node: TreeViews) => {
+                if (node.children) {
+                    tempArray.push(node.categoryId + '');
+                    getParents(node.children);
+                }
+            });
+            setExpendedCategory([...tempArray,"0"])
         };
-        getParents(categories);
-      }, [categories])
+        getParents(treeCategories);
+    }, [treeCategories])
 
+    useEffect(() => {
+        setTreeCategories(arrayToTree(arrayCategories, { parentProperty: 'categoryParent', customID: 'categoryId' }))
+    }, [arrayCategories])
     const handleToggle = (event: any, nodeIds: string[]) => {
         event.preventDefault()
-      };
-      const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
-        if (nodeId == selectedCategory) {
-          setSelectedCategory('')
+    };
+    const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
+        if (nodeId === selectedCategory) {
+            setSelectedCategory('')
         } else
-          setSelectedCategory(nodeId)
-      };
+            setSelectedCategory(nodeId)
+    };
+
+
 
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId + ''} label={nodes.categoryName} classes={{ label: treeClasses.label }}>
+        <TreeItem
+            key={nodes.categoryId}
+            nodeId={nodes.categoryId + ''}
+            label={nodes.categoryName}
+            onIconClick={() => handleTreeIconClick(nodes.categoryId + '')}
+            classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
+            onLabelClick={() => handleTreeLabelClick(nodes.categoryId + '')}
+            endIcon={<SubdirectoryArrowRight />}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
 
     const Category = ({ category }: CategoryProps) => {
         useEffect(() => {
-    
+
         }, [category]);
         return renderTrees(category);
-      }
+    }
 
+    const handleTreeIconClick = (nodeId: string) => {
+        const targetIndex = expendedCategory.findIndex((e: string) => e === nodeId);
+        targetIndex === -1 ?
+            setExpendedCategory(pre => {
+                let temp: string[] = [...pre];
+                temp = [...temp, nodeId]
+                return temp
+            })
+            : setExpendedCategory(pre => {
+                let temp: string[] = [...pre];
+                temp.splice(targetIndex, 1)
+                return temp;
+            })
+    }
+
+    const handleTreeLabelClick = async (nodeId: string) => {
+        const response= await api.get(`/category/${nodeId}`)
+        console.log(response)
+        const index = arrayCategories.findIndex((element:any)=>element.categoryId+''===nodeId)
+    }
     return (
         <>
-            <Paper>
+            <Paper style={{ maxWidth: 1024, margin: "auto" }}>
                 <Card>
                     <CardHeader
                         avatar={
@@ -154,34 +208,51 @@ const Categories = () => {
                         }
                     />
                     <CardContent>
-                        <Grid container>
-                            <Grid item>
+                        <Grid container direction="row">
+                            <Grid item xs={6}>
                                 <List>
                                     <ListItem key={1}>
-                                        {categories.length > 0 ? (
-                                            <TreeView
-                                                onNodeToggle={handleToggle}
-                                                onNodeSelect={handleNodeSelect}
-                                                className={classes.root}
-                                                // defaultCollapseIcon={<ExpandMore />}
-                                                // defaultExpandIcon={<ChevronRight />}
-                                                expanded={categoriesHavingChild}
-                                            >
-                                                <div>
-                                                    {categories.map((category: TreeViews) => {
-                                                        return <Category key={category.categoryId} category={category} />
-                                                    })}
-                                                </div>
-                                            </TreeView>
-                                        ) :
-                                            (<CircularProgress />)
-                                        }
+                                        <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperRoot }}>
+                                            {treeCategories.length > 0 ? (
+                                                <TreeView
+                                                    onNodeToggle={handleToggle}
+                                                    onNodeSelect={handleNodeSelect}
+                                                    className={classes.root}
+                                                    defaultCollapseIcon={<ExpandMore />}
+                                                    defaultExpandIcon={<ChevronRight />}
+                                                    expanded={expendedCategory}
+                                                >
+                                                    <TreeItem
+                                                        key={"0"}
+                                                        nodeId={"0"}
+                                                        label={"전체 보기"}
+                                                        onIconClick={() => handleTreeIconClick("0")}
+                                                        classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
+                                                        onLabelClick={() => handleTreeLabelClick("0")}
+                                                        endIcon={<SubdirectoryArrowRight />}>
+                                                        {treeCategories.map((category: TreeViews) => {
+                                                            return <Category key={category.categoryId} category={category} />
+                                                        })}
+                                                    </TreeItem>
+                                                </TreeView>
+                                            ) :
+                                                (<CircularProgress />)
+                                            }
+                                        </Paper>
                                     </ListItem>
                                 </List>
                             </Grid>
-                            <Grid container direction="column">
-                                <Grid item>hi</Grid>
-                                <Grid item>bye</Grid>
+                            <Grid container style={{ padding: 10 }} item xs={6} direction="column" >
+                                <Grid item>
+                                    <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperInfo }}>
+
+                                    </Paper>
+                                </Grid>
+                                <Grid item>
+                                    <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperInfo }}>
+                                        카테고리 추가?
+                                </Paper>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </CardContent>

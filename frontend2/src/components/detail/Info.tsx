@@ -40,6 +40,7 @@ import { promises } from "fs";
 import fileDownload from "js-file-download";
 import { useSelector } from "react-redux";
 import { RootState } from "../../modules";
+import api, { BASE_API_URL } from "../../util/api";
 
 const useStyles = makeStyles(() =>
 ({
@@ -97,10 +98,6 @@ function parseJwt(token: string) {
   };
 
 const Info = (props: MatchParams) => {
-    const token = sessionStorage.getItem("current_user_token");
-    if (token) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
     const history = useHistory();
     const assetSeq: string = props.assetSeq;
     const classes = useStyles();
@@ -112,8 +109,8 @@ const Info = (props: MatchParams) => {
     const [downloadOpen, setDownloadOpen] = useState<boolean>(false)
     const [alertOpen, setAlertOpen] = useState<boolean>(false)
     const [alertMessage, setAlertMessage] = useState<string>('')
-    let user={userId:parseJwt(token).sub,userRole:parseJwt(token).userRole};
-   
+    const user=useSelector((state:RootState)=>state.member);
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
     const handleClick = () => {
         setIsOpen(!isOpen);
     };
@@ -121,10 +118,10 @@ const Info = (props: MatchParams) => {
 
 
     useEffect(() => {
-        axios.get(`/api/asset/${assetSeq}`
+        api.get(`/asset/${assetSeq}`
         ).then(result => {
             setAssetInfo(result.data.result);
-            axios.get(`/api/category/list`)
+            api.get(`/category/list`)
                 .then(response => {
                     setParentCategory(findParent(result.data.result.assetCategory, response.data.result))
                 })
@@ -179,7 +176,7 @@ const Info = (props: MatchParams) => {
     }
 
     const handleDeleteConfirm = () => {
-        axios.delete(`/api/asset/${assetSeq}`,
+        api.delete(`/asset/${assetSeq}`,
             {
                 params: {
                     assetOwner: assetInfo.assetOwner
@@ -199,7 +196,7 @@ const Info = (props: MatchParams) => {
     }
 
     const handleSingleDownload = (fileLocation: string, fileOriginName: string) => () => {
-        axios.get(`/api/download`, {
+        api.get(`/download`, {
             responseType: 'blob',
             params:{
                 fileLocation
@@ -221,7 +218,7 @@ const Info = (props: MatchParams) => {
             
             for (let i = 0; i < checked.length; i++) {
                 let fileInfo = checked[i].split(',')
-                await axios.get(`${fileInfo[0]}`,
+                await api.get(`${fileInfo[0]}`,
                     {
                         responseType: 'blob',
                         // onDownloadProgress:ProgressEvent=>{
@@ -264,19 +261,19 @@ const Info = (props: MatchParams) => {
                                         <CardMedia>
                                             {!item.assetType ?
                                                 <div>
-                                                    <img src={"/images/unsupportedFile.png"} alt="" />
+                                                    <img src={BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'))+"/images/unsupportedFile.png"} alt="" />
                                                     <GridListTileBar title={"미리보기가 지원되지 않는 형식"} />
                                                 </div>
                                                 :
                                                 item.assetType.includes("image") ?
-                                                    <img style={{ maxWidth: '600px',maxHeight:'600px' }} src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} alt="" />
+                                                    <img style={{ maxWidth: '600px',maxHeight:'600px' }} src={BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'))+item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} alt="" />
                                                     : item.assetType.includes("video") ?
-                                                        <video style={{ maxWidth: '600px',maxHeight:'600px' }} controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
+                                                        <video style={{ maxWidth: '600px',maxHeight:'600px' }} controls src={BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'))+item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
                                                         :
                                                         item.assetType.includes("audio") ?
-                                                            <audio controls src={item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
+                                                            <audio controls src={BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'))+item.assetLocation.substring(item.assetLocation.lastIndexOf("/uploadedImages"))} />
                                                             : <div>
-                                                                <img src={"/images/unsupportedFile.png"} alt="" />
+                                                                <img src={BASE_API_URL.substring(0,BASE_API_URL.lastIndexOf('/api'))+"/images/unsupportedFile.png"} alt="" />
                                                                 <GridListTileBar title={"미리보기가 지원되지 않는 형식"} />
                                                             </div>
                                             }

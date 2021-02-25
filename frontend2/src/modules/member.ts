@@ -15,6 +15,7 @@ export const logout = () => ({type:Logout})
 type User = {
     userId: string,
     userRole: string,
+    token: string,
     isLogined: boolean
 }
 
@@ -28,6 +29,7 @@ type LoginAction =
 const initialState: User = {
     userId: '',
     userRole: '',
+    token: '',
     isLogined: false
 }
 

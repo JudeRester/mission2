@@ -34,8 +34,6 @@ public interface AssetMapper {
 
     public int total();
 
-    public List<Category> getCategoryList();
-
     public void deleteTag(Tags dto);
 
     public String getAssetTagList(int assetSeq);

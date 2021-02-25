@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.malgn.mission2.mapper.CategoryMapper">
+    <select id="getCategoryList" resultType="Category">
+        SELECT LEVEL,categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER
+		FROM category
+		START WITH categoryparent IS NULL
+		CONNECT BY PRIOR categoryid = CategoryPARENT
+		ORDER SIBLINGS BY CategoryORDER
+    </select>
+	<select id="getCategoryInfo" resultType="Category">
+		select categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER, (select count(*) from image where imagecategory=categoryid) as possessions
+		from category
+		where categoryId=#{categoryId}
+	</select>
+</mapper>

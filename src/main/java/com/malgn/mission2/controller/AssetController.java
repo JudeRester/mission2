@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -216,12 +217,15 @@ public class AssetController {
         return res;
     }
 
+    @CrossOrigin(origins = "*")
     @PutMapping("/asset")
-    public Response<Object, Object> updateAsset(@RequestBody Asset dto, Authentication auth) {
+    public Response<String, Object> updateAsset(@RequestBody Asset dto, Authentication auth) {
         UserInfo user = (UserInfo) auth.getPrincipal();
         dto.setAssetChanger(user.getUserId());
         service.assetUpdate(dto);
-        return null;
+        Response<String, Object> res = new Response<>();
+        res = res.success("Modified", null);
+        return res;
     }
 
     @DeleteMapping("/asset/{assetSeq}")
@@ -248,15 +252,6 @@ public class AssetController {
         }
         Response<List<Asset>, Object> res = new Response<>();
         res = res.success(list, new Page(crt, service.total()));
-        return res;
-    }
-
-    @GetMapping("/category/list")
-    public Response<List<Category>, Object> categoryList() {
-        log.debug("get...categoryList");
-        List<Category> list = service.getCategoryList();
-        Response<List<Category>, Object> res = new Response<>();
-        res = res.success(list, null);
         return res;
     }
 

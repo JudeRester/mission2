@@ -24,6 +24,7 @@ import axios from 'axios';
 import arrayToTree from 'array-to-tree';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { Clear, Search } from '@material-ui/icons';
+import api from '../../util/api';
 
 const drawerWidth = 450;
 
@@ -155,11 +156,8 @@ export default function SideHeader(props: any) {
     assetType: string,
   }
 
-  let token = sessionStorage.getItem("current_user_token");
   const user = useSelector((state: RootState) => state.member)
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-  }
+  api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
   const useTreeStyles = makeStyles({
     root: {
       height: 240,
@@ -217,15 +215,12 @@ export default function SideHeader(props: any) {
   }, [pageNum])
 
   useEffect(() => {
-    token = sessionStorage.getItem("current_user_token");
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
-    axios.get(`/api/category/list`)
+    
+    api.get(`/category/list`)
       .then(response => {
         setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
       })
-    axios.get(`/api/tag/list`)
+    api.get(`/tag/list`)
       .then(response => {
         setTags(response.data.result)
       })
@@ -273,11 +268,11 @@ export default function SideHeader(props: any) {
   const search = () => {
     if (isSearch) {
       let categoryList: Array<string> = [];
-      axios.get(`/api/category/list`)
+      api.get(`/category/list`)
         .then(response => {
           if (selectedCategory)
             categoryList = (findChild(parseStringToNumber(selectedCategory), response.data.result).split('>'));
-          axios.get(`/api/search?${setData()}`)
+          api.get(`/search?${setData()}`)
             .then(response => {
               setContents(response.data.result)
               setSearchWindowOpen(true)
@@ -405,7 +400,7 @@ export default function SideHeader(props: any) {
           <Typography style={{ marginLeft: "auto" }}>
             <Link to="/"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>Home</Button></Link>
             <Link to="/upload"><Button onClick={handleSearchReset} classes={{ text: classes.linkButton }}>파일 업로드</Button></Link>
-            {token ? parseJwt(token).userRole === "ROLE_ADMIN" && <>
+            {user ? user.userRole === "ROLE_ADMIN" && <>
               <Button aria-controls="fade-menu" aria-haspopup="true" classes={{ text: classes.linkButton }} onClick={handleAdminMenuClick}>
                 관리자 메뉴
               </Button>

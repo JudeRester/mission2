@@ -6,6 +6,7 @@ import member, { login } from '../../modules/member';
 import { RootState } from '../../modules';
 import { useHistory } from 'react-router';
 import { Switch } from '@material-ui/core';
+import api from "../../util/api";
 
 
 let DivWrapper = styled.div`
@@ -204,7 +205,7 @@ function Login() {
   async function handleLoginButton(e: any) {
     e.preventDefault();
     try {
-      const response = await axios.post(`/api/authenticate`,
+      const response = await api.post(`/authenticate`,
         { username: username, password: password },
         {
           headers: {
@@ -212,7 +213,7 @@ function Login() {
             'Access-Control-Allow-Origin': '*'
           }
         });
-      dispatch(login({ userId: parseJwt(response.data.token).sub ,userRole: parseJwt(response.data.token).userRole, isLogined: true }))
+      dispatch(login({ userId: parseJwt(response.data.token).sub ,userRole: parseJwt(response.data.token).userRole,token:response.data.token, isLogined: true }))
       sessionStorage.setItem("current_user_token", response.data.token);
       history.push("/");
     } catch (err) {

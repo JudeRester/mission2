@@ -8,6 +8,7 @@ import { Button, CircularProgress, colors, Dialog, DialogActions, DialogContent,
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
+import api from '../../util/api';
 //style 
 
 let DivWrapper = styled.div`
@@ -133,12 +134,8 @@ type MatchParams = {
 //style end
 const ModInfo = (props: MatchParams) => {
     const history = useHistory()
-    let token = sessionStorage.getItem("current_user_token");
     const user = useSelector((state: RootState) => state.member)
-    if (token) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
-
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
     const assetSeq: string = props.assetSeq;
 
     let [fileList, setFileList] = useState<Array<AssetFile>>();
@@ -156,24 +153,21 @@ const ModInfo = (props: MatchParams) => {
     let [assetInfo, setAssetInfo] = useState<Asset>();
 
     useEffect(() => {
-        token = sessionStorage.getItem("current_user_token");
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-        }
-        axios.get(`/api/category/list`)
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+        api.get(`/category/list`)
             .then(response => {
                 setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
             })
     }, [user])
 
     useEffect(() => {
-        axios.get(`/api/asset/${assetSeq}`)
+        api.get(`/asset/${assetSeq}`)
             .then(result => {
                 let data: Asset = result.data.result;
                 setAssetInfo(data);
                 setTitle(data.assetTitle);
                 setFileList(data.assetFiles);
-                if(data.tags)
+                if (data.tags)
                     setTags(data.tags.split(','))
                 setSelectedCategory(data.assetCategory + '')
             })
@@ -264,10 +258,10 @@ const ModInfo = (props: MatchParams) => {
     }
 
     const handleFileDelete = () => {
-        axios.delete(`/api/file`,
+        api.delete(`/file`,
             {
                 params: {
-                    assetLocation:fileList[deleteTargetFileIndex].assetLocation
+                    assetLocation: fileList[deleteTargetFileIndex].assetLocation
                 },
                 headers: {
                     'Content-type': 'application/json',
@@ -289,10 +283,10 @@ const ModInfo = (props: MatchParams) => {
             if (inputTag !== "") {
                 if (tags.filter(tag => tag.trim() === inputTag).length <= 0) {
                     setIsTagDuplicated(false);
-                    axios.post(`/api/tag`, null,
+                    api.post(`/tag`, null,
                         { params: { assetTag: inputTag, assetSeq: assetSeq } }
                     ).then(result => {
-                        if(result.data.result)
+                        if (result.data.result)
                             setTags(result.data.result.split(','))
                         else
                             setTags([])
@@ -306,10 +300,10 @@ const ModInfo = (props: MatchParams) => {
     }
 
     const removeTag = (targetTag: string) => {
-        axios.delete(`/api/tag`,
+        api.delete(`/tag`,
             { params: { assetTag: targetTag.trim(), assetSeq: assetSeq } }
         ).then(result => {
-            if(result.data.result)
+            if (result.data.result)
                 setTags(result.data.result.split(','))
             else
                 setTags([])
@@ -323,9 +317,13 @@ const ModInfo = (props: MatchParams) => {
             assetTitle: title,
             assetCategory: selectedCategory
         }
-        axios.put(`/api/asset`,
-            data
-        ).then(result=>{
+        api.put(`/asset`,
+            data, {
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+        ).then(result => {
             history.goBack();
         })
     }

@@ -119,10 +119,6 @@ public class AssetService {
         return mapper.total();
     }
 
-    public List<Category> getCategoryList() {
-        return mapper.getCategoryList();
-    }
-
     public void deleteTag(Tags dto) {
         mapper.deleteTag(dto);
     }

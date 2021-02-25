@@ -18,6 +18,9 @@ import { Clear, Search } from "@material-ui/icons";
 import { Pagination } from "@material-ui/lab";
 import axios from "axios";
 import React, { useEffect, useState } from "react"
+import { useSelector } from "react-redux";
+import { RootState } from "../../../modules";
+import api from "../../../util/api";
 
 type MatchParams = {
     pageNum: string
@@ -77,12 +80,6 @@ interface DeleteTarget {
 }
 // const Members = (props: MatchParams) => {
 const Members = () => {
-    let token = sessionStorage.getItem("current_user_token");
-    if (token) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    }
-
-
     const [memberList, setMemberList] = useState<Array<MemberInfo>>();
     const [pageNum, setPageNum] = useState<number>(1);
     const [pageInfo, setPageInfo] = useState<Page>();
@@ -106,7 +103,8 @@ const Members = () => {
     const [searchCondition, setSearchCondition] = useState<string>('userId')
     const [isSearch, setIsSearch] = useState<boolean>(false)
     const [keyword, setKeyword] = useState<string>('');
-
+    const user = useSelector((state:RootState)=>state.member)
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
 
     const handleAddOpen = () => {
         setAddOpen(true)
@@ -126,7 +124,7 @@ const Members = () => {
                 userEmail: addUserEmail.data,
                 userPhone: addUserPhone.data,
             }
-            axios.post(`/api/member/user`, data)
+            api.post(`/member/user`, data)
                 .then(response => {
                     const data = response.data
                     if (data.code === 200) {
@@ -174,7 +172,7 @@ const Members = () => {
     }
     function idDupCheck(value: string) {
         if (idVali.test(value)) {
-            axios.get(`/api/member/user?userId=${value}`)
+            api.get(`/member/user?userId=${value}`)
                 .then(response => {
                     if (response.data.result) {
                         setAddUserId({ data: value, error: false })
@@ -290,7 +288,7 @@ const Members = () => {
                 userEmail: addUserEmail.data,
                 userPhone: addUserPhone.data,
             }
-            axios.put(`/api/member/user`, data)
+            api.put(`/member/user`, data)
                 .then(response => {
                     const data = response.data
                     if (data.code === 200) {
@@ -304,7 +302,7 @@ const Members = () => {
     }
     const handleDelete = (userId: string) => {
         setDeleteOpen(true)
-        axios.get(`/api/member/user/assetcount/${userId}`)
+        api.get(`/member/user/assetcount/${userId}`)
             .then(response => {
                 setDeleteTarget({ userId: userId, count: response.data.result })
             })
@@ -315,7 +313,7 @@ const Members = () => {
         setDeleteOpen(false)
     }
     const handleDeleteConfirm = () => {
-        axios.delete(`/api/member/user/${deleteTarget.userId}`)
+        api.delete(`/member/user/${deleteTarget.userId}`)
             .then(response => {
                 setDeleteTarget(null)
                 setDeleteOpen(false)
@@ -355,17 +353,14 @@ const Members = () => {
         loadMembers();
     }
     async function loadMembers() {
-        token = sessionStorage.getItem("current_user_token");
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-        }
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
         let response
         switch (isSearch) {
             case true:
-                response = await axios.get(`/api/member/search?${setData()}`)
+                response = await api.get(`/member/search?${setData()}`)
                 break;
             default:
-                response = await axios.get(`/api/member/list/${pageNum}`)
+                response = await api.get(`/member/list/${pageNum}`)
                 break;
         }
         const list: Array<MemberInfo> = response.data.result
