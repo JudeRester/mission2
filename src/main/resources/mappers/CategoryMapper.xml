@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.malgn.mission2.mapper.CategoryMapper">
-    <select id="getCategoryList" resultType="Category">
+	<select id="getCategoryList" resultType="Category">
         SELECT LEVEL,categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER
 		FROM category
 		START WITH categoryparent IS NULL
@@ -10,8 +10,16 @@
 		ORDER SIBLINGS BY CategoryORDER
     </select>
 	<select id="getCategoryInfo" resultType="Category">
-		select categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER, (select count(*) from image where imagecategory=categoryid) as possessions
+		<choose>
+			<when test='categoryId != null and categoryId==0'>
+				select (select count(*) from asset) as possessions
+				from dual
+			</when>
+			<otherwise>
+				select categoryid,categoryname, CATEGORYPARENT, CATEGORYORDER, (select count(*) from asset where asset_category=categoryid) as possessions
 		from category
 		where categoryId=#{categoryId}
+			</otherwise>
+		</choose>
 	</select>
 </mapper>
