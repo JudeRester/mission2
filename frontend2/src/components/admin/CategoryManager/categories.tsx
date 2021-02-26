@@ -23,6 +23,11 @@ import {
     Theme,
     Tooltip,
     TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from "@material-ui/core";
 import {
     amber,
@@ -35,6 +40,7 @@ import { TreeItem, TreeView } from "@material-ui/lab";
 import { ChevronRight, ExpandMore, SubdirectoryArrowRight } from "@material-ui/icons";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../modules";
+import CategoryNode from "./CategoryNode";
 
 const ModifyButton = withStyles((theme: Theme) => ({
     root: {
@@ -119,7 +125,8 @@ const useStyles = makeStyles(() => ({
         overflow: "scroll"
     },
     tooltip: {
-        fontSize: 15
+        fontSize: 15,
+        textAlign: "center"
     }
 }))
 
@@ -128,9 +135,7 @@ interface TreeViews {
     categoryName: string;
     categoryId: string;
 }
-interface CategoryProps {
-    category: TreeViews
-}
+
 
 interface CategoryInfo {
     categoryId: number,
@@ -163,6 +168,7 @@ const useTreeStyles = makeStyles({
 });
 
 
+
 const Categories = () => {
     useEffect(() => {
         loadCategories()
@@ -175,7 +181,7 @@ const Categories = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [selectedCategoryInfo, setSelectedCategoryInfo] = useState<CategoryInfo>();
-    const [addingCategoryName, setAddingCategoryName] = useState<string>('');
+    const [deleteOpen, setDeleteOpen] = useState<boolean>(false)
 
     const treeClasses = useTreeStyles();
     const classes = useStyles();
@@ -201,15 +207,14 @@ const Categories = () => {
 
     useEffect(() => {
         setTreeCategories(arrayToTree(arrayCategories, { parentProperty: 'categoryParent', customID: 'categoryId' }))
+        handleTreeLabelClick("0")
     }, [arrayCategories])
     const handleToggle = (event: any, nodeIds: string[]) => {
         event.preventDefault()
     };
     const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
-        if (nodeId === selectedCategory) {
-            setSelectedCategory('')
-        } else
-            setSelectedCategory(nodeId)
+        event.stopPropagation();
+        setSelectedCategory(nodeId)
     };
 
     const hasChild = () => {
@@ -225,40 +230,38 @@ const Categories = () => {
         getParents(treeCategories);
         return tempArray.findIndex((e: string) => e === `${selectedCategoryInfo.categoryId}`)
     }
-    const onChange = useCallback((e: React.ChangeEvent<{ value: string }>) => {
-        setAddingCategoryName(e.target.value)
-        
-    }, []);
 
-    const renderTrees = (nodes: TreeViews) => {
-
-
-        return (
-            <TreeItem
-                key={nodes.categoryId}
-                nodeId={nodes.categoryId + ''}
-                label={nodes.categoryName ? nodes.categoryName :
-                    <TextField
-                        id="standard-basic"
-                        label="새 카테고리 이름"
-                        // onKeyPress={(e)=>{handleInputNewCategoryName(e)}}
-                        onChange={onChange}
-                        value={addingCategoryName}
-                    />
-                }
-                onIconClick={() => handleTreeIconClick(nodes.categoryId + '')}
-                classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
-                onLabelClick={nodes.categoryName ? () => handleTreeLabelClick(nodes.categoryId + '') : null}
-                endIcon={<SubdirectoryArrowRight />}>
-                {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
-            </TreeItem>
-        )
+    const handleAddCategory = async () => {
+        const order = await getLastOrder(selectedCategory)
+        const newNode: CategoryInfo = {
+            categoryId: new Date().getTime(),
+            categoryName: '',
+            categoryOrder: order,
+            categoryParent: parseStringToNumber(selectedCategory),
+            possessions: 0,
+            newNode: true,
+        }
+        setArrayCategories(pre => {
+            const temp = [...pre, newNode];
+            return temp
+        })
     }
-    const Category = ({ category }: CategoryProps) => {
-        // useEffect(() => {
 
-        // }, [category]);
-        return renderTrees(category);
+    const parseStringToNumber = (target: string) => {
+        let parser: number = +target
+        return parser
+    }
+    function getLastOrder(nodeId: string) {
+        let count = 0
+        for (let i = 0; i < arrayCategories.length; i++) {
+            if (arrayCategories[i].categoryParent + '' === nodeId)
+                count++
+        }
+        return count
+    }
+    const handleTreeLabelClick = async (nodeId: string) => {
+        const response = await api.get(`/category/${nodeId}`)
+        setSelectedCategoryInfo(response.data.result)
     }
 
     const handleTreeIconClick = (nodeId: string) => {
@@ -276,41 +279,20 @@ const Categories = () => {
             })
     }
 
-    const handleAddCategory = () => {
-        const newNode: CategoryInfo = {
-            categoryId: new Date().getTime(),
-            categoryName: '',
-            categoryOrder: getLastOrder(selectedCategory),
-            categoryParent: parseStringToNumber(selectedCategory),
-            possessions: 0,
-            newNode: true,
-        }
-        setArrayCategories(pre => {
-            const temp = [...pre, newNode];
-            return temp
-        })
+    const deleteButtonClick = () => {
+        setDeleteOpen(true)
     }
-    const parseStringToNumber = (target: string) => {
-        let parser: number = +target
-        return parser
+
+    const handleDeleteClose = () => {
+        setDeleteOpen(false)
     }
-    function getLastOrder(nodeId: string) {
-        let count = 0
-        for (let i = 0; i < arrayCategories.length; i++) {
-            if (arrayCategories[i].categoryParent + '' === nodeId)
-                count++
-        }
-        return count
-    }
-    const handleTreeLabelClick = async (nodeId: string) => {
-        const response = await api.get(`/category/${nodeId}`)
-        setSelectedCategoryInfo(response.data.result)
-        // const index = arrayCategories.findIndex((element: any) => element.categoryId + '' === nodeId)
-    }
-    const handleInputNewCategoryName = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "Enter") {
-            console.log(e.target)
-        }
+    const handleDeleteConfirm = () => {
+        api.delete(`/category/${selectedCategoryInfo.categoryId}`)
+            .then(response => {
+                setSelectedCategory(null)
+                setDeleteOpen(false)
+                loadCategories()
+            })
     }
     return (
         <>
@@ -326,73 +308,102 @@ const Categories = () => {
                     <CardContent>
 
                         <Grid item>
-                            {selectedCategoryInfo ?
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>
-                                                카테고리 내 게시글 수 : {selectedCategoryInfo.possessions}
+
+                            <Table>
+                                <TableHead>
+                                    <TableRow style={{height:"50px"}}>
+                                        {selectedCategoryInfo ?
+                                            <>
+                                                <TableCell>
+                                                    카테고리 내 게시글 수 : {selectedCategoryInfo.possessions}
+                                                </TableCell>
+                                                <TableCell align="right" style={{padding:0}}>
+                                                    <Button variant="contained" color="primary" style={{ marginRight: 5 }} onClick={handleAddCategory}>추가</Button>
+                                                    {selectedCategoryInfo.categoryId ?
+                                                        <>
+                                                            <ModifyButton>수정</ModifyButton>
+                                                            {selectedCategoryInfo.possessions || hasChild() !== -1 ?
+                                                                <Tooltip classes={{ tooltip: classes.tooltip }} title="하위 카테고리나 게시물이 있는 카테고리는 삭제할 수 없습니다" placement="top-start">
+                                                                    <span>
+                                                                        <DeleteButton disabled={true}>삭제</DeleteButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                                :
+                                                                <DeleteButton onClick={deleteButtonClick} disabled={false}>삭제</DeleteButton>
+                                                            }
+                                                        </>
+                                                        :
+                                                        null
+                                                    }
+                                                </TableCell>
+                                            </>
+                                            :
+                                            <TableCell colSpan={2} style={{textAlign:"center"}}>
+                                                    <Typography variant={"h6"}>카테고리를 선택해 주세요</Typography>
                                             </TableCell>
-                                            <TableCell align="right">
-                                                <Button variant="contained" color="primary" style={{ marginRight: 5 }} onClick={handleAddCategory}>추가</Button>
-                                                {selectedCategoryInfo.categoryId ?
-                                                    <>
-                                                        <ModifyButton>수정</ModifyButton>
-                                                        {selectedCategoryInfo.possessions || hasChild() !== -1 ?
-                                                            <Tooltip classes={{ tooltip: classes.tooltip }} title="하위 카테고리나 게시물이 있는 카테고리는 삭제할 수 없습니다" placement="top-start">
-                                                                <span>
-                                                                    <DeleteButton disabled={true}>삭제</DeleteButton>
-                                                                </span>
-                                                            </Tooltip>
-                                                            :
-                                                            <DeleteButton disabled={false}>삭제</DeleteButton>
-                                                        }
-                                                    </>
-                                                    :
-                                                    null
-                                                }
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                </Table>
-                                :
-                                <Typography>카테고리를 선택해 주세요</Typography>
-                            }
-                            <List>
-                                <ListItem key={1}>
-                                    <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperRoot }}>
-                                        {treeCategories.length > 0 ? (
-                                            <TreeView
-                                                onNodeToggle={handleToggle}
-                                                onNodeSelect={handleNodeSelect}
-                                                className={classes.root}
-                                                defaultCollapseIcon={<ExpandMore />}
-                                                defaultExpandIcon={<ChevronRight />}
-                                                expanded={expendedCategory}
-                                            >
-                                                <TreeItem
-                                                    key={"0"}
-                                                    nodeId={"0"}
-                                                    label={"전체 보기"}
-                                                    onIconClick={() => handleTreeIconClick("0")}
-                                                    classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
-                                                    onLabelClick={() => handleTreeLabelClick("0")}
-                                                    endIcon={<SubdirectoryArrowRight />}>
-                                                    {treeCategories.map((category: TreeViews) => {
-                                                        return <Category key={category.categoryId} category={category} />
-                                                    })}
-                                                </TreeItem>
-                                            </TreeView>
-                                        ) :
-                                            (<CircularProgress />)
                                         }
-                                    </Paper>
-                                </ListItem>
-                            </List>
+                                    </TableRow>
+                                </TableHead>
+                            </Table>
+                                <List>
+                                    <ListItem key={1}>
+                                        <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperRoot }}>
+                                            {treeCategories.length > 0 ? (
+                                                <TreeView
+                                                    onNodeToggle={handleToggle}
+                                                    onNodeSelect={handleNodeSelect}
+                                                    className={classes.root}
+                                                    defaultCollapseIcon={<ExpandMore />}
+                                                    defaultExpandIcon={<ChevronRight />}
+                                                    expanded={expendedCategory}
+                                                    defaultSelected="0"
+                                                >
+                                                    <TreeItem
+                                                        key={"0"}
+                                                        nodeId={"0"}
+                                                        label={"전체 보기"}
+                                                        onIconClick={() => handleTreeIconClick("0")}
+                                                        classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
+                                                        onLabelClick={() => handleTreeLabelClick("0")}
+                                                        endIcon={<SubdirectoryArrowRight />}>
+                                                        {treeCategories.map((category: TreeViews) => {
+                                                            return <CategoryNode key={category.categoryId} category={category} setExpendedCategoryList={setExpendedCategory} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} setArrayCategoryList={setArrayCategories} arrayCategoryList={arrayCategories} />
+                                                        })}
+                                                    </TreeItem>
+                                                </TreeView>
+                                            ) :
+                                                (<CircularProgress />)
+                                            }
+                                        </Paper>
+                                    </ListItem>
+                                </List>
                         </Grid>
                     </CardContent>
                 </Card>
             </Paper>
+
+                <Dialog
+                    open={deleteOpen}
+                    onClose={handleDeleteClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"카테고리 삭제"}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            {selectedCategoryInfo &&
+                                `${selectedCategoryInfo.categoryName} 카테고리를 삭제하시겠습니까?`}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <DeleteButton onClick={handleDeleteConfirm}>
+                            삭제
+                    </DeleteButton>
+                        <Button onClick={handleDeleteClose} color="primary" autoFocus>
+                            취소
+                    </Button>
+                    </DialogActions>
+                </Dialog>
         </>
     )
 

@@ -12,4 +12,8 @@ public interface CategoryMapper {
 
     public Category getCategoryInfo(int categoryId);
 
+    public int addCategory(Category dto);
+
+    public int deleteCategory(int c_id);
+
 }

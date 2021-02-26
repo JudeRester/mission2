@@ -22,4 +22,27 @@
 			</otherwise>
 		</choose>
 	</select>
+
+	<insert id="addCategory">
+		insert into category values(
+		cat_seq.nextval
+		, #{categoryName}
+		<choose>
+			<when test='categoryParent==0'>
+				, null
+				, nvl((SELECT max(categoryOrder) FROM (SELECT * FROM category WHERE CategoryPARENT is null))+1,0)
+			</when>
+			<otherwise>
+				, #{categoryParent}
+				, nvl((SELECT max(categoryOrder) FROM (SELECT * FROM category WHERE CategoryPARENT=#{categoryParent}))+1,0)
+			</otherwise>
+		</choose>
+		
+		)
+	</insert>
+
+	<delete id="deleteCategory">
+		delete from category
+		where categoryid=#{categoryId}
+	</delete>
 </mapper>

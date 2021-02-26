@@ -22,4 +22,12 @@ public class CategoryService {
         return mapper.getCategoryInfo(categoryId);
     }
 
+    public int addCategory(Category dto) {
+        return mapper.addCategory(dto);
+    }
+
+    public int deleteCategory(int c_id) {
+        return mapper.deleteCategory(c_id);
+    }
+
 }
