@@ -41,6 +41,14 @@
 		)
 	</insert>
 
+<update id="updateCategoryName">
+		update category
+		set
+		categoryname=#{categoryName}
+		where
+		categoryid=#{categoryId}
+	</update>
+	
 	<delete id="deleteCategory">
 		delete from category
 		where categoryid=#{categoryId}

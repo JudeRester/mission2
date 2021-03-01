@@ -16,4 +16,6 @@ public interface CategoryMapper {
 
     public int deleteCategory(int c_id);
 
+    public int updateCategoryName(Category dto);
+
 }

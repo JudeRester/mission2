@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path = "api/category")
-public class CategocyController {
+public class CategoryController {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
@@ -56,6 +57,13 @@ public class CategocyController {
     public Response<String, Object> deleteCategory(@PathVariable("categoryId") int categoryId) {
         Response<String, Object> res = new Response<>();
         res = res.success(service.deleteCategory(categoryId) + "개 레코드 삭제", null);
+        return res;
+    }
+
+    @PutMapping(path = "")
+    public Response<String, Object> updateCategory(@RequestBody Category dto) {
+        Response<String, Object> res = new Response<>();
+        res = res.success(service.updateCategoryName(dto) + "개 레코드 수정", null);
         return res;
     }
 }

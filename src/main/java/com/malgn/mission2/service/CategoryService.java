@@ -30,4 +30,8 @@ public class CategoryService {
         return mapper.deleteCategory(c_id);
     }
 
+    public int updateCategoryName(Category dto) {
+        return mapper.updateCategoryName(dto);
+    }
+
 }

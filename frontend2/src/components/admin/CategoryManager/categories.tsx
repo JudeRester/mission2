@@ -144,6 +144,7 @@ interface CategoryInfo {
     categoryParent: number,
     possessions?: number,
     newNode?: boolean,
+    modifying?: boolean,
 }
 const useTreeStyles = makeStyles({
     root: {
@@ -247,6 +248,15 @@ const Categories = () => {
         })
     }
 
+    const handleModifyCategory = () =>{
+        const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.categoryId+'' === selectedCategory);
+        setArrayCategories(pre=>{
+            let temp = [...pre];
+            temp[targetIndex].modifying=true;
+            return temp;
+        })
+    } 
+
     const parseStringToNumber = (target: string) => {
         let parser: number = +target
         return parser
@@ -294,6 +304,8 @@ const Categories = () => {
                 loadCategories()
             })
     }
+
+
     return (
         <>
             <Paper style={{ maxWidth: 1024, margin: "auto" }}>
@@ -321,7 +333,7 @@ const Categories = () => {
                                                     <Button variant="contained" color="primary" style={{ marginRight: 5 }} onClick={handleAddCategory}>추가</Button>
                                                     {selectedCategoryInfo.categoryId ?
                                                         <>
-                                                            <ModifyButton>수정</ModifyButton>
+                                                            <ModifyButton onClick={handleModifyCategory}>수정</ModifyButton>
                                                             {selectedCategoryInfo.possessions || hasChild() !== -1 ?
                                                                 <Tooltip classes={{ tooltip: classes.tooltip }} title="하위 카테고리나 게시물이 있는 카테고리는 삭제할 수 없습니다" placement="top-start">
                                                                     <span>
