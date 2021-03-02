@@ -34,4 +34,8 @@ public class CategoryService {
         return mapper.updateCategoryName(dto);
     }
 
+    public int updateCategoryOrder(Category dto) {
+        return mapper.updateCategoryOrder(dto);
+    }
+
 }

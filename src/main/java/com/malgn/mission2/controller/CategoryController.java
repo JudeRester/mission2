@@ -66,4 +66,12 @@ public class CategoryController {
         res = res.success(service.updateCategoryName(dto) + "개 레코드 수정", null);
         return res;
     }
+
+    @PutMapping(value = "order")
+    public Response<String, Object> updateCategoryOrder(@RequestBody Category dto) {
+        Response<String, Object> res = new Response<>();
+
+        res = res.success(service.updateCategoryOrder(dto)+"", null);
+        return null;
+    }
 }

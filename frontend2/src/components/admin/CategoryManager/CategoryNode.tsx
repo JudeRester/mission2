@@ -33,6 +33,8 @@ interface CategoryProps {
     selectedInfo: React.Dispatch<React.SetStateAction<CategoryInfo>>
     setArrayCategoryList: React.Dispatch<React.SetStateAction<CategoryInfo[]>>,
     arrayCategoryList: CategoryInfo[],
+    treeCategoryList:any[],
+    setTreeCategoryList:React.Dispatch<React.SetStateAction<any[]>>,
 }
 const useTreeStyles = makeStyles({
     root: {
@@ -40,9 +42,13 @@ const useTreeStyles = makeStyles({
         flexGrow: 1,
         // maxWidth: 400,
         display: 'contents',
+
     },
     label: {
-        textAlign: 'left'
+        textAlign: 'left',
+        "& .dragOver": {
+            backgroundColor: "red",
+        }
     },
     group: {
         marginLeft: 7,
@@ -56,25 +62,32 @@ const useTreeStyles = makeStyles({
     }
 });
 
-const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList, selectedInfo, setArrayCategoryList, arrayCategoryList }: CategoryProps) => {
+const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList, selectedInfo, setArrayCategoryList, arrayCategoryList,treeCategoryList, setTreeCategoryList}: CategoryProps) => {
     const treeClasses = useTreeStyles();
     const setExpendedCategory = setExpendedCategoryList
     const expendedCategory = expendedCategoryList
     const setSelectedCategoryInfo = selectedInfo
     const setArrayCategories = setArrayCategoryList
     const arrayCategories = arrayCategoryList
+    const treeCategories = treeCategoryList
+    const setTreeCategories = setTreeCategoryList
     const [addingCategoryName, setAddingCategoryName] = useState<string>('');
+    const [dragged, setDragged] = useState<CategoryInfo>()
 
     const onChange = useCallback((e: React.ChangeEvent<{ value: string }>) => {
         setAddingCategoryName(e.target.value)
 
     }, []);
 
-    useEffect(()=>{
+    const loadCategories = async () => {
+        const response = await api.get('/category/list')
+        setArrayCategories(response.data.result)
+    }
+    useEffect(() => {
         const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.modifying === true);
-        if(targetIndex!==-1)
+        if (targetIndex !== -1)
             setAddingCategoryName(arrayCategories[targetIndex].categoryName)
-    },[arrayCategories])
+    }, [arrayCategories])
 
 
     const handleTreeLabelClick = async (nodeId: string) => {
@@ -95,8 +108,8 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
                 break;
         }
     }
-    
-    const checkIsNameEmpty= async ()=>{
+
+    const checkIsNameEmpty = async () => {
         if (addingCategoryName.trim()) {
             const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.newNode === true);
             const newNode: CategoryInfo = {
@@ -119,7 +132,7 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
         }
     }
 
-    const cancelAddCategory =() =>{
+    const cancelAddCategory = () => {
         setArrayCategories(pre => {
             const targetIndex = pre.findIndex((e: CategoryInfo) => e.newNode === true)
             let temp: CategoryInfo[] = [...pre]
@@ -128,7 +141,7 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
         })
     }
 
-    
+
 
     const handleModifyCategoryName = async (e: React.KeyboardEvent<HTMLDivElement>) => {
         switch (e.key) {
@@ -143,7 +156,7 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
                 break;
         }
     }
-    const checkIsNameEmptyForModify= async ()=>{
+    const checkIsNameEmptyForModify = async () => {
         if (addingCategoryName.trim()) {
             const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.modifying === true);
             const data = {
@@ -164,12 +177,12 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
         }
     }
 
-    const cancelModifyCategory =() =>{
+    const cancelModifyCategory = () => {
 
         setArrayCategories(pre => {
             const targetIndex = pre.findIndex((e: CategoryInfo) => e.modifying === true)
             let temp: CategoryInfo[] = [...pre]
-            temp[targetIndex].modifying=false;
+            temp[targetIndex].modifying = false;
             return temp;
         })
     }
@@ -187,38 +200,71 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
                 return temp;
             })
     }
+    
+    const onDragStart = (e: React.DragEvent, category: TreeViews) => {
+        e.stopPropagation()
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("objectId", category.categoryId)
+    }
 
-    const _onDragStart = (e:React.DragEvent) => {
-        // e.dataTransfer.effectAllowed = "move";
-        // e.dataTransfer.setData("text/html", ''+e.target);
-        console.log(e.dataTransfer.getData("text/html"))
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    }
+
+    const onDrop = async (e: React.DragEvent, categoryId: string) => {
+        e.stopPropagation()
+        const node = arrayCategories[arrayCategories.findIndex((element)=>element.categoryId===Number(e.dataTransfer.getData('objectId')))]
+        node.categoryParent=Number(categoryId)
+        const response = await api.put(`category/order`,node)
+        loadCategories()
+    }
+
+    const onDragEnter = (e: React.DragEvent<HTMLElement>, categoryId: string) => {
+        e.stopPropagation()
+        console.log('height',(e.target as HTMLDivElement).getBoundingClientRect().height)
+        console.log('top',(e.target as HTMLDivElement).getBoundingClientRect().top)
+        const node = arrayCategories[arrayCategories.findIndex((element)=>element.categoryId===Number(e.dataTransfer.getData('objectId')))]
+
+    }
+   
+    const onDragLeave = (e: React.DragEvent, categoryId: string) => {
+        e.stopPropagation()
+        // let targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.categoryId === -1)
+        // const temp = [...arrayCategories]
+        // temp.splice(targetIndex, 1)
+        // setArrayCategories(temp)
     }
 
     return <TreeItem
         draggable
-        onDragStart={_onDragStart}
+        onDragStart={(e) => { onDragStart(e, category) }}
+        onDragOver={onDragOver}
+        onDrop={(e) => { onDrop(e, category.categoryId) }}
+        onDragEnter={(e) => { onDragEnter(e, category.categoryId) }}
+        onDragLeave={(e) => { onDragLeave(e, category.categoryId) }}
+        className={"dragOver"}
         key={category.categoryId}
         nodeId={category.categoryId + ''}
-        label={category.categoryName ? 
+        label={category.categoryName ?
             category.modifying ?
-            <TextField
-                id="standard-basic"
-                onKeyPress={(e) => { handleModifyCategoryName(e) }}
-                onChange={onChange}
-                onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>)=>{
-                    event.stopPropagation()
-                }}
-                onBlur={cancelModifyCategory}
-                value={addingCategoryName}
-                autoFocus
-            />
-            :
-            category.categoryName :
+                <TextField
+                    id="standard-basic"
+                    onKeyPress={(e) => { handleModifyCategoryName(e) }}
+                    onChange={onChange}
+                    onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+                        event.stopPropagation()
+                    }}
+                    onBlur={cancelModifyCategory}
+                    value={addingCategoryName}
+                    autoFocus
+                />
+                :
+                category.categoryName :
             <TextField
                 id="standard-basic"
                 onKeyPress={(e) => { handleInputNewCategoryName(e) }}
                 onChange={onChange}
-                onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>)=>{
+                onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
                     event.stopPropagation()
                 }}
                 onBlur={cancelAddCategory}
@@ -233,7 +279,7 @@ const CategoryNode = ({ category, setExpendedCategoryList, expendedCategoryList,
             : null}
         endIcon={<SubdirectoryArrowRight />}>
 
-        {Array.isArray(category.children) ? category.children.map((node) => <CategoryNode category={node} setExpendedCategoryList={setExpendedCategory} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} setArrayCategoryList={setArrayCategories} arrayCategoryList={arrayCategories} />) : null}
+        {Array.isArray(category.children) ? category.children.map((node) => <CategoryNode category={node} setExpendedCategoryList={setExpendedCategory} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} setArrayCategoryList={setArrayCategories} arrayCategoryList={arrayCategories} treeCategoryList={treeCategories} setTreeCategoryList={setTreeCategories}/>) : null}
     </TreeItem>;
 }
 

@@ -53,4 +53,12 @@
 		delete from category
 		where categoryid=#{categoryId}
 	</delete>
+
+	<update id="updateCategoryOrder">
+		update category
+		set
+		categoryParent=#{categoryParent}
+		where
+			categoryId=#{categoryId}
+	</update>
 </mapper>

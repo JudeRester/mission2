@@ -152,6 +152,9 @@ const useTreeStyles = makeStyles({
         flexGrow: 1,
         // maxWidth: 400,
         display: 'contents',
+        ".dragOver":{
+            backgroundColor:"red",
+        }
     },
     label: {
         textAlign: 'left'
@@ -208,7 +211,7 @@ const Categories = () => {
 
     useEffect(() => {
         setTreeCategories(arrayToTree(arrayCategories, { parentProperty: 'categoryParent', customID: 'categoryId' }))
-        handleTreeLabelClick("0")
+        // handleTreeLabelClick("0")
     }, [arrayCategories])
     const handleToggle = (event: any, nodeIds: string[]) => {
         event.preventDefault()
@@ -302,6 +305,7 @@ const Categories = () => {
                 setSelectedCategory(null)
                 setDeleteOpen(false)
                 loadCategories()
+                handleTreeLabelClick("0")
             })
     }
 
@@ -379,7 +383,7 @@ const Categories = () => {
                                                         onLabelClick={() => handleTreeLabelClick("0")}
                                                         endIcon={<SubdirectoryArrowRight />}>
                                                         {treeCategories.map((category: TreeViews) => {
-                                                            return <CategoryNode key={category.categoryId} category={category} setExpendedCategoryList={setExpendedCategory} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} setArrayCategoryList={setArrayCategories} arrayCategoryList={arrayCategories} />
+                                                            return <CategoryNode key={category.categoryId} category={category} setExpendedCategoryList={setExpendedCategory} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} setArrayCategoryList={setArrayCategories} arrayCategoryList={arrayCategories} treeCategoryList={treeCategories} setTreeCategoryList={setTreeCategories}/>
                                                         })}
                                                     </TreeItem>
                                                 </TreeView>
