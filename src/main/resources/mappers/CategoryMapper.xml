@@ -37,18 +37,17 @@
 				, nvl((SELECT max(categoryOrder) FROM (SELECT * FROM category WHERE CategoryPARENT=#{categoryParent}))+1,0)
 			</otherwise>
 		</choose>
-		
 		)
 	</insert>
 
-<update id="updateCategoryName">
+	<update id="updateCategoryName">
 		update category
 		set
 		categoryname=#{categoryName}
 		where
 		categoryid=#{categoryId}
 	</update>
-	
+
 	<delete id="deleteCategory">
 		delete from category
 		where categoryid=#{categoryId}
@@ -57,8 +56,34 @@
 	<update id="updateCategoryOrder">
 		update category
 		set
-		categoryParent=#{categoryParent}
+		<choose>
+			<when test="categoryParent==0">
+				categoryParent=null
+			</when>
+			<otherwise>
+				categoryParent=#{categoryParent}
+			</otherwise>
+		</choose>
 		where
 			categoryId=#{categoryId}
+	</update>
+
+	<update id="updateCategoryOrders">
+		<foreach collection="list" item="arr" open="DECLARE BEGIN"
+			close="; END;" separator=";">
+			update category
+			set
+			categoryParent=
+			<choose>
+				<when test='arr.categoryParent==0'>
+					null
+				</when>
+				<otherwise>
+					#{arr.categoryParent}
+				</otherwise>
+			</choose>
+			,categoryOrder=#{arr.categoryOrder}
+			where categoryId=#{arr.categoryId}
+		</foreach>
 	</update>
 </mapper>

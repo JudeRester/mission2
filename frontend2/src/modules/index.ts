@@ -1,10 +1,13 @@
 import {combineReducers} from 'redux';
 import member from './member'
 import fileList from './fileList';
-
+import dragNode from './dragNode'
+import arrayCategories from './arrayCategories'
 const rootReducer = combineReducers({
     member,
-    fileList
+    fileList,
+    dragNode,
+    arrayCategories
 });
 
 export default rootReducer;

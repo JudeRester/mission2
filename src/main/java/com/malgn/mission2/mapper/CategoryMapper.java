@@ -20,4 +20,6 @@ public interface CategoryMapper {
 
     public int updateCategoryOrder(Category dto);
 
+    public void updateCategoryOrders(List<Category> categories);
+
 }

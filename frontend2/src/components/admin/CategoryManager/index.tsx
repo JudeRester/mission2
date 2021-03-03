@@ -1,4 +1,4 @@
-import Categories from "./categories"
+import Categories from "./Categories"
 
 const CategoryManager = () => {
     return (

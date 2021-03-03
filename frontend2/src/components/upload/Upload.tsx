@@ -1,11 +1,30 @@
-import React, { useState, FormEvent, useEffect, useRef } from 'react';
-import axios from 'axios';
+import React,
+{
+    useState,
+    FormEvent,
+    useEffect,
+} from 'react';
 import styled from '@emotion/styled';
 import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
-import { ExpandMore, ChevronRight } from '@material-ui/icons'
-import { Avatar, Box, Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, LinearProgress, List, ListItem, ListItemAvatar, ListItemText, makeStyles, Typography } from '@material-ui/core';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    LinearProgress,
+    List,
+    ListItem,
+    ListItemText,
+    makeStyles,
+    Typography
+}
+    from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
@@ -147,7 +166,6 @@ const Upload = () => {
     let [progresses, setProgresses] = useState<Array<number>>([0]);
     let [newProgresses, setNewProgresses] = useState<Array<number>>([0]);
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
-    let temp: number[]
 
     useEffect(() => {
         api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
@@ -249,7 +267,7 @@ const Upload = () => {
                         try {
                             setProgresses(pre => { pre[index] = Math.round(100 / chunks.length * i); return pre })
                             setNewProgresses([...progresses])
-                            const result = await api.post(`/largefile`,
+                            await api.post(`/largefile`,
                                 chunks[i],
                                 {
                                     params: data,
@@ -292,7 +310,7 @@ const Upload = () => {
             // }
         })();
     }
-   
+
     const fileUploadComplete = async (seq: number) => {
         try {
             await api.post(`/complete`,
@@ -314,7 +332,7 @@ const Upload = () => {
 
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (filesState.length != 0 && title && selectedCategory) {
+        if (filesState.length !== 0 && title && selectedCategory) {
             let data = { assetTitle: title, assetCategory: selectedCategory }
             try {
                 const response = await api.post(`/asset`,

@@ -38,4 +38,8 @@ public class CategoryService {
         return mapper.updateCategoryOrder(dto);
     }
 
+    public void updateCategoryOrders(List<Category> categories) {
+        mapper.updateCategoryOrders(categories);
+    }
+
 }

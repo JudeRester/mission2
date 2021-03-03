@@ -113,16 +113,6 @@ const useStylesForSearch = makeStyles((theme: Theme) =>
   }),
 );
 
-function parseJwt(token: string) {
-  var base64Url = token.split('.')[1];
-  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
-    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-  }).join(''));
-
-  return JSON.parse(jsonPayload);
-};
-
 export default function SideHeader(props: any) {
 
   type Asset = {
@@ -469,7 +459,7 @@ export default function SideHeader(props: any) {
               >
                 <div>
                   {categories.map((category: TreeViews) => {
-                    return <Category key={category.categoryId} category={category} />
+                    return <Category category={category} />
                   })}
                 </div>
               </TreeView>
@@ -483,7 +473,7 @@ export default function SideHeader(props: any) {
           {tags && tags.length > 0 ?
             tags.map((item, i) => {
               return (
-                <ListItem key={i} role={undefined} dense button onClick={handleCheck(item.assetTag)}>
+                <ListItem key={item.assetTag} role={undefined} dense button onClick={handleCheck(item.assetTag)}>
                   <ListItemIcon>
                     <Checkbox
                       edge="start"

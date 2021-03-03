@@ -1,4 +1,4 @@
-import Members from "./members"
+import Members from "./Members"
 
 const MemberManager = () => {
     return (

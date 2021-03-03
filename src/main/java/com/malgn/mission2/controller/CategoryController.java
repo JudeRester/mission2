@@ -67,11 +67,18 @@ public class CategoryController {
         return res;
     }
 
-    @PutMapping(value = "order")
+    @PutMapping(path = "order")
     public Response<String, Object> updateCategoryOrder(@RequestBody Category dto) {
         Response<String, Object> res = new Response<>();
-
-        res = res.success(service.updateCategoryOrder(dto)+"", null);
+        res = res.success(service.updateCategoryOrder(dto) + "", null);
         return null;
+    }
+
+    @PutMapping(path = "orders")
+    public Response<Object, Object> updateCategorySwap(@RequestBody List<Category> categories) {
+        service.updateCategoryOrders(categories);
+        Response<Object, Object> res = new Response<>();
+        res = res.success(null, null);
+        return res;
     }
 }

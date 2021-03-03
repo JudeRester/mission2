@@ -1,5 +1,5 @@
 import React, {  } from 'react';
-import './App.css';
+// import './App.css';
 import rootReducer from './modules'
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
@@ -9,7 +9,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   // const devTools =
-  //   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
+    // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
   const store = createStore(rootReducer
     //, devTools
   )
