@@ -34,7 +34,7 @@ import {
 import arrayToTree from "array-to-tree";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { TreeItem, TreeView } from "@material-ui/lab";
-import { ChevronRight, ExpandMore, SubdirectoryArrowRight } from "@material-ui/icons";
+import { ChevronRight, ExpandMore, Folder, FolderOpen, Remove, SubdirectoryArrowRight } from "@material-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../modules";
 import CategoryNode from "./CategoryNode";
@@ -176,28 +176,48 @@ const useTreeStyles = makeStyles({
 
 
 const Categories = () => {
-    useEffect(() => {
-        loadCategories()
-    }, [])
 
+    /**
+     * ? store
+     */
+    const arrayCategories = useSelector((state: RootState) => state.arrayCategories)
+    const dispatch = useDispatch()
     const user = useSelector((state: RootState) => state.member)
+    const draggedNode = useSelector((state: RootState) => state.dragNode)
+
     api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+
+    /**
+     * ? state
+     */
+
     const [treeCategories, setTreeCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [selectedCategoryInfo, setSelectedCategoryInfo] = useState<CategoryInfo>();
     const [deleteOpen, setDeleteOpen] = useState<boolean>(false)
 
+    /**
+     * ? style
+     */
+
     const treeClasses = useTreeStyles();
     const classes = useStyles();
-    const arrayCategories = useSelector((state: RootState) => state.arrayCategories)
-    const dispatch = useDispatch()
+
+    /**
+     * ? functions
+     */
 
     const loadCategories = async () => {
         const response = await api.get('/category/list')
         const array = response.data.result
         dispatch(setArrayCategories(array))
     }
+
+    useEffect(() => {
+        loadCategories()
+    }, [])
+
 
     useEffect(() => {
         let tempArray: Array<string> = [];
@@ -208,9 +228,9 @@ const Categories = () => {
                     getParents(node.children);
                 }
             });
-            setExpendedCategory([...tempArray, "0"])
         };
         getParents(treeCategories);
+        setExpendedCategory([...tempArray, "0"])
     }, [treeCategories])
 
     useEffect(() => {
@@ -245,7 +265,7 @@ const Categories = () => {
             categoryId: new Date().getTime(),
             categoryName: '',
             categoryOrder: order,
-            categoryParent: parseStringToNumber(selectedCategory),
+            categoryParent: Number(selectedCategory),
             possessions: 0,
             newNode: true,
         }
@@ -257,10 +277,6 @@ const Categories = () => {
         dispatch(modifyCategory(targetIndex))
     }
 
-    const parseStringToNumber = (target: string) => {
-        let parser: number = +target
-        return parser
-    }
     function getLastOrder(nodeId: string) {
         let count = 0
         for (let i = 0; i < arrayCategories.length; i++) {
@@ -306,7 +322,7 @@ const Categories = () => {
             })
     }
 
-    const draggedNode = useSelector((state: RootState) => state.dragNode)
+
     const onDragOver = (e: React.DragEvent) => {
         e.preventDefault();
     }
@@ -325,18 +341,13 @@ const Categories = () => {
 
     const setTestCategory = (target: Array<string>) => {
         setExpendedCategory(target);
-    } 
+    }
 
     return (
         <>
             <Paper style={{ maxWidth: 1024, margin: "auto" }}>
                 <Card>
                     <CardHeader
-                        // avatar={
-                        //     <div>
-                        //         <h2>카테고리 관리</h2>
-                        //     </div>
-                        // }
                         title="카테고리 관리"
                     />
                     <CardContent>
@@ -374,7 +385,7 @@ const Categories = () => {
                                             :
                                             <TableCell colSpan={2} align="center"
                                             //  style={{ textAlign: "center" }}
-                                             >
+                                            >
                                                 <Typography variant={"h6"}>카테고리를 선택해 주세요</Typography>
                                             </TableCell>
                                         }
@@ -384,33 +395,33 @@ const Categories = () => {
                             <List>
                                 <ListItem key={1}>
                                     <Paper elevation={4} classes={{ elevation4: classes.elevation4, root: classes.paperRoot }}>
-                                        {treeCategories.length > 0 ? (
+                                        {treeCategories && expendedCategory ? (
                                             <TreeView
                                                 onNodeToggle={handleToggle}
                                                 onNodeSelect={handleNodeSelect}
                                                 className={classes.root}
-                                                defaultCollapseIcon={<ExpandMore />}
-                                                defaultExpandIcon={<ChevronRight />}
+                                                defaultCollapseIcon={<FolderOpen />}
+                                                defaultExpandIcon={<Folder />}
                                                 expanded={expendedCategory}
                                                 defaultSelected="0"
                                             >
                                                 <TreeItem
-                                                    key={"0"}
-                                                    nodeId={"0"}
+                                                    key="0"
+                                                    nodeId="0"
                                                     label="전체 보기"
                                                     onDragOver={onDragOver}
                                                     onDrop={(e) => { onDrop(e, "0") }}
                                                     onIconClick={() => handleTreeIconClick("0")}
                                                     classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
                                                     onLabelClick={() => handleTreeLabelClick("0")}
-                                                    endIcon={<SubdirectoryArrowRight />}>
+                                                    endIcon={<Remove />}>
                                                     {treeCategories.map((category: TreeViews) => {
                                                         return <CategoryNode
-                                                                key={category.categoryName}
-                                                                category={category} 
-                                                                setExpendedCategoryList={setTestCategory} 
-                                                                expendedCategoryList={expendedCategory} 
-                                                                selectedInfo={setSelectedCategoryInfo} />
+                                                            key={category.categoryName}
+                                                            category={category}
+                                                            setExpendedCategoryList={setTestCategory}
+                                                            expendedCategoryList={expendedCategory}
+                                                            selectedInfo={setSelectedCategoryInfo} />
                                                     })}
                                                 </TreeItem>
                                             </TreeView>

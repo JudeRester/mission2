@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../modules";
@@ -31,6 +32,7 @@ const DropForHighOrder = ({ id }: props) => {
 
     const onDrop = async (e: React.DragEvent, categoryId: string) => {
         e.stopPropagation()
+        setIsAble(false)
         if (draggedNode.includes(String(categoryId))) {
             //드랍 불가능 액션
         } else {
@@ -73,7 +75,7 @@ const DropForHighOrder = ({ id }: props) => {
             onDragLeave={(e) => { onDragLeave(e) }}
         >
             {isAble &&
-                <div style={{backgroundColor:"black"}}></div>
+                <ArrowRightIcon/>
             }
         </DropDiv>
     )

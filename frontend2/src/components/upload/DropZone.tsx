@@ -1,8 +1,8 @@
-import React, { forwardRef, useState, useEffect, useRef, InputHTMLAttributes } from 'react';
+import React, 
+{  
+    useRef,  
+} from 'react';
 import styled from '@emotion/styled';
-import { RootState } from '../../modules';
-import { add, remove } from '../../modules/fileList';
-import { preProcessFile } from 'typescript';
 
 const DivContainer = styled.div`
 `;
@@ -119,7 +119,7 @@ const DropZone = (props: any) => {
 
     const handleFiles = (files: FileList) => {
         for (let i = 0; i < files.length; i++) {
-            if (fileList.filter((file: File) => file.name == files[i].name).length <= 0) {
+            if (fileList.filter((file: File) => file.name === files[i].name).length <= 0) {
                 setFileList((pre: File[]) => [...pre, files[i]]);
             }
         }

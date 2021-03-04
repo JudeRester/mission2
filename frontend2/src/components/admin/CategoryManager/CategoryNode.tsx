@@ -8,7 +8,7 @@ import {
 
 import React, { useState, useCallback, useEffect } from "react";
 import { TreeItem } from "@material-ui/lab";
-import { SubdirectoryArrowRight } from "@material-ui/icons";
+import { Remove, SubdirectoryArrowRight } from "@material-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../modules";
 import { setDragged } from "../../../modules/dragNode";
@@ -49,9 +49,8 @@ const useTreeStyles = makeStyles({
     },
     label: {
         textAlign: 'left',
-        "& .dragOver": {
-            backgroundColor: "red",
-        }
+        backgroundColor: (props: {backgroundColor:string})=>
+            props.backgroundColor,
     },
     group: {
         marginLeft: 7,
@@ -66,19 +65,26 @@ const useTreeStyles = makeStyles({
 });
 
 const CategoryNode = (props: CategoryProps) => {
-    
-
-
-    const {category, setExpendedCategoryList, expendedCategoryList, selectedInfo} = props;
-    
-    const treeClasses = useTreeStyles();
+    /**
+     * ? store
+     */
+    const arrayCategories =useSelector((state:RootState)=>state.arrayCategories)
     const draggedNode = useSelector((state: RootState) => state.dragNode)
     const dispatch = useDispatch()
-    // const setExpendedCategory = setExpendedCategoryList
+    /**
+     * ? props
+     */
+    const {category, setExpendedCategoryList, expendedCategoryList, selectedInfo} = props;
     const expendedCategory = expendedCategoryList
     const setSelectedCategoryInfo = selectedInfo
-    const arrayCategories =useSelector((state:RootState)=>state.arrayCategories)
+    /**
+     * ?state
+     */
     const [addingCategoryName, setAddingCategoryName] = useState<string>('');
+    const [styleProps,setStyleProps] = useState({backgroundColor: null})
+
+    const treeClasses = useTreeStyles(styleProps);
+    
     const onChange = useCallback((e: React.ChangeEvent<{ value: string }>) => {
         setAddingCategoryName(e.target.value)
 
@@ -239,6 +245,7 @@ const CategoryNode = (props: CategoryProps) => {
 
     const onDrop = async (e: React.DragEvent, categoryId: string) => {
         e.stopPropagation()
+        setStyleProps({backgroundColor: null})
         if (draggedNode.includes(String(categoryId))) {
             //드랍 불가능 액션
         } else {
@@ -253,13 +260,16 @@ const CategoryNode = (props: CategoryProps) => {
         e.stopPropagation()
         if (draggedNode.includes(String(categoryId))) {
             //드랍 불가능 표시
+            setStyleProps({backgroundColor:"red"})
         } else {
             //드랍 가능 표시
+            setStyleProps({backgroundColor:"lightblue"})
         }
     }
 
     const onDragLeave = (e: React.DragEvent, categoryId: string) => {
         e.stopPropagation()
+        setStyleProps({backgroundColor: null})
         // let targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.categoryId === -1)
         // const temp = [...arrayCategories]
         // temp.splice(targetIndex, 1)
@@ -311,7 +321,7 @@ const CategoryNode = (props: CategoryProps) => {
             onLabelClick={category.categoryName ?
                 () => handleTreeLabelClick(category.categoryId + '')
                 : null}
-            endIcon={<SubdirectoryArrowRight />}>
+            endIcon={<Remove />}>
 
             {Array.isArray(category.children) ? category.children.map((node) => 
             <CategoryNode 

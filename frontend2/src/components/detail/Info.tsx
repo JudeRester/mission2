@@ -3,20 +3,15 @@ import {
     CardMedia,
     Divider,
     Grid,
-    Paper,
     Collapse,
     List,
     ListItem,
     ListItemText,
-    ListItemIcon,
     makeStyles,
-    GridList,
-    GridListTile,
     GridListTileBar,
     Table,
     TableRow,
     TableCell,
-    Checkbox,
     ListItemSecondaryAction,
     IconButton,
     Button,
@@ -31,7 +26,6 @@ import { StarBorder, ExpandLess, ExpandMore, Comment, GetApp } from "@material-u
 // import { InboxIcon } from '@material-ui/icons/MoveToInbox';
 import React, { useEffect, useState } from "react"
 import Carousel from "react-material-ui-carousel"
-import axios from "axios";
 import moment from 'moment';
 import { useHistory } from "react-router";
 import { saveAs } from 'file-saver';

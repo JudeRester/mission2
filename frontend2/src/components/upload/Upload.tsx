@@ -17,6 +17,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    fade,
     LinearProgress,
     List,
     ListItem,
@@ -29,6 +30,7 @@ import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
 import api from '../../util/api';
+import { Folder, FolderOpen, Remove } from '@material-ui/icons';
 //style 
 
 let DivWrapper = styled.div`
@@ -207,7 +209,12 @@ const Upload = () => {
     }
 
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId + ''} label={nodes.categoryName} classes={{ label: classes.label }}>
+        <TreeItem 
+        endIcon={<Remove />} 
+        key={nodes.categoryId} 
+        nodeId={nodes.categoryId + ''} 
+        label={nodes.categoryName} 
+        classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
@@ -402,6 +409,16 @@ const Upload = () => {
         label: {
             textAlign: 'left'
         },
+        group: {
+            marginLeft: 7,
+            paddingLeft: 18,
+            borderLeft: `1px dashed ${fade('#000000', 0.4)}`,
+        },
+        iconContainer: {
+            "& svg": {
+                marginLeft: 10
+            }
+        }
     });
     const classes = useStyles();
     return (
@@ -428,8 +445,8 @@ const Upload = () => {
                                         onNodeToggle={handleToggle}
                                         onNodeSelect={handleNodeSelect}
                                         className={classes.root}
-                                        // defaultCollapseIcon={<ExpandMore />}
-                                        // defaultExpandIcon={<ChevronRight />}
+                                        defaultCollapseIcon={<FolderOpen />}
+                                        defaultExpandIcon={<Folder />}
                                         expanded={categoriesHavingChild}
                                     >
                                         <div>

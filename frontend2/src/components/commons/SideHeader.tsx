@@ -14,13 +14,21 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fade, InputBase, ListItemSecondaryAction, Menu, MenuItem, Paper } from '@material-ui/core';
+import {
+  Button,
+  Checkbox,
+  CircularProgress,
+  Fade,
+  InputBase,
+  Menu,
+  MenuItem,
+  Paper
+} from '@material-ui/core';
 import SearchWindow from './SearchWindow';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../modules/member';
 import { RootState } from '../../modules';
-import axios from 'axios';
 import arrayToTree from 'array-to-tree';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { Clear, Search } from '@material-ui/icons';
@@ -205,7 +213,7 @@ export default function SideHeader(props: any) {
   }, [pageNum])
 
   useEffect(() => {
-    
+
     api.get(`/category/list`)
       .then(response => {
         setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
@@ -292,17 +300,17 @@ export default function SideHeader(props: any) {
     let parser: number = +target
     return parser
   }
-  const findChild = (target: number, categories: Category[]) => {
+  const findChild = (target: number, categories: CategoryInfo[]) => {
     let pStr = "" + target;
     categories.forEach(element => {
-      if (element.categoryParent == target) {
+      if (element.categoryParent === target) {
         pStr += '>' + findChild(element.categoryId, categories)
       }
     });
     // pStr+=target;
     return pStr;
   }
-  type Category = {
+  type CategoryInfo = {
     categoryId: number,
     categoryName: string,
     categoryParent: number,
@@ -343,7 +351,7 @@ export default function SideHeader(props: any) {
     event.preventDefault()
   };
   const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
-    if (nodeId == selectedCategory) {
+    if (nodeId === selectedCategory) {
       setSelectedCategory('')
     } else
       setSelectedCategory(nodeId)
@@ -405,7 +413,7 @@ export default function SideHeader(props: any) {
                 <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/member" onClick={handleSearchReset}>회원 관리</Link></MenuItem>
                 <MenuItem onClick={handleAdminMenuClose}><Link to="/admin/category" onClick={handleSearchReset}>카테고리 관리</Link></MenuItem>
               </Menu></> : null}
-              <Link to="/"><Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button></Link>
+            <Link to="/"><Button onClick={logoutHandler} classes={{ text: classes.linkButton }}>로그아웃</Button></Link>
           </Typography>
 
         </Toolbar>
@@ -459,7 +467,7 @@ export default function SideHeader(props: any) {
               >
                 <div>
                   {categories.map((category: TreeViews) => {
-                    return <Category category={category} />
+                    return <Category key={category.categoryId} category={category} />
                   })}
                 </div>
               </TreeView>

@@ -26,7 +26,6 @@ function parseJwt(token: string) {
 const Pages = (props: any) => {
     const user = useSelector((state: RootState) => state.member)
     const dispatch = useDispatch();
-    const [isAdminLogined, setIsAdminLogined] = useState(false)
     let token = sessionStorage.getItem('current_user_token')
     useEffect(() => {
         if (token && !user.isLogined) {
