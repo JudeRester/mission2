@@ -131,6 +131,76 @@ public class AssetController {
         return res;
     }
 
+    @GetMapping("/createLocation/{assetSeq}")
+    public Response<String, Object> createLocation(@PathVariable("assetSeq") int assetSeq,
+            @Value("${property.image.location}") String path) {
+        Calendar c = Calendar.getInstance();
+        // 운영체제 별 경로
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win"))
+            path = "c:" + path;
+        else if (os.contains("mac"))
+            path = System.getProperty("user.home") + path;
+        // 운영체제 별 경로 end
+
+        // 경로 생성
+        String month = Integer.toString(c.get(c.MONTH) + 1);
+        String date = Integer.toString(c.get(c.DATE));
+
+        if (month.length() == 1)
+            month = "0" + month;
+        if (date.length() == 1)
+            date = "0" + date;
+        path = path + c.get(c.YEAR) + "/" + month + "/" + date + "/" + assetSeq + "/";
+        // 경로 생성 end
+        return new Response<String, Object>().success(path, null);
+    }
+
+    @PostMapping("/templargefile")
+    public Response<AssetLargeFile, Object> tempUploadLargeFile(@RequestBody byte[] chunkData,
+            AssetLargeFile assetLargeFile) {
+        log.debug("post...upload large file");
+
+        File file = new File(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
+        File folder = new File(assetLargeFile.getLocation());
+
+        try {
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
+            lFileOutputStream.write(chunkData);
+            lFileOutputStream.close();
+
+        } catch (Exception e) {
+            log.error("{}", e.getMessage(), e);
+        }
+
+        if (assetLargeFile.getIsLastChunk()) {
+            AssetFile dto = new AssetFile();
+            dto.setAssetLocation(assetLargeFile.getLocation() + assetLargeFile.getAssetUuidName());
+            dto.setAssetOriginName(assetLargeFile.getAssetOriginName());
+            dto.setAssetSeq(assetLargeFile.getAssetSeq());
+            dto.setAssetSize(assetLargeFile.getAssetSize());
+            dto.setAssetType(assetLargeFile.getAssetType());
+            service.upload(dto);
+
+            try {
+                if (assetLargeFile.getAssetType().contains("image")) {
+                    String fileOriginName = assetLargeFile.getAssetOriginName();
+                    service.makeThumbnail(assetLargeFile.getLocation(), assetLargeFile.getAssetUuidName(),
+                            fileOriginName.substring(fileOriginName.lastIndexOf(".")));
+                }
+
+            } catch (Exception e) {
+                log.error("{}", e.getMessage(), e);
+            }
+
+        }
+
+        return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
+    }
+
     @PostMapping("/prelargefile")
     public Response<AssetLargeFile, Object> preLargeFile(@RequestBody AssetLargeFile assetLargeFile,
             @Value("${property.image.location}") String path) {

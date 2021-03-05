@@ -13,6 +13,7 @@ import Drawer from './commons/SideHeader';
 import SideHeader from './commons/SideHeader';
 import MemberManager from './admin/MemberManager';
 import CategoryManager from './admin/CategoryManager';
+import TempUpload from './upload/TempUpload';
 
 function parseJwt(token: string) {
     var base64Url = token.split('.')[1];
@@ -41,6 +42,7 @@ const Pages = (props: any) => {
                 <SideHeader>
                     <Route exact path="/" component={Main} />
                     <Route path="/upload" component={Upload} />
+                    <Route path="/tempupload" component={TempUpload} />
                     <Route path="/detail/:assetSeq" component={Detail} />
                     <Route path="/modify/:assetSeq" component={Modify} />
                     { user.userRole === "ROLE_ADMIN" && <>

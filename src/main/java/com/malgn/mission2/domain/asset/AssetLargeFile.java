@@ -2,6 +2,7 @@ package com.malgn.mission2.domain.asset;
 
 public class AssetLargeFile {
     private int assetSeq;
+    private byte[] chunk;
     private String assetOriginName;
     private String assetUuidName;
     private long assetSize;
@@ -9,6 +10,33 @@ public class AssetLargeFile {
     private String location;
     private String assetType;
     private int assetCategory;
+    private int isUploadComplete;
+    private int currentChunk;
+    private int totalChunk;
+
+    public int getIsUploadComplete() {
+        return this.isUploadComplete;
+    }
+
+    public void setIsUploadComplete(int isUploadComplete) {
+        this.isUploadComplete = isUploadComplete;
+    }
+
+    public int getCurrentChunk() {
+        return this.currentChunk;
+    }
+
+    public void setCurrentChunk(int currentChunk) {
+        this.currentChunk = currentChunk;
+    }
+
+    public int getTotalChunk() {
+        return this.totalChunk;
+    }
+
+    public void setTotalChunk(int totalChunk) {
+        this.totalChunk = totalChunk;
+    }
 
     public int getAssetSeq() {
         return this.assetSeq;
@@ -83,7 +111,9 @@ public class AssetLargeFile {
         return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
                 + ", assetUuidName='" + getAssetUuidName() + "'" + ", assetSize='" + getAssetSize() + "'"
                 + ", isLastChunk='" + isIsLastChunk() + "'" + ", location='" + getLocation() + "'" + ", assetType='"
-                + getAssetType() + "'" + ", assetCategory='" + getAssetCategory() + "'" + "}";
+                + getAssetType() + "'" + ", assetCategory='" + getAssetCategory() + "'" + ", isUploadComplete='"
+                + getIsUploadComplete() + "'" + ", currentChunk='" + getCurrentChunk() + "'" + ", totalChunk='"
+                + getTotalChunk() + "'" + "}";
     }
 
 }

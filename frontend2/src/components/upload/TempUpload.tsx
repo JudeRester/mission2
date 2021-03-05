@@ -5,7 +5,6 @@ import React,
     useEffect,
 } from 'react';
 import styled from '@emotion/styled';
-import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
 import {
@@ -27,10 +26,13 @@ import {
 }
     from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../modules';
 import api from '../../util/api';
 import { Folder, FolderOpen, Remove } from '@material-ui/icons';
+// import TempDropZone from './TempDropZone';
+import TempDropZone from './tempDropZone'
+import { UploadFileInfo } from '../../util/types';
 //style 
 
 let DivWrapper = styled.div`
@@ -162,12 +164,13 @@ interface CategoryProps {
     category: TreeViews
 }
 
-const Upload = () => {
+const TempUpload = () => {
     /**
      * ? store
      */
     const history = useHistory()
     const user = useSelector((state: RootState) => state.member)
+    // const fileList = useSelector((state:RootState)=>state.fileList)
     /**
      * ? api
      */
@@ -176,22 +179,21 @@ const Upload = () => {
     /**
      * ? state
      */
+    const [fileList, setFileList] = useState<Array<UploadFileInfo>>([]);
+
     const [title, setTitle] = useState<string>();
     const [currentInputTag, setCurrentInputTag] = useState<string>('');
     const [tags, setTags] = useState<Array<string>>([]);
-    const [filesState, setFilesState] = useState<Array<File>>([]);
-    const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>();
-    const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [assetSeq, setAssetSeq] = useState<number>();
-
+    const [isPaused, setIsPaused] = useState<boolean>(false);
+    
+    const [categories, setCategories] = useState([]);
+    const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [isTagDuplicated, setIsTagDuplicated] = useState<boolean>(false);
     const [alertOpen, setAlertOpen] = useState<boolean>(false);
     const [uploadOpen, setUploadOpen] = useState<boolean>(false);
 
-    const [progresses, setProgresses] = useState<Array<number>>([0]);
-    const [newProgresses, setNewProgresses] = useState<Array<number>>([0]);
-    
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
 
     /**
@@ -218,22 +220,13 @@ const Upload = () => {
         getParents(categories);
     }, [categories])
 
-    useEffect(() => {
-        setProgresses(pre => {
-            return new Array(filesState.length).fill(0)
-        })
-        setNewProgresses(pre => {
-            return new Array(filesState.length).fill(0)
-        })
-    }, [filesState])
-    
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem 
-        endIcon={<Remove />} 
-        key={nodes.categoryId} 
-        nodeId={nodes.categoryId + ''} 
-        label={nodes.categoryName} 
-        classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
+        <TreeItem
+            endIcon={<Remove />}
+            key={nodes.categoryId}
+            nodeId={nodes.categoryId + ''}
+            label={nodes.categoryName}
+            classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
@@ -265,7 +258,7 @@ const Upload = () => {
      */
     const submitFiles = async (e: FormEvent) => {
         e.preventDefault();
-        if (filesState.length !== 0 && title && selectedCategory) {
+        if (fileList.length !== 0 && title && selectedCategory) {
             let data = { assetTitle: title, assetCategory: selectedCategory }
             try {
                 const response = await api.post(`/asset`,
@@ -273,12 +266,9 @@ const Upload = () => {
                     {
                         headers: {
                             'Content-type': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
                         }
                     });
                 setAssetSeq(response.data.result.assetSeq);
-
-                fileUpload();
             }
             catch (err) {
                 console.log(err);
@@ -287,8 +277,31 @@ const Upload = () => {
             handleAlertOpen();
         }
     }
-    // 파일을 청크로 나누는 함수
-    const fileSlicer = (target: File) => {
+
+    const uploadStart = async () => {
+        console.log(fileList)
+        for (let i = 0; i < fileList.length; i++) {
+            !fileList[i].isUploadComplete && !isPaused && await fileUpload(fileList[i])
+        }
+    }
+    const fileUpload = async (file: UploadFileInfo) => {
+        const targetFile = {...file}
+        const response = await api.get(`/createLocation/${assetSeq}`)
+        targetFile.assetLocation= response.data.result
+        const chunks = fileToChunks(targetFile.file)
+        for(let i=0;i<chunks.length;i++){
+            if(!isPaused){
+                try{
+                    await api.post(`/templargefile`)
+                }catch(err) {
+                    console.log(err);
+                }
+            }
+        }
+    }
+
+     // 파일을 청크로 나누는 함수
+     const fileToChunks = (target: File) => {
         let chunks = [];
         let chunkIndex = 0; // 파일 자를 시작 위치
         const CHUNK_COUNT = Math.ceil(target.size / CHUNK_SIZE);//청크갯수
@@ -301,100 +314,6 @@ const Upload = () => {
         }
         return chunks
     }
-    const fileUpload = () => {
-        handlerUploadOpen();
-
-        (async function () {
-            for (let index = 0; index < filesState.length; index++) {
-                if (filesState[index].size > CHUNK_SIZE) {
-                    const chunks = fileSlicer(filesState[index])
-                    let data = {
-                        "assetSeq": assetSeq,
-                        "assetOriginName": filesState[index].name,
-                        "assetSize": filesState[index].size,
-                        "assetUuidName": '',
-                        "isLastChunk": false,
-                        "location": '',
-                        "assetType": filesState[index].type,
-                        "category": selectedCategory
-                    }
-                    const result = await api.post(`/prelargefile`,
-                        data
-                    )
-                    data["assetUuidName"] = result.data.result.assetUuidName;
-                    data["location"] = result.data.result.location;
-                    for (let i = 0; i < chunks.length; i++) {
-                        if ((i + 1) === chunks.length) {
-                            data["isLastChunk"] = true;
-                        }
-                        try {
-                            setProgresses(pre => { pre[index] = Math.round(100 / chunks.length * i); return pre })
-                            setNewProgresses([...progresses])
-                            await api.post(`/largefile`,
-                                chunks[i],
-                                {
-                                    params: data,
-                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                }
-                            )
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    }
-                } else {
-                    try {
-                        const formData = new FormData();
-                        formData.append("file", filesState[index]);
-                        formData.append("assetSeq", '' + assetSeq);
-                        formData.append("assetType", filesState[index].type);
-                        formData.append("category", selectedCategory)
-                        await api.post(`/file`,
-                            formData,
-                            {
-                                onUploadProgress: ProgressEvent => {
-                                    const percentage = Math.round(
-                                        ProgressEvent.loaded * 100 / ProgressEvent.total
-                                    )
-                                    setProgresses(pre => { pre[index] = percentage; return pre })
-                                    setNewProgresses([...progresses])
-                                }
-                            }
-                        )
-
-                    }
-                    catch (err) {
-
-                    }
-                }
-                if (index === filesState.length - 1) {
-                    await fileUploadComplete(assetSeq)
-                }
-            }
-            // }
-        })();
-    }
-
-    const fileUploadComplete = async (seq: number) => {
-        try {
-            await api.post(`/complete`,
-                { assetSeq: seq, tags: tags.toString() },
-                {
-                    headers: {
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                })
-            setFilesState([]);
-
-            history.push('/')
-        } catch (err) {
-            console.log(err)
-        }
-
-    }
-
-    
-
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
@@ -418,7 +337,7 @@ const Upload = () => {
         setTags([...tags]);
     }
 
-    
+
     const useStyles = makeStyles({
         root: {
             height: 240,
@@ -440,6 +359,32 @@ const Upload = () => {
             }
         }
     });
+
+    function setFileListProp(action: string, payload: any) {
+        switch (action) {
+            case "set":
+                setFileList(payload)
+                break;
+            case "add":
+                setFileList(pre=>{
+                    let tempFileList=[...pre];
+                    tempFileList = tempFileList.concat(payload)
+                    return tempFileList;
+                })
+                break;
+            case "delete":
+                setFileList(pre=>{
+                    let tempFileList = [...pre];
+                    tempFileList.splice(payload, 1);
+                    return tempFileList;
+                })
+                break;
+            default:
+                setFileList([])
+                break;
+        }
+    }
+
     const classes = useStyles();
     return (
         <>
@@ -498,10 +443,13 @@ const Upload = () => {
                                 )}
                             </DivTagGroup>
                             <DivInputGroup>
-                                <DropZone filesState={filesState} setFilesState={setFilesState} />
+                                <TempDropZone fileList={fileList} setFileListProp={setFileListProp} />
                             </DivInputGroup>
                             <DivTagGroup>
-                                <Button size="large" color="primary" onClick={submitFiles}>저장</Button>
+                                <Button size="large" color="primary"
+                                    // onClick={submitFiles}
+                                    onClick={uploadStart}
+                                >저장</Button>
                             </DivTagGroup>
 
                         </FormLogin>
@@ -528,46 +476,8 @@ const Upload = () => {
                 </DialogActions>
             </Dialog>
 
-
-            <Dialog
-                open={uploadOpen}
-                // onClose={handlerUploadClose}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <DialogTitle id="alert-dialog-title">{"업로드"}</DialogTitle>
-                <DialogContent>
-                    <List className={classes.root}>
-                        {filesState.map((file, mapIndex) =>
-                            <ListItem alignItems="flex-start">
-                                <ListItemText
-                                    primary={file.name}
-                                    secondary={
-                                        <React.Fragment>
-                                            <Box display="flex" alignItems="center">
-                                                <Box width="100%" mr={1}>
-                                                    <LinearProgress variant="determinate" value={newProgresses[mapIndex]} />
-                                                </Box>
-                                                <Box minWidth={35}>
-                                                    <Typography variant="body2" color="textSecondary">{`${Math.round(newProgresses[mapIndex])}%`}</Typography>
-                                                </Box>
-                                            </Box>
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                        )}
-
-                    </List>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handlerUploadClose} color="primary">
-                        창닫기
-                     </Button>
-                </DialogActions>
-            </Dialog>
         </>
     )
 }
 
-export default Upload;
+export default TempUpload;
