@@ -201,4 +201,8 @@ public class AssetService {
         return mapper.searchTotal(src);
     }
 
+    public void fileUploadUpdate(AssetFile dto) {
+        mapper.fileUploadUpdate(dto);
+    }
+
 }

@@ -56,4 +56,6 @@ public interface AssetMapper {
 
     public int searchTotal(Search src);
 
+    public void fileUploadUpdate(AssetFile dto);
+
 }

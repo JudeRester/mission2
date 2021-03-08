@@ -27,13 +27,19 @@
         asset_Origin_name,
         asset_Location,
         asset_Size,
-        asset_Type)
+        asset_Type,
+        isUploadComplete,
+        current_chunk,
+        total_chunk)
         values(
             #{assetSeq},
             #{assetOriginName},
             #{assetLocation},
             #{assetSize},
-            #{assetType}
+            #{assetType},
+            #{isUploadComplete},
+            #{currentChunk},
+            #{totalChunk}
         )
     </insert>
 
@@ -46,6 +52,13 @@
 
     <update id="completeAsset">
         update asset set asset_iscomplete = 1 where asset_seq=#{assetSeq}
+    </update>
+    <update id="fileUploadUpdate">
+        update assetfile
+        set isUploadComplete= #{isUploadComplete},
+        current_chunk=#{currentChunk},
+        total_chunk=#{totalChunk}
+        where asset_Location=#{assetLoaction}
     </update>
 
     <select id="getAsset" resultType="Asset">
@@ -349,27 +362,27 @@
             WHERE
             a.asset_seq=t.asset_seq
             AND a.asset_CATEGORY=c.categoryid
-            <if test='tag != null'>
-                AND (
-                <foreach collection="tag" item="tag" separator="and">
+        <if test='tag != null'>
+            AND (
+            <foreach collection="tag" item="tag" separator="and">
                     a.asset_SEQ  in
                     (SELECT asset_seq FROM assettag WHERE asset_tag=#{tag})
                 </foreach>
-                )
-            </if>
-            <if test="category != null">
-                and (
-                <foreach collection="category" item="category" separator="or">
+            )
+        </if>
+        <if test="category != null">
+            and (
+            <foreach collection="category" item="category" separator="or">
                     a.asset_category = #{category}
                 </foreach>
-                )
-            </if>
-            <if test='keyword != null'>
+            )
+        </if>
+        <if test='keyword != null'>
                 and(
                 asset_Title like '%'||#{keyword}||'%'
                 )
             </if>
-            )
+        )
     </select>
 
 </mapper>

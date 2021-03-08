@@ -6,6 +6,9 @@ public class AssetFile {
     private String assetLocation;
     private long assetSize;
     private String assetType;
+    private int isUploadComplete;
+    private int currentChunk;
+    private int totalChunk;
 
     public int getAssetSeq() {
         return this.assetSeq;
@@ -47,11 +50,36 @@ public class AssetFile {
         this.assetType = assetType;
     }
 
+    public int getIsUploadComplete() {
+        return this.isUploadComplete;
+    }
+
+    public void setIsUploadComplete(int isUploadComplete) {
+        this.isUploadComplete = isUploadComplete;
+    }
+
+    public int getCurrentChunk() {
+        return this.currentChunk;
+    }
+
+    public void setCurrentChunk(int currentChunk) {
+        this.currentChunk = currentChunk;
+    }
+
+    public int getTotalChunk() {
+        return this.totalChunk;
+    }
+
+    public void setTotalChunk(int totalChunk) {
+        this.totalChunk = totalChunk;
+    }
+
     @Override
     public String toString() {
         return "{" + " assetSeq='" + getAssetSeq() + "'" + ", assetOriginName='" + getAssetOriginName() + "'"
                 + ", assetLocation='" + getAssetLocation() + "'" + ", assetSize='" + getAssetSize() + "'"
-                + ", assetType='" + getAssetType() + "'" + "}";
+                + ", assetType='" + getAssetType() + "'" + ", isUploadComplete='" + getIsUploadComplete() + "'"
+                + ", currentChunk='" + getCurrentChunk() + "'" + ", totalChunk='" + getTotalChunk() + "'" + "}";
     }
 
 }
