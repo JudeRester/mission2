@@ -30,7 +30,6 @@ import moment from 'moment';
 import { useHistory } from "react-router";
 import { saveAs } from 'file-saver';
 import JSZip from "jszip";
-import { promises } from "fs";
 import fileDownload from "js-file-download";
 import { useSelector } from "react-redux";
 import { RootState } from "../../modules";
@@ -251,7 +250,7 @@ const Info = (props: MatchParams) => {
                         >
                             {assetInfo && assetInfo.assetFiles.map((item, i) => (
                                 <Grid item>
-                                    <CardContent>
+                                    <CardContent style={{textAlign:"center"}}>
                                         <CardMedia>
                                             {!item.assetType ?
                                                 <div>

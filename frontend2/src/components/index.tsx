@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Login from './login/Login';
-import { connect, Provider, useDispatch, useSelector } from 'react-redux';
+import { connect,  useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import { RootState } from '../modules';
 import { login } from '../modules/member';
@@ -9,11 +9,9 @@ import Header from './commons/Header';
 import Main from './main';
 import Detail from './detail';
 import Modify from './modify';
-import Drawer from './commons/SideHeader';
 import SideHeader from './commons/SideHeader';
 import MemberManager from './admin/MemberManager';
 import CategoryManager from './admin/CategoryManager';
-import TempUpload from './upload/TempUpload';
 
 function parseJwt(token: string) {
     var base64Url = token.split('.')[1];
@@ -42,7 +40,6 @@ const Pages = (props: any) => {
                 <SideHeader>
                     <Route exact path="/" component={Main} />
                     <Route path="/upload" component={Upload} />
-                    <Route path="/tempupload" component={TempUpload} />
                     <Route path="/detail/:assetSeq" component={Detail} />
                     <Route path="/modify/:assetSeq" component={Modify} />
                     { user.userRole === "ROLE_ADMIN" && <>

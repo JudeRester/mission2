@@ -33,9 +33,7 @@ import { RootState } from '../../modules';
 import api from '../../util/api';
 import { Folder, FolderOpen, FormatBoldTwoTone, Remove } from '@material-ui/icons';
 // import TempDropZone from './TempDropZone';
-import TempDropZone from './tempDropZone'
 import { UploadFileInfo } from '../../util/types';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import DropZone from './DropZone';
 //style 
 
@@ -86,9 +84,9 @@ box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;
 
 const DivInputGroup = styled.div`
 width: 100%;
-  position: relative;
-  border-bottom: 1px solid #b2b2b2;
-  margin-bottom: 26px;
+position: relative;
+border-bottom: 1px solid #b2b2b2;
+margin-bottom: 26px;
 `;
 
 const DivTagGroup = styled.div`
@@ -100,34 +98,34 @@ display:block;
 
 const SpanInputLabel = styled.span`
 font-family: Poppins-Regular;
-  font-size: 15px;
-  color: #808080;
-  line-height: 1.2;
-  text-align: right;
-  position: absolute;
-  top: 14px;
-  left: -105px;
-  width: 80px;
+font-size: 15px;
+color: #808080;
+line-height: 1.2;
+text-align: right;
+position: absolute;
+top: 14px;
+left: -105px;
+width: 80px;
 `;
 const InputText = styled.input`
 font-family: Poppins-Regular;
-  font-size: 15px;
-  color: #555555;
-  line-height: 1.2;
-  height: 45px;
-  display: block;
-  width: 100%;
-  background: transparent;
-  padding: 0 5px;
-  outline:none;
-  border:none;
+font-size: 15px;
+color: #555555;
+line-height: 1.2;
+height: 45px;
+display: block;
+width: 100%;
+background: transparent;
+padding: 0 5px;
+outline:none;
+border:none;
 `;
 const FormLogin = styled.form`
 width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  padding: 43px 88px 93px 150px;
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+padding: 43px 88px 93px 150px;
 `;
 
 const SpanTag = styled.span`
@@ -632,12 +630,12 @@ const Upload = () => {
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
                         (제목, 카테고리, 파일첨부는 필수요소 입니다.)
-          </DialogContentText>
+                    </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleAlertClose} color="primary">
                         확인
-          </Button>
+                    </Button>
                 </DialogActions>
             </Dialog>
             <Dialog
@@ -674,10 +672,10 @@ const Upload = () => {
                 <DialogActions>
                     <Button onClick={handlePauseUpload} color="primary" variant="contained">
                         일시정지
-                     </Button>
+                    </Button>
                     <Button onClick={handleCancelUpload} color="secondary" variant="contained">
                         취소
-                     </Button>
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -691,15 +689,15 @@ const Upload = () => {
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
                         업로드를 취소하면 현재까지의 진행사항이 모두 삭제됩니다
-          </DialogContentText>
+                    </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                <Button onClick={cancelUpload} color="secondary" variant="contained">
+                    <Button onClick={cancelUpload} color="secondary" variant="contained">
                         확인
-                     </Button>
+                    </Button>
                     <Button onClick={handleCloseCancel} color="primary" variant="contained">
                         취소
-                     </Button>
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>

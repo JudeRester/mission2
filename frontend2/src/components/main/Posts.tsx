@@ -9,13 +9,9 @@ import {
   GridListTile,
   makeStyles,
   GridListTileBar,
-  Paper,
-  Divider,
-  ButtonBase,
   CircularProgress,
 
 } from '@material-ui/core'
-import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 
 import { Pagination, PaginationItem, PaginationItemTypeMap } from '@material-ui/lab';
 import axios from 'axios';
@@ -34,9 +30,11 @@ const useStyles = makeStyles(() => ({
     height: 400,
   },
   imageCountLessEqualTwo: {
+    textAlign:"center",
     height: '100%!important'
   },
   imageCountOverTwo: {
+    textAlign:"center",
     height: '50%!important'
   },
   ul: {
