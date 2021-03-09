@@ -54,38 +54,43 @@ public class AssetService {
         mapper.upload(assetLargeFile);
     }
 
-    public void makeThumbnail(String path, String fileName, String fileExt) throws Exception {
+    public void makeThumbnail(String path, String fileName, String fileExt) {
         // 저장된 원본파일로부터 BufferedImage 객체를 생성합니다.
-        BufferedImage srcImg = ImageIO.read(new File(path + fileName));
-        // 썸네일의 너비와 높이 입니다.
-        int dw = 500, dh = 500;
-        // 원본 이미지의 너비와 높이 입니다.
-        int ow = srcImg.getWidth();
-        int oh = srcImg.getHeight();
-        // 원본 너비를 기준으로 하여 썸네일의 비율로 높이를 계산합니다.
-        int nw = ow;
-        int nh = (ow * dh) / dw;
-        // 계산된 높이가 원본보다 높다면 crop이 안되므로
-        // 원본 높이를 기준으로 썸네일의 비율로 너비를 계산합니다.
-        if (nh > oh) {
-            nw = (oh * dw) / dh;
-            nh = oh;
-        }
-        // 계산된 크기로 원본이미지를 가운데에서 crop 합니다.
-        BufferedImage cropImg = Scalr.crop(srcImg, (ow - nw) / 2, (oh - nh) / 2, nw, nh);
-        // crop된 이미지로 썸네일을 생성합니다.
-        BufferedImage destImg = Scalr.resize(cropImg, dw, dh);
+        try {
+            BufferedImage srcImg = ImageIO.read(new File(path + fileName));
+            // 썸네일의 너비와 높이 입니다.
+            int dw = 500, dh = 500;
+            // 원본 이미지의 너비와 높이 입니다.
+            int ow = srcImg.getWidth();
+            int oh = srcImg.getHeight();
+            // 원본 너비를 기준으로 하여 썸네일의 비율로 높이를 계산합니다.
+            int nw = ow;
+            int nh = (ow * dh) / dw;
+            // 계산된 높이가 원본보다 높다면 crop이 안되므로
+            // 원본 높이를 기준으로 썸네일의 비율로 너비를 계산합니다.
+            if (nh > oh) {
+                nw = (oh * dw) / dh;
+                nh = oh;
+            }
+            // 계산된 크기로 원본이미지를 가운데에서 crop 합니다.
+            BufferedImage cropImg = Scalr.crop(srcImg, (ow - nw) / 2, (oh - nh) / 2, nw, nh);
+            // crop된 이미지로 썸네일을 생성합니다.
+            BufferedImage destImg = Scalr.resize(cropImg, dw, dh);
 
-        int index = path.lastIndexOf("/uploadedImages") + "/uploadedImages".length();
+            int index = path.lastIndexOf("/uploadedImages") + "/uploadedImages".length();
 
-        String thumbPath = path.substring(0, index) + "/thumb" + path.substring(index);
-        File folder = new File(thumbPath);
-        if (!folder.exists()) {
-            folder.mkdirs();
+            String thumbPath = path.substring(0, index) + "/thumb" + path.substring(index);
+            File folder = new File(thumbPath);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            String thumbName = thumbPath + fileName;
+            File thumbFile = new File(thumbName);
+            ImageIO.write(destImg, fileExt.toUpperCase(), thumbFile);
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
         }
-        String thumbName = thumbPath + fileName;
-        File thumbFile = new File(thumbName);
-        ImageIO.write(destImg, fileExt.toUpperCase(), thumbFile);
     }
 
     public Asset getAsset(int assetSeq) {
@@ -203,6 +208,24 @@ public class AssetService {
 
     public void fileUploadUpdate(AssetFile dto) {
         mapper.fileUploadUpdate(dto);
+    }
+
+    public List<AssetLargeFile> getUploadedFilesInfo(int assetSeq) {
+        List<AssetLargeFile> list = mapper.getUploadedFilesInfo(assetSeq);
+        for (int i = 0; i < list.size(); i++) {
+            String tempLocation = list.get(i).getAssetLocation();
+            File file = new File(tempLocation);
+            if (file.exists()) {
+                list.get(i).setUploadedSize(file.length());
+            }
+            list.get(i).setAssetLocation(tempLocation.substring(0, tempLocation.lastIndexOf("/") + 1));
+            list.get(i).setAssetUuidName(tempLocation.substring(tempLocation.lastIndexOf("/") + 1));
+        }
+        return list;
+    }
+
+    public void assetUpdateBeforeComplete(Asset dto) {
+        mapper.assetUpdateBeforeComplete(dto);
     }
 
 }

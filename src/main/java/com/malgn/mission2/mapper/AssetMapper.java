@@ -58,4 +58,8 @@ public interface AssetMapper {
 
     public void fileUploadUpdate(AssetFile dto);
 
+    public List<AssetLargeFile> getUploadedFilesInfo(int assetSeq);
+
+    public void assetUpdateBeforeComplete(Asset dto);
+
 }

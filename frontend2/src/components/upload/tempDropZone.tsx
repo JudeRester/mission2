@@ -3,10 +3,9 @@ import React,
     useRef,
 } from 'react';
 import styled from '@emotion/styled';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../modules';
 import { v4 as uuid } from 'uuid';
 import { UploadFileInfo } from '../../util/types';
+import api from '../../util/api';
 const DivContainer = styled.div`
 `;
 
@@ -115,7 +114,7 @@ const InputFileinput = styled.input`
 display:none;
 `;
 
-const TempDropZone = (props:{fileList:UploadFileInfo[],setFileListProp:(action: string, payload: any) => void;}) => {
+const TempDropZone = (props: { fileList: UploadFileInfo[], setFileListProp: (action: string, payload: any) => void; isPaused:boolean}) => {
 
     /**
      * ? state
@@ -130,12 +129,12 @@ const TempDropZone = (props:{fileList:UploadFileInfo[],setFileListProp:(action: 
      * ? functions
      */
     const handleFiles = (files: FileList) => {
-        const newFiles:UploadFileInfo[]=[]
+        const newFiles: UploadFileInfo[] = []
         for (let i = 0; i < files.length; i++) {
             if (fileList.filter((file: UploadFileInfo) => file.file.name === files[i].name).length <= 0) {
                 const newFile: UploadFileInfo = {
-                    assetSeq:0,
-                    assetUuidName: uuid()+files[i].name.substring(files[i].name.lastIndexOf(".")),
+                    assetSeq: 0,
+                    assetUuidName: uuid() + files[i].name.substring(files[i].name.lastIndexOf(".")),
                     file: files[i],
                     uploadedSize: 0,
                     currentChunk: 0,
@@ -147,17 +146,30 @@ const TempDropZone = (props:{fileList:UploadFileInfo[],setFileListProp:(action: 
                     assetType: files[i].type
                 }
                 newFiles.push(newFile)
-                // dispatch(addFile(newFile))
             }
         }
-        setFileList("add",newFiles)
+        setFileList("add", newFiles)
     }
-    const handleRemoveFile = (name: string) => {
+    const handleRemoveFile = async (name: string) => {
+        
         const targetIndex = fileList.findIndex((e: UploadFileInfo) => e.assetOriginName === name);
         const tempList = [...fileList]
+        if(props.isPaused){
+            const data =fileList[targetIndex].assetLocation+fileList[targetIndex].assetUuidName
+            await api.delete(`/file`,
+            {
+                params: {
+                    assetLocation: data
+                },
+                headers: {
+                    'Content-type': 'application/json',
+                }
+            }
+        )}
         tempList.splice(targetIndex, 1)
+
         // dispatch(removeFile(targetIndex))
-        setFileList("delete",targetIndex)
+        setFileList("delete", targetIndex)
     }
 
     const dragOver = (e: React.DragEvent<HTMLDivElement>) => {

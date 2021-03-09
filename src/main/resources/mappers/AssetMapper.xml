@@ -58,8 +58,20 @@
         set isUploadComplete= #{isUploadComplete},
         current_chunk=#{currentChunk},
         total_chunk=#{totalChunk}
-        where asset_Location=#{assetLoaction}
+        where asset_Location=#{assetLocation}
     </update>
+
+    <select id="getUploadedFilesInfo" resultType="AssetLargeFile">
+        SELECT 
+            asset_seq, 
+            asset_location, 
+            isuploadcomplete, 
+            current_chunk 
+        FROM 
+            assetfile 
+        WHERE 
+            asset_seq=#{assetSeq}
+    </select>
 
     <select id="getAsset" resultType="Asset">
         select 
@@ -235,6 +247,14 @@
         asset_category=#{assetCategory},
         asset_changer=#{assetChanger},
         asset_update_date=sysdate
+        where
+        asset_seq=#{assetSeq}
+    </update>
+    <update id="assetUpdateBeforeComplete">
+        update asset
+        set
+        asset_title=#{assetTitle},
+        asset_category=#{assetCategory}
         where
         asset_seq=#{assetSeq}
     </update>

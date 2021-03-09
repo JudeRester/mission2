@@ -5,7 +5,6 @@ import React,
     useEffect,
 } from 'react';
 import styled from '@emotion/styled';
-import DropZone from './DropZone';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
 import {
@@ -27,10 +26,17 @@ import {
 }
     from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
-import { useSelector } from 'react-redux';
+import {
+    useSelector
+} from 'react-redux';
 import { RootState } from '../../modules';
 import api from '../../util/api';
-import { Folder, FolderOpen, Remove } from '@material-ui/icons';
+import { Folder, FolderOpen, FormatBoldTwoTone, Remove } from '@material-ui/icons';
+// import TempDropZone from './TempDropZone';
+import TempDropZone from './tempDropZone'
+import { UploadFileInfo } from '../../util/types';
+import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
+import DropZone from './DropZone';
 //style 
 
 let DivWrapper = styled.div`
@@ -168,6 +174,7 @@ const Upload = () => {
      */
     const history = useHistory()
     const user = useSelector((state: RootState) => state.member)
+    // const fileList = useSelector((state:RootState)=>state.fileList)
     /**
      * ? api
      */
@@ -176,22 +183,26 @@ const Upload = () => {
     /**
      * ? state
      */
+    const [fileList, setFileList] = useState<Array<UploadFileInfo>>([]);
+
     const [title, setTitle] = useState<string>();
     const [currentInputTag, setCurrentInputTag] = useState<string>('');
     const [tags, setTags] = useState<Array<string>>([]);
-    const [filesState, setFilesState] = useState<Array<File>>([]);
-    const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>();
-    const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [assetSeq, setAssetSeq] = useState<number>();
+    const [isPaused, setIsPaused] = useState<boolean>(false);
 
+    const [categories, setCategories] = useState([]);
+    const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     const [isTagDuplicated, setIsTagDuplicated] = useState<boolean>(false);
     const [alertOpen, setAlertOpen] = useState<boolean>(false);
     const [uploadOpen, setUploadOpen] = useState<boolean>(false);
-
     const [progresses, setProgresses] = useState<Array<number>>([0]);
     const [newProgresses, setNewProgresses] = useState<Array<number>>([0]);
-    
+    const [cancelOpen, setCancelOpen] = useState<boolean>(false);
+    /**
+     * ? variable
+     */
     const CHUNK_SIZE: number = 1024 * 1024 * 10;//10MB
 
     /**
@@ -204,6 +215,16 @@ const Upload = () => {
                 setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
             })
     }, [user])
+
+    useEffect(() => {
+        setProgresses(pre => {
+            return new Array(fileList.length).fill(0)
+        })
+        setNewProgresses(pre => {
+            return new Array(fileList.length).fill(0)
+        })
+    }, [fileList])
+
     useEffect(() => {
         let tempArray: Array<string> = [];
         async function getParents(array: Array<TreeViews>) {
@@ -218,22 +239,13 @@ const Upload = () => {
         getParents(categories);
     }, [categories])
 
-    useEffect(() => {
-        setProgresses(pre => {
-            return new Array(filesState.length).fill(0)
-        })
-        setNewProgresses(pre => {
-            return new Array(filesState.length).fill(0)
-        })
-    }, [filesState])
-    
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem 
-        endIcon={<Remove />} 
-        key={nodes.categoryId} 
-        nodeId={nodes.categoryId + ''} 
-        label={nodes.categoryName} 
-        classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
+        <TreeItem
+            endIcon={<Remove />}
+            key={nodes.categoryId}
+            nodeId={nodes.categoryId + ''}
+            label={nodes.categoryName}
+            classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
@@ -254,31 +266,37 @@ const Upload = () => {
     const handleAlertClose = () => {
         setAlertOpen(false)
     }
-    const handlerUploadOpen = () => {
+    const handleUploadOpen = () => {
         setUploadOpen(true);
     }
-    const handlerUploadClose = () => {
+    const handleUploadClose = () => {
         setUploadOpen(false);
     }
-    /**
-     * * 파일 업로드
-     */
-    const submitFiles = async (e: FormEvent) => {
-        e.preventDefault();
-        if (filesState.length !== 0 && title && selectedCategory) {
-            let data = { assetTitle: title, assetCategory: selectedCategory }
+    const handlePauseUpload = () => {
+        handleUploadClose()
+        setIsPaused(pre => {
+            let temp = true;
+            return temp;
+        })
+    }
+
+    const handleResumeUpload = async () => {
+        setIsPaused(pre => {
+            let temp = false;
+            return temp;
+        })
+        if (fileList.length !== 0 && title && selectedCategory) {
+            let data = { assetTitle: title, assetCategory: selectedCategory, assetSeq: assetSeq }
             try {
-                const response = await api.post(`/asset`,
+                const response = await api.put(`/asset/${assetSeq}`,
                     data,
                     {
                         headers: {
                             'Content-type': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
                         }
                     });
-                setAssetSeq(response.data.result.assetSeq);
-
-                fileUpload();
+                await resumeUpload()
+                uploadStart()
             }
             catch (err) {
                 console.log(err);
@@ -287,8 +305,141 @@ const Upload = () => {
             handleAlertOpen();
         }
     }
+
+    const handleCancelUpload = () => {
+        //업로드 취소 확인창 띄우기
+        handlePauseUpload()
+        setCancelOpen(true)
+    }
+    const handleCloseCancel = ()=>{
+        setCancelOpen(false)
+        handleResumeUpload()
+    }
+
+    const cancelUpload = async () =>{
+        await api.delete(`/asset/${assetSeq}?assetOwner=${user.userId}`)
+        history.replace('/')
+    }
+    /**
+     * * 파일 업로드
+     */
+    const submitFiles = async (e: FormEvent) => {
+
+        e.preventDefault();
+        if (fileList.length !== 0 && title && selectedCategory) {
+            let data = { assetTitle: title, assetCategory: selectedCategory }
+            try {
+                const response = await api.post(`/asset`,
+                    data,
+                    {
+                        headers: {
+                            'Content-type': 'application/json',
+                        }
+                    });
+                setAssetSeq(pre => {
+                    const tempAssetSeq = response.data.result.assetSeq;
+                    return tempAssetSeq;
+                });
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            handleAlertOpen();
+        }
+    }
+    useEffect(() => {
+        assetSeq && uploadStart()
+    }, [assetSeq])
+    const uploadStart = async () => {
+        handleUploadOpen();
+        console.log(fileList, isPaused)
+        for (let i = 0; i < fileList.length; i++) {
+            let pause = isPaused;
+            setIsPaused(pre => {
+                pause = pre;
+                return pre;
+            })
+            fileList[i].isUploadComplete && setProgresses(pre => {
+                pre[i] = 100
+                return pre;
+            })
+            !fileList[i].isUploadComplete && !pause && await fileUpload(fileList[i]);
+            setIsPaused(pre => {
+                pause = pre
+                return pre;
+            });
+            !pause && fileList.length === i + 1 && fileUploadComplete()
+        }
+
+    }
+    const fileUpload = async (file: UploadFileInfo) => {
+        const targetFile = { ...file }
+        let pause = isPaused;
+        const response = await api.get(`/createLocation/${assetSeq}`)
+        file.assetLocation=response.data.result
+        targetFile.assetLocation = response.data.result
+        targetFile.assetSeq = assetSeq
+        const chunks = fileToChunks(targetFile.file)
+        const targetIndex = fileList.findIndex((e: UploadFileInfo) => e.assetOriginName === targetFile.assetOriginName);
+        for (let i = targetFile.currentChunk; i < chunks.length; i++) {
+            const targetFileWithNoFile = { ...targetFile }
+            delete targetFileWithNoFile.file
+            setIsPaused(pre => {
+                pause = pre;
+                return pre;
+            });
+            if (!pause) {
+                try {
+                    const response = await api.post(`/file`,
+                        chunks[i],
+                        {
+                            params: {
+                                assetLargeFile: targetFileWithNoFile,
+                            },
+                            headers: {
+                                "Content-Type": 'multipart/form-data'
+                            }
+                        })
+                    response.data.code === 200 && targetFile.currentChunk++
+                    setProgresses(pre => {
+                        pre[targetIndex] = Math.round(100 / chunks.length * targetFile.currentChunk);
+                        setNewProgresses([...pre])
+                        return pre
+                    })
+                } catch (err) {
+                    console.log(err);
+                }
+            } else {
+                break;
+            }
+            if (targetFile.currentChunk == targetFile.totalChunk - 1) {
+                targetFile.isUploadComplete = 1
+                setFileList(pre => {
+                    let tempList = [...pre]
+                    tempList[targetIndex] = targetFile
+                    return tempList;
+                })
+            }
+        }
+    }
+    const fileUploadComplete = async () => {
+        try {
+            await api.post(`/complete`,
+                { assetSeq: assetSeq, tags: tags.toString() },
+                {
+                    headers: {
+                        'Content-type': 'application/json',
+                    }
+                })
+            setFileList([]);
+            history.replace('/')
+        } catch (err) {
+            console.log(err)
+        }
+    }
     // 파일을 청크로 나누는 함수
-    const fileSlicer = (target: File) => {
+    const fileToChunks = (target: File) => {
         let chunks = [];
         let chunkIndex = 0; // 파일 자를 시작 위치
         const CHUNK_COUNT = Math.ceil(target.size / CHUNK_SIZE);//청크갯수
@@ -301,99 +452,28 @@ const Upload = () => {
         }
         return chunks
     }
-    const fileUpload = () => {
-        handlerUploadOpen();
-
-        (async function () {
-            for (let index = 0; index < filesState.length; index++) {
-                if (filesState[index].size > CHUNK_SIZE) {
-                    const chunks = fileSlicer(filesState[index])
-                    let data = {
-                        "assetSeq": assetSeq,
-                        "assetOriginName": filesState[index].name,
-                        "assetSize": filesState[index].size,
-                        "assetUuidName": '',
-                        "isLastChunk": false,
-                        "location": '',
-                        "assetType": filesState[index].type,
-                        "category": selectedCategory
-                    }
-                    const result = await api.post(`/prelargefile`,
-                        data
-                    )
-                    data["assetUuidName"] = result.data.result.assetUuidName;
-                    data["location"] = result.data.result.location;
-                    for (let i = 0; i < chunks.length; i++) {
-                        if ((i + 1) === chunks.length) {
-                            data["isLastChunk"] = true;
-                        }
-                        try {
-                            setProgresses(pre => { pre[index] = Math.round(100 / chunks.length * i); return pre })
-                            setNewProgresses([...progresses])
-                            await api.post(`/largefile`,
-                                chunks[i],
-                                {
-                                    params: data,
-                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                }
-                            )
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    }
-                } else {
-                    try {
-                        const formData = new FormData();
-                        formData.append("file", filesState[index]);
-                        formData.append("assetSeq", '' + assetSeq);
-                        formData.append("assetType", filesState[index].type);
-                        formData.append("category", selectedCategory)
-                        await api.post(`/file`,
-                            formData,
-                            {
-                                onUploadProgress: ProgressEvent => {
-                                    const percentage = Math.round(
-                                        ProgressEvent.loaded * 100 / ProgressEvent.total
-                                    )
-                                    setProgresses(pre => { pre[index] = percentage; return pre })
-                                    setNewProgresses([...progresses])
-                                }
-                            }
-                        )
-
-                    }
-                    catch (err) {
-
-                    }
-                }
-                if (index === filesState.length - 1) {
-                    await fileUploadComplete(assetSeq)
+    /**
+     * * 업로드 재개
+     */
+    const resumeUpload = async () => {
+        const response = await api.get(`/uploaded/${assetSeq}`)
+        const uploadedList: UploadFileInfo[] = response.data.result
+        const tempFileList = [...fileList]
+        for (let i = 0; i < tempFileList.length; i++) {
+            for (let j = 0; j < uploadedList.length; j++) {
+                if (tempFileList[i].assetUuidName === uploadedList[j].assetUuidName) {
+                    let tempF = tempFileList[i]
+                    let tempU = uploadedList[j]
+                    tempF.isUploadComplete = tempU.isUploadComplete
+                    tempF.currentChunk = tempU.currentChunk + 1
+                    tempF.uploadedSize = tempU.uploadedSize
+                    break;
                 }
             }
-            // }
-        })();
-    }
-
-    const fileUploadComplete = async (seq: number) => {
-        try {
-            await api.post(`/complete`,
-                { assetSeq: seq, tags: tags.toString() },
-                {
-                    headers: {
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                })
-            setFilesState([]);
-
-            history.push('/')
-        } catch (err) {
-            console.log(err)
         }
-
+        setFileList([...tempFileList])
+        console.log(fileList, tempFileList)
     }
-
-    
 
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === "Tab") {
@@ -418,7 +498,7 @@ const Upload = () => {
         setTags([...tags]);
     }
 
-    
+
     const useStyles = makeStyles({
         root: {
             height: 240,
@@ -440,6 +520,32 @@ const Upload = () => {
             }
         }
     });
+
+    function setFileListProp(action: string, payload: any) {
+        switch (action) {
+            case "set":
+                setFileList(payload)
+                break;
+            case "add":
+                setFileList(pre => {
+                    let tempFileList = [...pre];
+                    tempFileList = tempFileList.concat(payload)
+                    return tempFileList;
+                })
+                break;
+            case "delete":
+                setFileList(pre => {
+                    let tempFileList = [...pre];
+                    tempFileList.splice(payload, 1);
+                    return tempFileList;
+                })
+                break;
+            default:
+                setFileList([])
+                break;
+        }
+    }
+
     const classes = useStyles();
     return (
         <>
@@ -498,10 +604,17 @@ const Upload = () => {
                                 )}
                             </DivTagGroup>
                             <DivInputGroup>
-                                <DropZone filesState={filesState} setFilesState={setFilesState} />
+                                <DropZone fileList={fileList} setFileListProp={setFileListProp} isPaused={isPaused} />
                             </DivInputGroup>
                             <DivTagGroup>
-                                <Button size="large" color="primary" onClick={submitFiles}>저장</Button>
+                                {!isPaused ? (<Button size="large" color="primary"
+                                    onClick={submitFiles} variant="contained"
+                                >업로드</Button>)
+                                    :
+                                    (<Button size="large" color="primary" variant="contained"
+                                        onClick={handleResumeUpload}
+                                    >업로드 재개</Button>)}
+
                             </DivTagGroup>
 
                         </FormLogin>
@@ -527,8 +640,6 @@ const Upload = () => {
           </Button>
                 </DialogActions>
             </Dialog>
-
-
             <Dialog
                 open={uploadOpen}
                 // onClose={handlerUploadClose}
@@ -538,10 +649,10 @@ const Upload = () => {
                 <DialogTitle id="alert-dialog-title">{"업로드"}</DialogTitle>
                 <DialogContent>
                     <List className={classes.root}>
-                        {filesState.map((file, mapIndex) =>
+                        {fileList.map((file, mapIndex) =>
                             <ListItem alignItems="flex-start">
                                 <ListItemText
-                                    primary={file.name}
+                                    primary={file.assetOriginName}
                                     secondary={
                                         <React.Fragment>
                                             <Box display="flex" alignItems="center">
@@ -561,8 +672,33 @@ const Upload = () => {
                     </List>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handlerUploadClose} color="primary">
-                        창닫기
+                    <Button onClick={handlePauseUpload} color="primary" variant="contained">
+                        일시정지
+                     </Button>
+                    <Button onClick={handleCancelUpload} color="secondary" variant="contained">
+                        취소
+                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={cancelOpen}
+                onClose={handleAlertClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">업로드를 취소합니까?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        업로드를 취소하면 현재까지의 진행사항이 모두 삭제됩니다
+          </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                <Button onClick={cancelUpload} color="secondary" variant="contained">
+                        확인
+                     </Button>
+                    <Button onClick={handleCloseCancel} color="primary" variant="contained">
+                        취소
                      </Button>
                 </DialogActions>
             </Dialog>

@@ -23,6 +23,8 @@ import com.malgn.mission2.domain.asset.Tags;
 import com.malgn.mission2.domain.common.Criteria;
 import com.malgn.mission2.domain.common.Page;
 import com.malgn.mission2.domain.common.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malgn.mission2.domain.UserInfo;
 import com.malgn.mission2.service.AssetService;
 
@@ -67,62 +69,6 @@ public class AssetController {
         return res;
     }
 
-    @PostMapping("/file")
-    public Response<Object, Object> uploadSmallFile(@RequestParam("file") MultipartFile mf,
-            @RequestParam("assetSeq") int assetSeq, @RequestParam("assetType") String type,
-            @Value("${property.image.location}") String path) {
-        log.debug("post...upload small file");
-        Calendar c = Calendar.getInstance();
-        // 운영체제 별 경로
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win"))
-            path = "c:" + path;
-        else if (os.contains("mac"))
-            path = System.getProperty("user.home") + path;
-        // 운영체제 별 경로 end
-        String month = Integer.toString(c.get(c.MONTH) + 1);
-        String date = Integer.toString(c.get(c.DATE));
-
-        if (month.length() == 1)
-            month = "0" + month;
-        if (date.length() == 1)
-            date = "0" + date;
-
-        path = path + c.get(c.YEAR) + "/" + month + "/" + date + "/" + assetSeq + "/";
-        String fileExt = FilenameUtils.getExtension(mf.getOriginalFilename());
-        String fileName = UUID.randomUUID() + "." + fileExt;
-        File file = new File(path + fileName);
-        File folder = new File(path);
-        // UserInfo user = (UserInfo)auth.getPrincipal();
-        AssetFile dto = new AssetFile();
-        dto.setAssetOriginName(mf.getOriginalFilename());
-        dto.setAssetLocation(path + fileName);
-        dto.setAssetSize(mf.getSize());
-        dto.setAssetSeq(assetSeq);
-        dto.setAssetType(type);
-
-        // List<Tags> tagDTOlist = new ArrayList<Tags>();
-        // StringTokenizer tkn = new StringTokenizer(tags, ",");
-        try {
-            if (!folder.exists()) {
-                folder.mkdirs();
-                log.debug("mkdir");
-            }
-
-            InputStream is = mf.getInputStream();
-            FileUtils.copyInputStreamToFile(is, file);
-            log.debug("image uploaded");
-
-            service.upload(dto);
-            if (type.contains("image"))
-                service.makeThumbnail(path, fileName, fileExt);
-
-        } catch (Exception e) {
-            log.error("{}", e.getMessage(), e);
-        }
-        return null;
-    }
-
     @DeleteMapping("/file")
     public Response<Object, Object> deleteFile(@RequestParam("assetLocation") String assetLocation) {
         Response<Object, Object> res = new Response<>();
@@ -158,133 +104,71 @@ public class AssetController {
         return new Response<String, Object>().success(path, null);
     }
 
-    @PostMapping("/templargefile")
-    public Response<AssetLargeFile, Object> tempUploadLargeFile( @RequestBody byte[] chunkData,
-            @RequestParam("assetLargeFile") AssetLargeFile assetLargeFile)
-            // @RequestBody AssetLargeFile assetLargeFile
-            ) {
+    @PostMapping("/file")
+    public Response<AssetLargeFile, Object> uploadLargeFile(@RequestBody byte[] chunkData,
+            @RequestParam("assetLargeFile") Object assetLargeFileObject) {
         log.debug("post...upload large file");
-        // File file = new File(assetLargeFile.getAssetLocation() +
-        // assetLargeFile.getAssetUuidName());
-        // File folder = new File(assetLargeFile.getAssetLocation());
+        ObjectMapper objectMapper = new ObjectMapper();
+        String parseHelper = assetLargeFileObject.toString();
+        AssetLargeFile assetLargeFile = new AssetLargeFile();
+        try {
+            assetLargeFile = objectMapper.readValue(parseHelper, AssetLargeFile.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
-        // try {
-        // if (!folder.exists()) {
-        // folder.mkdirs();
-        // }
-        // FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
-        // lFileOutputStream.write(chunkData);
-        // lFileOutputStream.close();
+        File file = new File(assetLargeFile.getAssetLocation() + assetLargeFile.getAssetUuidName());
+        File folder = new File(assetLargeFile.getAssetLocation());
 
-        // } catch (Exception e) {
-        // log.error("{}", e.getMessage(), e);
-        // } finally {
-        // if (assetLargeFile.getCurrentChunk() == 0) {
-        // AssetFile dto = new AssetFile();
-        // dto = assetLargeFile;
-        // dto.setAssetLocation(assetLargeFile.getAssetLocation() +
-        // assetLargeFile.getAssetUuidName());
-        // service.upload(dto);
-        // } else {
-        // AssetFile dto = new AssetFile();
-        // dto = assetLargeFile;
-        // dto.setAssetLocation(assetLargeFile.getAssetLocation() +
-        // assetLargeFile.getAssetUuidName());
-        // if (assetLargeFile.getCurrentChunk() == assetLargeFile.getTotalChunk() - 1) {
-        // dto.setIsUploadComplete(1);
-        // try {
-        // if (assetLargeFile.getAssetType().contains("image")) {
-        // String fileOriginName = assetLargeFile.getAssetOriginName();
-        // service.makeThumbnail(assetLargeFile.getAssetLocation(),
-        // assetLargeFile.getAssetUuidName(),
-        // fileOriginName.substring(fileOriginName.lastIndexOf(".")));
-        // }
-        // } catch (Exception e) {
-        // log.error("{}", e.getMessage(), e);
-        // }
-        // }
-        // service.fileUploadUpdate(dto);
-        // }
-        // }
-        // return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
-        return null;
-    }
+        try {
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
+            lFileOutputStream.write(chunkData);
+            lFileOutputStream.close();
 
-    @PostMapping("/prelargefile")
-    public Response<AssetLargeFile, Object> preLargeFile(@RequestBody AssetLargeFile assetLargeFile,
-            @Value("${property.image.location}") String path) {
-        Calendar c = Calendar.getInstance();
-        // 운영체제 별 경로
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win"))
-            path = "c:" + path;
-        else if (os.contains("mac"))
-            path = System.getProperty("user.home") + path;
-        // 운영체제 별 경로 end
-        String month = Integer.toString(c.get(c.MONTH) + 1);
-        String date = Integer.toString(c.get(c.DATE));
-
-        if (month.length() == 1)
-            month = "0" + month;
-        if (date.length() == 1)
-            date = "0" + date;
-        String fileOriginName = assetLargeFile.getAssetOriginName();
-        path = path + c.get(c.YEAR) + "/" + month + "/" + date + "/" + assetLargeFile.getAssetSeq() + "/";
-        String fileExt = fileOriginName.substring(fileOriginName.lastIndexOf("."));
-        String fileName = UUID.randomUUID() + fileExt;
-        assetLargeFile.setAssetLocation(path);
-        assetLargeFile.setAssetUuidName(fileName);
+        } catch (Exception e) {
+            log.error("{}", e.getMessage(), e);
+        } finally {
+            if (assetLargeFile.getCurrentChunk() == 0) {
+                AssetFile dto = new AssetFile();
+                dto = assetLargeFile;
+                if (assetLargeFile.getCurrentChunk() == assetLargeFile.getTotalChunk() - 1) {
+                    dto.setIsUploadComplete(1);
+                    try {
+                        if (assetLargeFile.getAssetType().contains("image")) {
+                            String fileOriginName = assetLargeFile.getAssetOriginName();
+                            service.makeThumbnail(assetLargeFile.getAssetLocation(), assetLargeFile.getAssetUuidName(),
+                                    fileOriginName.substring(fileOriginName.lastIndexOf(".") + 1));
+                        }
+                    } catch (Exception e) {
+                        log.error("{}", e.getMessage(), e);
+                    }
+                }
+                dto.setAssetLocation(assetLargeFile.getAssetLocation() + assetLargeFile.getAssetUuidName());
+                service.upload(dto);
+            } else {
+                AssetFile dto = new AssetFile();
+                dto = assetLargeFile;
+                if (assetLargeFile.getCurrentChunk() == assetLargeFile.getTotalChunk() - 1) {
+                    dto.setIsUploadComplete(1);
+                    try {
+                        if (assetLargeFile.getAssetType().contains("image")) {
+                            String fileOriginName = assetLargeFile.getAssetOriginName();
+                            service.makeThumbnail(assetLargeFile.getAssetLocation(), assetLargeFile.getAssetUuidName(),
+                                    fileOriginName.substring(fileOriginName.lastIndexOf(".") + 1));
+                        }
+                    } catch (Exception e) {
+                        log.error("{}", e.getMessage(), e);
+                    }
+                }
+                dto.setAssetLocation(assetLargeFile.getAssetLocation() + assetLargeFile.getAssetUuidName());
+                service.fileUploadUpdate(dto);
+            }
+        }
         return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
     }
-
-    // @PostMapping("/largefile")
-    // public Response<AssetLargeFile, Object> uploadLargeFile(@RequestBody byte[]
-    // chunkData,
-    // AssetLargeFile assetLargeFile) {
-    // log.debug("post...upload large file");
-
-    // File file = new File(assetLargeFile.getAssetLocation() +
-    // assetLargeFile.getAssetUuidName());
-    // File folder = new File(assetLargeFile.getAssetLocation());
-
-    // try {
-    // if (!folder.exists()) {
-    // folder.mkdirs();
-    // }
-    // FileOutputStream lFileOutputStream = new FileOutputStream(file, true);
-    // lFileOutputStream.write(chunkData);
-    // lFileOutputStream.close();
-
-    // } catch (Exception e) {
-    // log.error("{}", e.getMessage(), e);
-    // }
-
-    // if (assetLargeFile.getIsLastChunk()) {
-    // AssetFile dto = new AssetFile();
-    // dto.setAssetLocation(assetLargeFile.getAssetLocation() +
-    // assetLargeFile.getAssetUuidName());
-    // dto.setAssetOriginName(assetLargeFile.getAssetOriginName());
-    // dto.setAssetSeq(assetLargeFile.getAssetSeq());
-    // dto.setAssetSize(assetLargeFile.getAssetSize());
-    // dto.setAssetType(assetLargeFile.getAssetType());
-    // service.upload(dto);
-
-    // try {
-    // if (assetLargeFile.getAssetType().contains("image")) {
-    // String fileOriginName = assetLargeFile.getAssetOriginName();
-    // service.makeThumbnail(assetLargeFile.getAssetLocation(),
-    // assetLargeFile.getAssetUuidName(),
-    // fileOriginName.substring(fileOriginName.lastIndexOf(".")));
-    // }
-
-    // } catch (Exception e) {
-    // log.error("{}", e.getMessage(), e);
-    // }
-
-    // }
-
-    // return new Response<AssetLargeFile, Object>().success(assetLargeFile, null);
-    // }
 
     @PostMapping("/complete")
     public Response<Object, Object> completeAsset(@RequestBody Asset asset) {
@@ -308,6 +192,13 @@ public class AssetController {
         service.assetUpdate(dto);
         Response<String, Object> res = new Response<>();
         res = res.success("Modified", null);
+        return res;
+    }
+
+    @PutMapping("/asset/{assetSeq}")
+    public Response<String, Object> updateAssetBeforeComplete(@RequestBody Asset dto) {
+        service.assetUpdateBeforeComplete(dto);
+        Response<String, Object> res = new Response<>();
         return res;
     }
 
@@ -383,7 +274,7 @@ public class AssetController {
         return res;
     }
 
-    @GetMapping(path = "/download")
+    @GetMapping(path = "download")
     public void downloadFile(@RequestParam("fileLocation") String fileLocation, HttpServletResponse response)
             throws IOException {
         response.setHeader("Content-Transfer-Encoding", "binary");
@@ -405,5 +296,12 @@ public class AssetController {
         fis.close();
         os.close();
 
+    }
+
+    @GetMapping(path = "uploaded/{assetSeq}")
+    public Response<List<AssetLargeFile>, Object> getUploadedFilesInfo(@PathVariable("assetSeq") int assetSeq) {
+        Response<List<AssetLargeFile>, Object> res = new Response<>();
+        res = res.success(service.getUploadedFilesInfo(assetSeq), null);
+        return res;
     }
 }

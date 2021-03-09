@@ -272,8 +272,38 @@ const TempUpload = () => {
     }
     const handlePauseUpload = () => {
         handleUploadClose()
-        setIsPaused(true)
+        setIsPaused(pre => {
+            let temp = true;
+            return temp;
+        })
     }
+
+    const handleResumeUpload = async () => {
+        setIsPaused(pre => {
+            let temp = false;
+            return temp;
+        })
+        if (fileList.length !== 0 && title && selectedCategory) {
+            let data = { assetTitle: title, assetCategory: selectedCategory, assetSeq: assetSeq }
+            try {
+                const response = await api.put(`/asset/${assetSeq}`,
+                    data,
+                    {
+                        headers: {
+                            'Content-type': 'application/json',
+                        }
+                    });
+                await resumeUpload()
+                uploadStart()
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            handleAlertOpen();
+        }
+    }
+
     const handleCancelUpload = () => {
         //업로드 취소 확인창 띄우기
         handleUploadClose()
@@ -311,43 +341,73 @@ const TempUpload = () => {
     }, [assetSeq])
     const uploadStart = async () => {
         handleUploadOpen();
-
+        console.log(fileList, isPaused)
         for (let i = 0; i < fileList.length; i++) {
-            !fileList[i].isUploadComplete && !isPaused && await fileUpload(fileList[i])
-            // !isPaused&&fileList.length===i+1&&fileUploadComplete()
+            let pause = isPaused;
+            setIsPaused(pre => {
+                pause = pre;
+                return pre;
+            })
+            fileList[i].isUploadComplete && setProgresses(pre => {
+                pre[i] = 100
+                return pre;
+            })
+            !fileList[i].isUploadComplete && !pause && await fileUpload(fileList[i]);
+            setIsPaused(pre => {
+                pause = pre
+                return pre;
+            });
+            !pause && fileList.length === i + 1 && fileUploadComplete()
         }
 
     }
     const fileUpload = async (file: UploadFileInfo) => {
         const targetFile = { ...file }
+        let pause = isPaused;
         const response = await api.get(`/createLocation/${assetSeq}`)
+        file.assetLocation=response.data.result
         targetFile.assetLocation = response.data.result
         targetFile.assetSeq = assetSeq
         const chunks = fileToChunks(targetFile.file)
-        const data = new FormData()
-        data.append("assetLargeFile",targetFile)
         const targetIndex = fileList.findIndex((e: UploadFileInfo) => e.assetOriginName === targetFile.assetOriginName);
-        for (let i = targetFile.currentChunk; i < chunks.length;i++) {
-            if (!isPaused) {
+        for (let i = targetFile.currentChunk; i < chunks.length; i++) {
+            const targetFileWithNoFile = { ...targetFile }
+            delete targetFileWithNoFile.file
+            setIsPaused(pre => {
+                pause = pre;
+                return pre;
+            });
+            if (!pause) {
                 try {
-                    const response = await api.post(`/templargefile`, 
-                    chunks[i], 
-                    // targetFile,
-                    {
-                        params: {
-                            assetLargeFile: data,
-                        },
-                        headers: {
-                            "Content-Type" : 'multipart/form-data'
-                        }
+                    const response = await api.post(`/templargefile`,
+                        chunks[i],
+                        {
+                            params: {
+                                assetLargeFile: targetFileWithNoFile,
+                            },
+                            headers: {
+                                "Content-Type": 'multipart/form-data'
+                            }
+                        })
+                    response.data.code === 200 && targetFile.currentChunk++
+                    setProgresses(pre => {
+                        pre[targetIndex] = Math.round(100 / chunks.length * targetFile.currentChunk);
+                        setNewProgresses([...pre])
+                        return pre
                     })
-                    response.data.result.code === 200 && targetFile.currentChunk++
-                    setProgresses(pre => { pre[targetIndex] = Math.round(100 / chunks.length * targetFile.currentChunk); return pre })
-                    setNewProgresses([...progresses])
                 } catch (err) {
                     console.log(err);
-                    setIsPaused(pre => (true))
                 }
+            } else {
+                break;
+            }
+            if (targetFile.currentChunk == targetFile.totalChunk - 1) {
+                targetFile.isUploadComplete = 1
+                setFileList(pre => {
+                    let tempList = [...pre]
+                    tempList[targetIndex] = targetFile
+                    return tempList;
+                })
             }
         }
     }
@@ -380,6 +440,29 @@ const TempUpload = () => {
         }
         return chunks
     }
+    /**
+     * * 업로드 재개
+     */
+    const resumeUpload = async () => {
+        const response = await api.get(`/uploaded/${assetSeq}`)
+        const uploadedList: UploadFileInfo[] = response.data.result
+        const tempFileList = [...fileList]
+        for (let i = 0; i < tempFileList.length; i++) {
+            for (let j = 0; j < uploadedList.length; j++) {
+                if (tempFileList[i].assetUuidName === uploadedList[j].assetUuidName) {
+                    let tempF = tempFileList[i]
+                    let tempU = uploadedList[j]
+                    tempF.isUploadComplete = tempU.isUploadComplete
+                    tempF.currentChunk = tempU.currentChunk + 1
+                    tempF.uploadedSize = tempU.uploadedSize
+                    break;
+                }
+            }
+        }
+        setFileList([...tempFileList])
+        console.log(fileList, tempFileList)
+    }
+
     const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
@@ -509,13 +592,17 @@ const TempUpload = () => {
                                 )}
                             </DivTagGroup>
                             <DivInputGroup>
-                                <TempDropZone fileList={fileList} setFileListProp={setFileListProp} />
+                                <TempDropZone fileList={fileList} setFileListProp={setFileListProp} isPaused={isPaused} />
                             </DivInputGroup>
                             <DivTagGroup>
-                                <Button size="large" color="primary"
-                                    onClick={submitFiles}
-                                // onClick={uploadStart}
-                                >저장</Button>
+                                {!isPaused ? (<Button size="large" color="primary"
+                                    onClick={submitFiles} variant="contained"
+                                >업로드</Button>)
+                                    :
+                                    (<Button size="large" color="primary" variant="contained"
+                                        onClick={handleResumeUpload}
+                                    >업로드 재개</Button>)}
+
                             </DivTagGroup>
 
                         </FormLogin>

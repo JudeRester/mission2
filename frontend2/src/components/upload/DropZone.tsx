@@ -1,9 +1,11 @@
-import React, 
-{  
-    useRef,  
+import React,
+{
+    useRef,
 } from 'react';
 import styled from '@emotion/styled';
-
+import { v4 as uuid } from 'uuid';
+import { UploadFileInfo } from '../../util/types';
+import api from '../../util/api';
 const DivContainer = styled.div`
 `;
 
@@ -112,18 +114,62 @@ const InputFileinput = styled.input`
 display:none;
 `;
 
-const DropZone = (props: any) => {
-    const fileList: File[] = props.filesState;
-    const setFileList = props.setFilesState;
+const DropZone = (props: { fileList: UploadFileInfo[], setFileListProp: (action: string, payload: any) => void; isPaused:boolean}) => {
 
-
+    /**
+     * ? state
+     */
+    const fileList: UploadFileInfo[] = props.fileList;
+    const setFileList = props.setFileListProp;
+    /**
+     * ? variable
+     */
+    const CHUNK_SIZE = 1024 * 1024 * 10 //10MB
+    /**
+     * ? functions
+     */
     const handleFiles = (files: FileList) => {
+        const newFiles: UploadFileInfo[] = []
         for (let i = 0; i < files.length; i++) {
-            if (fileList.filter((file: File) => file.name === files[i].name).length <= 0) {
-                setFileList((pre: File[]) => [...pre, files[i]]);
-                
+            if (fileList.filter((file: UploadFileInfo) => file.file.name === files[i].name).length <= 0) {
+                const newFile: UploadFileInfo = {
+                    assetSeq: 0,
+                    assetUuidName: uuid() + files[i].name.substring(files[i].name.lastIndexOf(".")),
+                    file: files[i],
+                    uploadedSize: 0,
+                    currentChunk: 0,
+                    totalChunk: Math.ceil(files[i].size / CHUNK_SIZE),
+                    isUploadComplete: 0,
+                    assetLocation: '',
+                    assetSize: files[i].size,
+                    assetOriginName: files[i].name,
+                    assetType: files[i].type
+                }
+                newFiles.push(newFile)
             }
         }
+        setFileList("add", newFiles)
+    }
+    const handleRemoveFile = async (name: string) => {
+        
+        const targetIndex = fileList.findIndex((e: UploadFileInfo) => e.assetOriginName === name);
+        const tempList = [...fileList]
+        if(props.isPaused){
+            const data =fileList[targetIndex].assetLocation+fileList[targetIndex].assetUuidName
+            await api.delete(`/file`,
+            {
+                params: {
+                    assetLocation: data
+                },
+                headers: {
+                    'Content-type': 'application/json',
+                }
+            }
+        )}
+        tempList.splice(targetIndex, 1)
+
+        // dispatch(removeFile(targetIndex))
+        setFileList("delete", targetIndex)
     }
 
     const dragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -158,14 +204,6 @@ const DropZone = (props: any) => {
         return fileName.substring(fileName.lastIndexOf('.') + 1, fileName.length) || fileName;
     }
 
-    const removeFile = (name: string) => {
-        const targetIndex = fileList.findIndex((e: File) => e.name === name);
-        let tempFileList = [...fileList]
-        tempFileList.splice(targetIndex, 1)
-        setFileList(tempFileList)
-        // dispatch(remove(targetIndex))
-    }
-
     const fileInputRef = useRef<HTMLInputElement>(null);
     const fileInputClicked = () => {
         fileInputRef.current.click();
@@ -177,7 +215,13 @@ const DropZone = (props: any) => {
     }
 
     return (
-        <DivContainer id="container" onDrop={fileDrop} onDragLeave={dragLeave} onDragOver={dragOver} onDragEnter={dragEnter}>
+        <DivContainer
+            id="container"
+            onDrop={fileDrop}
+            onDragLeave={dragLeave}
+            onDragOver={dragOver}
+            onDragEnter={dragEnter}
+        >
             <DivDropConatiner onClick={fileInputClicked}>
                 <DivDropMessage>
                     <DivUploadIcon />
@@ -186,14 +230,14 @@ const DropZone = (props: any) => {
                 <InputFileinput type="file" multiple onChange={filesSelected} ref={fileInputRef} />
             </DivDropConatiner>
             <DivFileDisplay>
-                {fileList.map((data: File, i) =>
+                {fileList.map((data: UploadFileInfo, i) =>
                     <DivFileStatus key={i}>
                         <div>
                             <div className="file-type-logo"></div>
-                            <DivFileType>{fileType(data.name)}</DivFileType>
-                            <SpanFileName >{data.name}</SpanFileName>
-                            <SpanFileSize>({fileSize(data.size)})</SpanFileSize>
-                            <SpanFileRemove onClick={() => removeFile(data.name)}>×</SpanFileRemove>
+                            <DivFileType>{fileType(data.assetOriginName)}</DivFileType>
+                            <SpanFileName >{data.assetOriginName}</SpanFileName>
+                            <SpanFileSize>({fileSize(data.assetSize)})</SpanFileSize>
+                            <SpanFileRemove onClick={() => handleRemoveFile(data.assetOriginName)}>×</SpanFileRemove>
                         </div>
                     </DivFileStatus>
                 )}
