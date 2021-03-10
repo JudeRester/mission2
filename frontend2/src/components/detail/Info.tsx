@@ -183,7 +183,7 @@ const Info = (props: MatchParams) => {
                     setAlertMessage(data.result)
                     setAlertOpen(true)
                 }else{
-                    history.push("/");
+                    history.replace("/");
                 }
             })
     }

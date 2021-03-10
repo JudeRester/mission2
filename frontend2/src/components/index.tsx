@@ -29,7 +29,7 @@ const Pages = (props: any) => {
     useEffect(() => {
         if (token && !user.isLogined) {
             token = sessionStorage.getItem('current_user_token')
-            dispatch(login({ userId: '',userRole: parseJwt(token).userRole,token:token , isLogined: true }));
+            dispatch(login({ userId: parseJwt(token).sub,userRole: parseJwt(token).userRole,token:token , isLogined: true }));
         }
     }, [user])
     return !user.isLogined ? (
