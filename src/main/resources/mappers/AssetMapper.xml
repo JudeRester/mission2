@@ -335,7 +335,21 @@
 			and(
 			a.asset_Title like '%'||#{keyword}||'%'
 			)
-		</if>
+        </if>
+        <if test='startDate != null'>
+            and(
+                asset_create_date
+            <![CDATA[ > ]]>
+            =#{startDate}
+            )
+        </if>
+        <if test='endDate != null'>
+            and (
+                asset_create_date
+            <![CDATA[ < ]]>
+            =#{endDate}
+            )
+        </if>
         group by
                     a.asset_Seq,
                     a.asset_Title,
@@ -380,8 +394,10 @@
             assetTAG t,
             CATEGORY c
             WHERE
-            a.asset_seq=t.asset_seq
+            a.asset_seq=t.asset_seq(+)
             AND a.asset_CATEGORY=c.categoryid
+            and
+                a.asset_isComplete=1
         <if test='tag != null'>
             AND (
             <foreach collection="tag" item="tag" separator="and">
@@ -402,6 +418,20 @@
                 asset_Title like '%'||#{keyword}||'%'
                 )
             </if>
+        <if test='startDate != null'>
+            and(
+                    asset_create_date
+            <![CDATA[ > ]]>
+            =#{startDate}
+                )
+        </if>
+        <if test='endDate != null'>
+            and (
+                    asset_create_date
+            <![CDATA[ < ]]>
+            =#{endDate}
+                )
+        </if>
         )
     </select>
 

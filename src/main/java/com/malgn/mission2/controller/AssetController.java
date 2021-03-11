@@ -49,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;
 import java.sql.Blob;
+import java.sql.Date;
 
 @RestController
 @RequestMapping("/api")
@@ -265,6 +266,7 @@ public class AssetController {
     @GetMapping("/search")
     public Response<List<Asset>, Object> search(Criteria crt, Search src) {
         src.setCrt(crt);
+        log.info(src.toString());
         List<Asset> list = service.search(src);
         for (Asset a : list) {
             a.setLocationArray(a.getLocations().trim().split("\\s*,\\s*"));

@@ -1,3 +1,4 @@
+import DateFnsUtils from '@date-io/date-fns';
 import {
   Grid,
   Typography,
@@ -13,7 +14,6 @@ import {
   Paper,
   Tab,
   Tabs,
-  Box,
   createStyles,
   Theme,
   InputBase,
@@ -24,10 +24,13 @@ import {
 } from '@material-ui/core'
 import { Clear, Folder, FolderOpen, Remove, Search } from '@material-ui/icons';
 
-import { Pagination, PaginationItem, PaginationItemTypeMap, ToggleButton, ToggleButtonGroup, TreeItem, TreeView } from '@material-ui/lab';
+import { Pagination, ToggleButton, ToggleButtonGroup, TreeItem, TreeView } from '@material-ui/lab';
+import {
+  KeyboardDatePicker, MuiPickersUtilsProvider,
+} from '@material-ui/pickers';
 import arrayToTree from 'array-to-tree';
 import moment from 'moment';
-import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -113,10 +116,10 @@ const useTreeStyles = makeStyles({
 });
 
 const useToggleStyles = makeStyles({
-  root:{
+  root: {
     border: "solid skyblue !important",
-    color:"black",
-    padding:5,
+    color: "black",
+    padding: 5,
 
   }
 })
@@ -160,7 +163,7 @@ const StyledToggleButtonGroup = withStyles((theme) => ({
   root: {
     width: "100%",
     display: 'block',
-    margin:12,
+    margin: 12,
   },
   grouped: {
     margin: theme.spacing(0.5),
@@ -189,19 +192,23 @@ const Posts = (props: MatchParams) => {
   const [tags, setTags] = useState<Array<Tags>>();
   const [checkedTags, setCheckedTags] = useState<Array<string>>([]);
   const [keyword, setKeyword] = useState<string>('');
-
+  const [startDate, setStartDate] = React.useState<Date | null>(null);
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
 
   const history = useHistory();
   const user = useSelector((state: RootState) => state.member)
   api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
-  const toAssetDetail = (assetSeq: number) => {
-    history.push('/detail/' + assetSeq)
-  }
-
 
   const classes = useStyles();
   const treeClasses = useTreeStyles();
   const toggleButtonClasses = useToggleStyles();
+
+
+
+
+  const toAssetDetail = (assetSeq: number) => {
+    history.push('/detail/' + assetSeq)
+  }
 
   async function loadContents() {
     const response = await api.get(`/list/${pageNum}`)
@@ -210,14 +217,19 @@ const Posts = (props: MatchParams) => {
     setContents(list)
   };
   useEffect(() => {
-    loadContents();
-  }, [pageNum]);
+    isSearch ? search() :
+      loadContents();
+  }, [pageNum, isSearch]);
 
   useEffect(() => {
 
     api.get(`/category/list`)
       .then(response => {
-        setCategories(arrayToTree(response.data.result, { parentProperty: 'categoryParent', customID: 'categoryId' }))
+        setCategories(
+          // arrayToTree(
+          response.data.result
+          // , { parentProperty: 'categoryParent', customID: 'categoryId' }))
+        )
       })
     api.get(`/tag/list`)
       .then(response => {
@@ -243,6 +255,14 @@ const Posts = (props: MatchParams) => {
     setTreeCategories(arrayToTree(categories, { parentProperty: 'categoryParent', customID: 'categoryId' }))
   }, [categories])
 
+  useEffect(() => {
+    if (startDate > endDate && endDate && startDate) {
+      let temp = endDate
+      setEndDate(startDate)
+      setStartDate(temp)
+    }
+  }, [startDate, endDate])
+
   const handlePanels = (event: React.ChangeEvent<{}>, newValue: number) => {
     setPanel(newValue);
   };
@@ -250,58 +270,71 @@ const Posts = (props: MatchParams) => {
   const searchClasses = useStylesForSearch();
 
   const handlerSearchButtonClick = () => {
-    setIsSearch(true);
+    setIsSearch(pre => {
+      return true
+    });
     setPageNum(pre => { return 1 })
     search()
   }
 
   const handleSearchReset = () => {
     setIsSearch(false)
-    setContents([])
     setSelectedCategory('')
     setCheckedTags([])
+    setPageNum(1)
   }
 
   const searchInputKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      setIsSearch(true);
+      setIsSearch(pre => { return true });
       setPageNum(pre => { return 1 })
       search()
     }
   }
-  const search = () => {
-    if (isSearch) {
+  const search = async () => {
+    let searchBoolean = isSearch;
+    await setIsSearch(pre => {
+      searchBoolean = pre;
+      return pre;
+    })
+    if (searchBoolean) {
       let categoryList: Array<string> = [];
-      api.get(`/category/list`)
-        .then(response => {
-          if (selectedCategory)
-            categoryList = (findChild(Number(selectedCategory), response.data.result).split('>'));
-          api.get(`/search?${setData()}`)
-            .then(response => {
-              setContents(response.data.result)
-              setPageInfo(response.data.reference)
-            })
-        })
+      // api.get(`/category/list`)
+      //   .then(response => {
+      //     if (selectedCategory&&selectedCategory!=='0')
+      //       categoryList = (findChild(Number(selectedCategory), response.data.result).split('>'));
+      //     api.get(`/search?${setData()}`)
+      //       .then(response => {
+      //         setContents(response.data.result)
+      //         setPageInfo(response.data.reference)
+      //       })
+      //   })
       const setData = () => {
         let data: string = ''
-        if (categoryList) {
-          categoryList.forEach((element: any) => {
-            data += `category=${element}&`
-          })
-        }
-        if (checkedTags) {
-          checkedTags.forEach((element: any) => {
-            data += `tag=${element}&`
-          })
-        }
-        if (keyword)
-          data += `keyword=${keyword}&`
-        data += `pageNum=${pageNum}`
+        categoryList && categoryList.forEach((element: any) => {
+          data += `category=${element}&`
+        })
+        checkedTags && checkedTags.forEach((element: any) => {
+          data += `tag=${element}&`
+        })
+        keyword && (data += `keyword=${keyword}&`);
+        startDate && (data += `startDate=${moment(startDate).format('YYYY-MM-DD')}&`);
+        endDate && (data += `endDate=${moment(endDate).add(1, 'day').format('YYYY-MM-DD')}&`)
+        data += `pageNum=${pageNum}&`
         return data
       }
+      if (selectedCategory && selectedCategory !== '0')
+        categoryList = (findChild(Number(selectedCategory), categories).split('>'));
+      api.get(`/search?${setData()}`)
+        .then(response => {
+          setContents(response.data.result)
+          setPageInfo(response.data.reference)
+        })
     }
   }
+
+
   const handleToggle = (event: any, nodeIds: string[]) => {
     event.preventDefault()
   };
@@ -323,6 +356,13 @@ const Posts = (props: MatchParams) => {
     }
 
     setCheckedTags(newChecked);
+  };
+
+  const handleStartDateChange = (date: Date | null) => {
+    setStartDate(date);
+  };
+  const handleEndDateChange = (date: Date | null) => {
+    setEndDate(date);
   };
 
   const renderTrees = (nodes: TreeViews) => (
@@ -360,7 +400,7 @@ const Posts = (props: MatchParams) => {
       padding: 30,
       margin: "auto",
     }}>
-      <Paper style={{ margin: "5px", padding: "10px", backgroundColor:"#e3e3e3"}}>
+      <Paper style={{ margin: "5px", padding: "10px", backgroundColor: "#e3e3e3" }}>
         <Tabs value={panel} onChange={handlePanels} >
           <Tab label="일반 검색" />
           <Tab label="상세 검색" />
@@ -386,6 +426,7 @@ const Posts = (props: MatchParams) => {
               <Paper elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
                 {treeCategories && expendedCategory ? (
                   <TreeView
+                    style={{ maxHeight: 400, overflow: "scroll" }}
                     onNodeToggle={handleToggle}
                     onNodeSelect={handleNodeSelect}
                     className={classes.root}
@@ -412,37 +453,66 @@ const Posts = (props: MatchParams) => {
                 }
               </Paper>
               <Typography>태그</Typography>
+                <StyledToggleButtonGroup
+                  value={checkedTags}
+                >
+                  {tags && tags.map((tag: Tags) => {
+                    if (checkedTags.filter(assetTag => assetTag === tag.assetTag).length <= 0) {
+                      return (
+                        <ToggleButton
+                          onClick={handleCheckTag(tag.assetTag)}
+                          value={tag.assetTag}
+                          aria-label={tag.assetTag}
+                          classes={{ root: toggleButtonClasses.root }}
+                        >
+                          {`${tag.assetTag}(${tag.count})`}
+                        </ToggleButton>)
+                    }
+                    else {
+                      return (
+                        <ToggleButton
+                          onClick={handleCheckTag(tag.assetTag)}
+                          aria-label={tag.assetTag}
+                          value={tag.assetTag}
+                          classes={{ root: toggleButtonClasses.root }}
+                          style={{ backgroundColor: "skyBlue" }}
+                        >
+                          {`${tag.assetTag}(${tag.count})`}
+                        </ToggleButton>)
+                    }
+                  })}
+                </StyledToggleButtonGroup>
+              <Typography>등록일</Typography>
 
-              <StyledToggleButtonGroup
-                value={checkedTags}
-              >
-                {tags && tags.map((tag: Tags) => {
-                  if (checkedTags.filter(assetTag => assetTag === tag.assetTag).length <= 0) {
-                    return (
-                      <ToggleButton
-                        onClick={handleCheckTag(tag.assetTag)}
-                        aria-label={tag.assetTag}
-                        classes={{root:toggleButtonClasses.root}}
-                      >
-                        {`${tag.assetTag}(${tag.count})`}
-                      </ToggleButton>)
-                  }
-                  else {
-                    return (
-                      <ToggleButton
-                        onClick={handleCheckTag(tag.assetTag)}
-                        aria-label={tag.assetTag}
-                        classes={{root:toggleButtonClasses.root}}
-                        style={{ backgroundColor: "skyBlue" }}
-                      >
-                        {`${tag.assetTag}(${tag.count})`}
-                      </ToggleButton>)
-                  }
-                })}
-              </StyledToggleButtonGroup>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    inputVariant="outlined"
+                    label="시작일"
+                    maxDate={new Date()}
+                    maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
+                    invalidDateMessage="올바른 날짜를 입력해주세요"
+                    format="yyyy/MM/dd"
+                    value={startDate}
+                    InputAdornmentProps={{ position: "end" }}
+                    onChange={date => handleStartDateChange(date)}
+                  />
 
-              <Typography>기간</Typography>
-
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    inputVariant="outlined"
+                    label="종료일"
+                    maxDate={new Date()}
+                    maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
+                    invalidDateMessage="올바른 날짜를 입력해주세요"
+                    format="yyyy/MM/dd"
+                    value={endDate}
+                    InputAdornmentProps={{ position: "end" }}
+                    onChange={date => handleEndDateChange(date)}
+                  />
+                </MuiPickersUtilsProvider>
             </div> :
             <div role="tabpanel">
               <Paper component="form" elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
@@ -463,7 +533,7 @@ const Posts = (props: MatchParams) => {
             </div>
         }
       </Paper>
-      <Paper style={{ margin: "5px", padding: "10px",backgroundColor:"#e3e3e3" }}>
+      <Paper style={{ margin: "5px", padding: "10px", backgroundColor: "#e3e3e3" }}>
         <Grid container spacing={3} justify="center">
           {contents ? contents.map(post => (
             <Grid item key={post.assetSeq}>
@@ -487,15 +557,15 @@ const Posts = (props: MatchParams) => {
                       }
                       return (
                         (post.locationArray.length < 3) ?
-                          <GridListTile key={i} cols={(post.locationArray.length % 2 != 0 && i == 0) ? 2 : 1} classes={{ root: classes.imageCountLessEqualTwo }}>
+                          <GridListTile key={i} cols={(post.locationArray.length % 2 !== 0 && i === 0) ? 2 : 1} classes={{ root: classes.imageCountLessEqualTwo }}>
                             <img src={imgUrl} alt="" />
 
                           </GridListTile>
                           :
                           i <= 3 ?
-                            <GridListTile key={i} cols={(post.locationArray.length % 2 != 0 && i == 0 && post.locationArray.length <= 3) ? 2 : 1} classes={{ root: classes.imageCountOverTwo }}>
+                            <GridListTile key={i} cols={(post.locationArray.length % 2 !== 0 && i === 0 && post.locationArray.length <= 3) ? 2 : 1} classes={{ root: classes.imageCountOverTwo }}>
                               <img src={imgUrl} alt="" />
-                              {(post.locationArray.length > 4 && i == 3) ?
+                              {(post.locationArray.length > 4 && i === 3) ?
                                 <Link to={"/detail/" + assetFile.assetSeq} >
                                   <GridListTileBar title={post.locationArray.length - (i + 1) + '개 더보기'} classes={{ root: classes.imageCountLessEqualTwo }} />
                                 </Link>

@@ -1,14 +1,33 @@
 package com.malgn.mission2.domain.asset;
 
+import java.sql.Date;
 import java.util.List;
 
 import com.malgn.mission2.domain.common.Criteria;
 
 public class Search {
+    private Date startDate;
+    private Date endDate;
     private List<String> tag;
     private List<String> category;
     private String keyword;
     private Criteria crt;
+
+    public Date getStartDate() {
+        return this.startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return this.endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
 
     public List<String> getTag() {
         return this.tag;
@@ -44,8 +63,9 @@ public class Search {
 
     @Override
     public String toString() {
-        return "{" + " tag='" + getTag() + "'" + ", category='" + getCategory() + "'" + ", keyword='" + getKeyword()
-                + "'" + ", crt='" + getCrt() + "'" + "}";
+        return "{" + " startDate='" + getStartDate() + "'" + ", endDate='" + getEndDate() + "'" + ", tag='" + getTag()
+                + "'" + ", category='" + getCategory() + "'" + ", keyword='" + getKeyword() + "'" + ", crt='" + getCrt()
+                + "'" + "}";
     }
 
 }
