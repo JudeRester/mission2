@@ -33,3 +33,22 @@ export interface TreeViews {
     categoryName: string;
     categoryId: string;
 }
+
+export type MemberInfo = {
+    userId: string,
+    userPass: string,
+    userName: string,
+    userEmail: string,
+    userPhone: string,
+    userCreateDate?:Date,
+}
+
+export type Page = {
+    startPage: number,
+    endPage: number,
+    prev: false,
+    next: false,
+    total: number
+  }
+
+export type Order = 'asc' | 'desc';

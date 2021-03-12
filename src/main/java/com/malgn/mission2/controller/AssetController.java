@@ -221,6 +221,7 @@ public class AssetController {
     public Response<List<Asset>, Object> getAssetList(@PathVariable("pageNum") int pageNum) {
         Criteria crt = new Criteria();
         crt.setPageNum(pageNum);
+        crt.setAmount(20);
         List<Asset> list = service.getAssetList(crt);
         for (Asset a : list) {
             a.setLocationArray(a.getLocations().trim().split("\\s*,\\s*"));
@@ -265,6 +266,7 @@ public class AssetController {
 
     @GetMapping("/search")
     public Response<List<Asset>, Object> search(Criteria crt, Search src) {
+        crt.setAmount(20);
         src.setCrt(crt);
         log.info(src.toString());
         List<Asset> list = service.search(src);

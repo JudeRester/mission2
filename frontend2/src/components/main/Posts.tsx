@@ -20,6 +20,8 @@ import {
   IconButton,
   fade,
   withStyles,
+  List,
+  ListItem,
 
 } from '@material-ui/core'
 import { Clear, Folder, FolderOpen, Remove, Search } from '@material-ui/icons';
@@ -36,7 +38,7 @@ import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 import { RootState } from '../../modules';
 import api, { BASE_API_URL } from '../../util/api';
-import { CategoryInfo, Tags, TreeViews } from '../../util/types';
+import { CategoryInfo, Page, Tags, TreeViews } from '../../util/types';
 
 
 const useStyles = makeStyles(() => ({
@@ -71,6 +73,7 @@ const useStylesForSearch = makeStyles((theme: Theme) =>
       padding: '2px 4px',
       display: 'flex',
       alignItems: 'center',
+      width: '100%',
       // width: 400,
     },
     input: {
@@ -139,14 +142,6 @@ type Asset = {
   assetCategoryName: string
 }
 
-type Page = {
-  startPage: number,
-  endPage: number,
-  prev: false,
-  next: false,
-  total: number
-}
-
 type AssetFile = {
   assetLocation: string,
   assetOriginName: string,
@@ -184,11 +179,12 @@ const Posts = (props: MatchParams) => {
   const [pageInfo, setPageInfo] = useState<Page>();
   const [panel, setPanel] = useState<number>(0);
 
+  const [hasCondition, setHasCondition] = useState<boolean>(true);
   const [isSearch, setIsSearch] = useState<boolean>(false)
   const [categories, setCategories] = useState([]);
   const [treeCategories, setTreeCategories] = useState([]);
   const [expendedCategory, setExpendedCategory] = useState<Array<string>>();
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('0');
   const [tags, setTags] = useState<Array<Tags>>();
   const [checkedTags, setCheckedTags] = useState<Array<string>>([]);
   const [keyword, setKeyword] = useState<string>('');
@@ -219,7 +215,7 @@ const Posts = (props: MatchParams) => {
   useEffect(() => {
     isSearch ? search() :
       loadContents();
-  }, [pageNum, isSearch]);
+  }, [pageNum, isSearch, hasCondition]);
 
   useEffect(() => {
 
@@ -274,24 +270,43 @@ const Posts = (props: MatchParams) => {
       return true
     });
     setPageNum(pre => { return 1 })
+    setHasCondition(true)
+    search()
+  }
+  const handlerSearchWithNoConditionButtonClick = () => {
+    setIsSearch(pre => {
+      return true
+    });
+    setHasCondition(false)
+    setPageNum(pre => { return 1 })
     search()
   }
 
   const handleSearchReset = () => {
     setIsSearch(false)
-    setSelectedCategory('')
+    setSelectedCategory('0')
     setCheckedTags([])
     setPageNum(1)
   }
 
+  const searchInputKeyPressWithNoCondition = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setIsSearch(pre => { return true });
+      setPageNum(pre => { return 1 })
+      handlerSearchWithNoConditionButtonClick()
+    }
+  }
   const searchInputKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       setIsSearch(pre => { return true });
       setPageNum(pre => { return 1 })
+      setHasCondition(true)
       search()
     }
   }
+
   const search = async () => {
     let searchBoolean = isSearch;
     await setIsSearch(pre => {
@@ -300,27 +315,17 @@ const Posts = (props: MatchParams) => {
     })
     if (searchBoolean) {
       let categoryList: Array<string> = [];
-      // api.get(`/category/list`)
-      //   .then(response => {
-      //     if (selectedCategory&&selectedCategory!=='0')
-      //       categoryList = (findChild(Number(selectedCategory), response.data.result).split('>'));
-      //     api.get(`/search?${setData()}`)
-      //       .then(response => {
-      //         setContents(response.data.result)
-      //         setPageInfo(response.data.reference)
-      //       })
-      //   })
       const setData = () => {
         let data: string = ''
-        categoryList && categoryList.forEach((element: any) => {
+        hasCondition && categoryList && categoryList.forEach((element: any) => {
           data += `category=${element}&`
         })
-        checkedTags && checkedTags.forEach((element: any) => {
+        hasCondition && checkedTags && checkedTags.forEach((element: any) => {
           data += `tag=${element}&`
         })
         keyword && (data += `keyword=${keyword}&`);
-        startDate && (data += `startDate=${moment(startDate).format('YYYY-MM-DD')}&`);
-        endDate && (data += `endDate=${moment(endDate).add(1, 'day').format('YYYY-MM-DD')}&`)
+        hasCondition && startDate && (data += `startDate=${moment(startDate).format('YYYY-MM-DD')}&`);
+        hasCondition && endDate && (data += `endDate=${moment(endDate).add(1, 'day').format('YYYY-MM-DD')}&`)
         data += `pageNum=${pageNum}&`
         return data
       }
@@ -340,7 +345,7 @@ const Posts = (props: MatchParams) => {
   };
   const handleNodeSelect = (event: any, nodeId: React.SetStateAction<string>) => {
     if (nodeId === selectedCategory) {
-      setSelectedCategory('')
+      setSelectedCategory('0')
     } else
       setSelectedCategory(nodeId)
   };
@@ -407,129 +412,174 @@ const Posts = (props: MatchParams) => {
         </Tabs>{
           panel ?
             <div role="tabpanel">
-              <Paper component="form" elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
-                <IconButton onClick={handlerSearchButtonClick} className={searchClasses.iconButton} aria-label="search">
-                  <Search />
-                </IconButton>
-                <InputBase
-                  className={searchClasses.input}
-                  placeholder="검색어 입력"
-                  onKeyPress={(e) => { searchInputKeyPress(e) }}
-                  onChange={(e) => { setKeyword(e.target.value) }}
-                />
-                {isSearch &&
-                  <IconButton onClick={handleSearchReset} aria-label="search">
-                    <Clear />
-                  </IconButton>}
-              </Paper>
-              <Typography>카테고리</Typography>
-              <Paper elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
-                {treeCategories && expendedCategory ? (
-                  <TreeView
-                    style={{ maxHeight: 400, overflow: "scroll" }}
-                    onNodeToggle={handleToggle}
-                    onNodeSelect={handleNodeSelect}
-                    className={classes.root}
-                    defaultCollapseIcon={<FolderOpen />}
-                    defaultExpandIcon={<Folder />}
-                    expanded={expendedCategory}
-                    defaultSelected="0"
-                  >
-                    <TreeItem
-                      key="0"
-                      nodeId="0"
-                      label="전체 보기"
-                      classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
-                      endIcon={<Remove />}>
-                      {treeCategories.map((category: TreeViews) => {
-                        return <Category
-                          key={category.categoryName}
-                          category={category} />
+              <List>
+                <ListItem button={false} style={{ alignItems: "baseline" }}>
+                  <Typography style={{
+                    position: "relative",
+                    width: "5%"
+                  }}>제목</Typography>
+                  <Paper component="form" elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
+                    <InputBase
+                      style={{ height: 48 }}
+                      className={searchClasses.input}
+                      placeholder="검색어 입력"
+                      value={keyword}
+                      onKeyPress={(e) => { searchInputKeyPress(e) }}
+                      onChange={(e) => { setKeyword(e.target.value) }}
+                    />
+                    {keyword &&
+                      <IconButton onClick={() => setKeyword('')} aria-label="search">
+                        <Clear />
+                      </IconButton>}
+                  </Paper>
+                </ListItem>
+                <ListItem button={false} style={{ alignItems: "baseline" }}>
+                  <Typography style={{
+                    position: "relative",
+                    width: "5%"
+                  }}>카테고리</Typography>
+                  <Paper elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
+                    {treeCategories && expendedCategory ? (
+                      <TreeView
+                        style={{ maxHeight: 400, overflow: "scroll" }}
+                        onNodeToggle={handleToggle}
+                        onNodeSelect={handleNodeSelect}
+                        className={classes.root}
+                        defaultCollapseIcon={<FolderOpen />}
+                        defaultExpandIcon={<Folder />}
+                        expanded={expendedCategory}
+                        selected={selectedCategory}
+                      >
+                        <TreeItem
+                          key="0"
+                          nodeId="0"
+                          label="전체 보기"
+                          classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
+                          endIcon={<Remove />}>
+                          {treeCategories.map((category: TreeViews) => {
+                            return <Category
+                              key={category.categoryName}
+                              category={category} />
+                          })}
+                        </TreeItem>
+                      </TreeView>
+                    ) :
+                      (<CircularProgress />)
+                    }
+                  </Paper>
+                </ListItem>
+                <ListItem button={false} style={{ alignItems: "baseline" }}>
+                  <Typography style={{ position: "relative", width: "5%" }}>태그</Typography>
+                  <Paper elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
+                    <StyledToggleButtonGroup
+                      value={checkedTags}
+                      style={{ maxHeight: "200px", overflow: "scroll" }}
+                    >
+                      {tags && tags.map((tag: Tags) => {
+                        if (checkedTags.filter(assetTag => assetTag === tag.assetTag).length <= 0) {
+                          return (
+                            <ToggleButton
+                              onClick={handleCheckTag(tag.assetTag)}
+                              value={tag.assetTag}
+                              aria-label={tag.assetTag}
+                              classes={{ root: toggleButtonClasses.root }}
+                            >
+                              {`${tag.assetTag}(${tag.count})`}
+                            </ToggleButton>)
+                        }
+                        else {
+                          return (
+                            <ToggleButton
+                              onClick={handleCheckTag(tag.assetTag)}
+                              aria-label={tag.assetTag}
+                              value={tag.assetTag}
+                              classes={{ root: toggleButtonClasses.root }}
+                              style={{ backgroundColor: "skyBlue" }}
+                            >
+                              {`${tag.assetTag}(${tag.count})`}
+                            </ToggleButton>)
+                        }
                       })}
-                    </TreeItem>
-                  </TreeView>
-                ) :
-                  (<CircularProgress />)
-                }
-              </Paper>
-              <Typography>태그</Typography>
-                <StyledToggleButtonGroup
-                  value={checkedTags}
-                >
-                  {tags && tags.map((tag: Tags) => {
-                    if (checkedTags.filter(assetTag => assetTag === tag.assetTag).length <= 0) {
-                      return (
-                        <ToggleButton
-                          onClick={handleCheckTag(tag.assetTag)}
-                          value={tag.assetTag}
-                          aria-label={tag.assetTag}
-                          classes={{ root: toggleButtonClasses.root }}
-                        >
-                          {`${tag.assetTag}(${tag.count})`}
-                        </ToggleButton>)
-                    }
-                    else {
-                      return (
-                        <ToggleButton
-                          onClick={handleCheckTag(tag.assetTag)}
-                          aria-label={tag.assetTag}
-                          value={tag.assetTag}
-                          classes={{ root: toggleButtonClasses.root }}
-                          style={{ backgroundColor: "skyBlue" }}
-                        >
-                          {`${tag.assetTag}(${tag.count})`}
-                        </ToggleButton>)
-                    }
-                  })}
-                </StyledToggleButtonGroup>
-              <Typography>등록일</Typography>
+                    </StyledToggleButtonGroup>
+                  </Paper>
+                </ListItem>
+                <ListItem button={false} style={{ alignItems: "baseline" }}>
+                  <Typography style={{ width: "5%" }}>등록일</Typography>
+                  <GridList cellHeight={'auto'} cols={2} style={{ width: "100%" }}>
+                    <GridListTile key="registeredDate" cols={1} style={{ maxWidth: 600 }}>
+                      <Paper elevation={4} classes={{ elevation4: searchClasses.elevation4 }} style={{
+                        margin: "12px",
+                        padding: '2px 4px',
+                        fontSize: "30px",
+                        width: "100%"
 
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="inline"
-                    inputVariant="outlined"
-                    label="시작일"
-                    maxDate={new Date()}
-                    maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
-                    invalidDateMessage="올바른 날짜를 입력해주세요"
-                    format="yyyy/MM/dd"
-                    value={startDate}
-                    InputAdornmentProps={{ position: "end" }}
-                    onChange={date => handleStartDateChange(date)}
-                  />
-
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="inline"
-                    inputVariant="outlined"
-                    label="종료일"
-                    maxDate={new Date()}
-                    maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
-                    invalidDateMessage="올바른 날짜를 입력해주세요"
-                    format="yyyy/MM/dd"
-                    value={endDate}
-                    InputAdornmentProps={{ position: "end" }}
-                    onChange={date => handleEndDateChange(date)}
-                  />
-                </MuiPickersUtilsProvider>
+                      }}>
+                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                          <KeyboardDatePicker
+                            autoOk
+                            variant="inline"
+                            inputVariant="outlined"
+                            label="시작일"
+                            maxDate={new Date()}
+                            maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
+                            invalidDateMessage="올바른 날짜를 입력해주세요"
+                            format="yyyy/MM/dd"
+                            value={startDate}
+                            InputAdornmentProps={{ position: "end" }}
+                            onChange={date => handleStartDateChange(date)}
+                          />
+                      &nbsp;-&nbsp;
+                      <KeyboardDatePicker
+                            autoOk
+                            variant="inline"
+                            inputVariant="outlined"
+                            label="종료일"
+                            maxDate={new Date()}
+                            maxDateMessage="날짜는 오늘 이전으로 선택해주세요"
+                            invalidDateMessage="올바른 날짜를 입력해주세요"
+                            format="yyyy/MM/dd"
+                            value={endDate}
+                            InputAdornmentProps={{ position: "end" }}
+                            onChange={date => handleEndDateChange(date)}
+                          />
+                        </MuiPickersUtilsProvider>
+                      </Paper>
+                    </GridListTile>
+                    <GridListTile key="searchButtons" cols={1} style={{ textAlign: "center" }}>
+                      <Button variant="contained" onClick={handlerSearchButtonClick} color="primary" style={{ margin: "20px" }}>검색</Button>
+                      <Button variant="contained" onClick={handleSearchReset} color="secondary" style={{ margin: "20px" }}>초기화</Button>
+                    </GridListTile>
+                  </GridList>
+                </ListItem>
+              </List>
             </div> :
             <div role="tabpanel">
-              <Paper component="form" elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
-                <IconButton onClick={handlerSearchButtonClick} className={searchClasses.iconButton} aria-label="search">
-                  <Search />
-                </IconButton>
-                <InputBase
-                  className={searchClasses.input}
-                  placeholder="검색어 입력"
-                  onKeyPress={(e) => { searchInputKeyPress(e) }}
-                  onChange={(e) => { setKeyword(e.target.value) }}
-                />
-                {isSearch &&
-                  <IconButton onClick={handleSearchReset} aria-label="search">
-                    <Clear />
-                  </IconButton>}
-              </Paper>
+              <List>
+                <ListItem button={false} style={{ alignItems: "baseline" }}>
+                  <Typography style={{
+                    position: "relative",
+                    width: "5%"
+                  }}>제목</Typography>
+                  <Paper component="form" elevation={4} classes={{ elevation4: searchClasses.elevation4, root: searchClasses.root }}>
+                    <InputBase
+                      style={{ height: 48 }}
+                      className={searchClasses.input}
+                      placeholder="검색어 입력"
+                      value={keyword}
+                      onKeyPress={(e) => { searchInputKeyPressWithNoCondition(e) }}
+                      onChange={(e) => { setKeyword(e.target.value) }}
+                    />
+                    {keyword &&
+                      <IconButton onClick={() => setKeyword('')} aria-label="search">
+                        <Clear />
+                      </IconButton>}
+                  </Paper>
+                </ListItem>
+                <ListItem button={false}>
+                  <Button variant="contained" onClick={handlerSearchWithNoConditionButtonClick} color="primary" style={{ marginLeft: "auto", marginRight: 5 }}>검색</Button>
+                  <Button variant="contained" onClick={handleSearchReset} color="secondary" style={{ marginRight: "auto", marginLeft: 5 }}>초기화</Button>
+                </ListItem>
+              </List>
             </div>
         }
       </Paper>
@@ -578,7 +628,7 @@ const Posts = (props: MatchParams) => {
                   }
                 </GridList>
 
-                <CardContent>
+                <CardContent onClick={() => { toAssetDetail(post.assetSeq) }} style={{cursor:"pointer"}}>
                   <Typography gutterBottom variant="h5" component="h2">
                     {post.assetTitle}
                   </Typography>
@@ -588,11 +638,11 @@ const Posts = (props: MatchParams) => {
                   <Typography align='left' component="p">작성자 : {post.assetOwnerName}</Typography>
                   <Typography align='left' component="p">태그 : {post.tags}</Typography>
                 </CardContent>
-                <CardActions>
+                {/* <CardActions>
                   <Button size="small" color="primary" onClick={() => { toAssetDetail(post.assetSeq) }}>
                     상세보기
                 </Button>
-                </CardActions>
+                </CardActions> */}
               </Card>
             </Grid>
           ))

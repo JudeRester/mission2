@@ -21,32 +21,12 @@ import React, { useEffect, useState } from "react"
 import { useSelector } from "react-redux";
 import { RootState } from "../../../modules";
 import api from "../../../util/api";
+import { MemberInfo, Order, Page } from "../../../util/types";
+import MembersTable from "./MembersTable";
 
 type MatchParams = {
     pageNum: string
 }
-
-const StyledTableCell = withStyles((theme: Theme) =>
-    createStyles({
-        head: {
-            backgroundColor: theme.palette.common.black,
-            color: theme.palette.common.white,
-        },
-        body: {
-            fontSize: 14,
-        },
-    }),
-)(TableCell);
-
-const StyledTableRow = withStyles((theme: Theme) =>
-    createStyles({
-        root: {
-            '&:nth-of-type(odd)': {
-                backgroundColor: theme.palette.action.hover,
-            },
-        },
-    }),
-)(TableRow);
 
 const mailVali = RegExp(/^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i);
 const phoneVali = RegExp(/^[0-9]{10,11}$/);
@@ -58,22 +38,6 @@ interface InputData<T> {
     error: boolean;
 }
 
-type MemberInfo = {
-    userId: string,
-    userPass: string,
-    userName: string,
-    userEmail: string,
-    userPhone: string,
-}
-
-type Page = {
-    startPage: number,
-    endPage: number,
-    prev: false,
-    next: false,
-    total: number
-}
-
 interface DeleteTarget {
     userId: string,
     count: number
@@ -83,14 +47,17 @@ const Members = () => {
     const [memberList, setMemberList] = useState<Array<MemberInfo>>();
     const [pageNum, setPageNum] = useState<number>(1);
     const [pageInfo, setPageInfo] = useState<Page>();
+
     const [addOpen, setAddOpen] = useState<boolean>(false);
     const [modOpen, setModOpen] = useState<boolean>(false);
+
     const [addUserId, setAddUserId] = useState<InputData<string>>({ data: '', error: true })
     const [addUserPassword, setAddUserPassword] = useState<InputData<string>>({ data: '', error: true })
     const [addUserPasswordCheck, setAddUserPasswordCheck] = useState<InputData<string>>({ data: '', error: true })
     const [addUsername, setAddUsername] = useState<InputData<string>>({ data: '', error: true })
     const [addUserPhone, setAddUserPhone] = useState<InputData<string>>({ data: '', error: true })
     const [addUserEmail, setAddUserEmail] = useState<InputData<string>>({ data: '', error: true })
+
     const [idInvalidMessage, setIdInvalidMessage] = useState<string>('')
     const [passwordInvalidMessage, setPasswordInvalidMessage] = useState<string>('')
     const [passwordCheckInvalidMessage, setPasswordCheckInvalidMessage] = useState<string>('')
@@ -98,13 +65,27 @@ const Members = () => {
     const [userPhoneInvalidMessage, setUserPhoneInvalidMessage] = useState<string>('')
     const [uesrEmailInvalidMessage, setUserEmailInvalidMessage] = useState<string>('')
     const [totalValid, setTotalValid] = useState<boolean>(true)
+
     const [deleteOpen, setDeleteOpen] = useState<boolean>(false)
     const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>()
+
     const [searchCondition, setSearchCondition] = useState<string>('userId')
+    const [orderBy, setOrderBy] = useState<string>('userCreateDate')
+    const [order, setOrder] = useState<Order>('desc')
     const [isSearch, setIsSearch] = useState<boolean>(false)
     const [keyword, setKeyword] = useState<string>('');
-    const user = useSelector((state:RootState)=>state.member)
+
+    const user = useSelector((state: RootState) => state.member)
     api.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+
+    const handleRequestSort = (property: string) => {
+        const isAsc = orderBy === property && order === 'asc';
+        !isSearch&&setIsSearch(pre=>{
+            return true;
+        })
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
 
     const handleAddOpen = () => {
         setAddOpen(true)
@@ -328,28 +309,30 @@ const Members = () => {
     const searchInputKeyPress = async (e: React.KeyboardEvent<HTMLDivElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
-            setIsSearch(pre=>{let temp = true;return temp});
-            setPageNum(pre=>{let temp =1; return temp})
+            setIsSearch(pre => { let temp = true; return temp });
+            setPageNum(pre => { let temp = 1; return temp })
             loadMembers();
         }
     }
     const handlerSearchButtonClick = () => {
-        setIsSearch(pre=>{let temp = true;return temp});
-        setPageNum(pre=>{let temp = 1; return temp})
+        setIsSearch(pre => { let temp = true; return temp });
+        setPageNum(pre => { let temp = 1; return temp })
         loadMembers();
     }
-    
+
     const setData = () => {
         let data: string = ''
         data += `condition=${searchCondition}&`
         data += `keyword=${keyword}&`
+        data += `orderBy=${orderBy}&`
+        data += `order=${order}&`
         data += `pageNum=${pageNum}`
         return data
     }
     const handleSearchReset = () => {
         setKeyword('')
         setPageNum(1)
-        setIsSearch(pre=>{return false})
+        setIsSearch(pre => { return false })
         loadMembers();
     }
     async function loadMembers() {
@@ -367,23 +350,15 @@ const Members = () => {
         setPageInfo(response.data.reference)
         setMemberList(list)
     };
-    useEffect(()=>{
-        setPageNum(pre=>{let temp =1; return temp})
+    useEffect(() => {
+        setPageNum(pre => { let temp = 1; return temp })
         loadMembers();
-    },[isSearch])
+    }, [isSearch])
     useEffect(() => {
         loadMembers();
     }, [pageNum]);
 
-    const ModifyButton = withStyles((theme: Theme) => ({
-        root: {
-            color: theme.palette.getContrastText(amber[500]),
-            backgroundColor: amber[500],
-            '&:hover': {
-                backgroundColor: amber[700],
-            },
-        },
-    }))(Button);
+
     const DeleteButton = withStyles((theme: Theme) => ({
         root: {
             color: theme.palette.getContrastText(red[900]),
@@ -488,35 +463,14 @@ const Members = () => {
                             </IconButton>
 
                         </Paper>
-                        <TableContainer component={Paper}>
-                            <Table aria-label="customized table">
-                                <TableHead>
-                                    <TableRow>
-                                        <StyledTableCell>아이디</StyledTableCell>
-                                        <StyledTableCell align="right">이름</StyledTableCell>
-                                        <StyledTableCell align="right">이메일</StyledTableCell>
-                                        <StyledTableCell align="right">전화번호</StyledTableCell>
-                                        <StyledTableCell align="right">&nbsp;</StyledTableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {memberList && memberList.map((user) => (
-                                        <StyledTableRow key={user.userId}>
-                                            <StyledTableCell component="th" scope="row">
-                                                {user.userId}
-                                            </StyledTableCell>
-                                            <StyledTableCell align="right">{user.userName}</StyledTableCell>
-                                            <StyledTableCell align="right">{user.userEmail}</StyledTableCell>
-                                            <StyledTableCell align="right">{user.userPhone}</StyledTableCell>
-                                            <StyledTableCell align="right">
-                                                <ModifyButton onClick={e => { handleModifyClick(user) }} >수정</ModifyButton>
-                                                <DeleteButton onClick={e => { handleDelete(user.userId) }}>삭제</DeleteButton>
-                                            </StyledTableCell>
-                                        </StyledTableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                        <MembersTable
+                            memberList={memberList}
+                            handleModifyClick={handleModifyClick}
+                            handleDelete={handleDelete}
+                            handleRequestSort={handleRequestSort}
+                            orderBy={orderBy}
+                            order={order}
+                        />
                         <CardActions style={{ justifyContent: "center" }}>
                             {pageInfo && <Pagination classes={{ ul: classes.ul }}
                                 hideNextButton={!pageInfo.next}

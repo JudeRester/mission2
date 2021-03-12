@@ -12,9 +12,9 @@
 	</select>
 	
 	<select id="getList" resultType="User">
-		SELECT * FROM (select user_id, user_name, user_email,user_phone, rownum AS record
+		SELECT * FROM (select user_id, user_name, user_email,user_phone,user_create_date, rownum AS record
 		from
-		(select user_id, user_name, user_email,user_phone from assetuser
+		(select user_id, user_name, user_email,user_phone,user_create_date from assetuser
 		where user_role!='ROLE_ADMIN' order by user_create_date desc))
 		where record between
 		(#{pageNum}-1)*#{amount}+1 and #{pageNum}*#{amount}
@@ -29,8 +29,8 @@
 	</select>
 
 	<select id="search" resultType="User">
-		select user_id, user_name, user_email,user_phone, record from
-			(select user_id, user_name, user_email,user_phone,rownum as record from 
+		select user_id, user_name, user_email,user_phone,user_create_date, record from
+			(select user_id, user_name, user_email,user_phone,user_create_date,rownum as record from 
 				(select user_id, user_name,
 				user_email,user_phone from assetuser
 				where 

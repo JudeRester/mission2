@@ -1,11 +1,22 @@
 package com.malgn.mission2.domain;
 
+import java.sql.Date;
+
 public class User {
     private String userId;
     private String userPass;
     private String userName;
     private String userEmail;
     private String userPhone;
+    private Date userCreateDate;
+
+    public Date getUserCreateDate() {
+        return this.userCreateDate;
+    }
+
+    public void setUserCreateDate(Date userCreateDate) {
+        this.userCreateDate = userCreateDate;
+    }
 
     public String getUserId() {
         return this.userId;
@@ -51,6 +62,7 @@ public class User {
     public String toString() {
         return "{" + " userId='" + getUserId() + "'" + ", userPass='" + getUserPass() + "'" + ", userName='"
                 + getUserName() + "'" + ", userEmail='" + getUserEmail() + "'" + ", userPhone='" + getUserPhone() + "'"
-                + "}";
+                + ", userCreateDate='" + getUserCreateDate() + "'" + "}";
     }
+
 }
