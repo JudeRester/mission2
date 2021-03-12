@@ -32,7 +32,8 @@
 		select user_id, user_name, user_email,user_phone,user_create_date, record from
 			(select user_id, user_name, user_email,user_phone,user_create_date,rownum as record from 
 				(select user_id, user_name,
-				user_email,user_phone from assetuser
+				user_email,user_phone,
+				user_create_date from assetuser
 				where 
 				user_role!='ROLE_ADMIN' 
 				and
@@ -45,7 +46,33 @@
 					<if test='condition != null and "userEmail".equals(condition)'>
 						user_Email LIKE '%'||#{keyword}||'%'
 					</if>
-				order by user_create_date desc)
+					order by 
+					<choose>
+						<when test="orderBy != null and 'userCreateDate'.equals(orderBy)">
+							user_create_date
+						</when>
+						<when test="orderBy != null and 'userId'.equals(orderBy)">
+							user_id
+						</when>
+						<when test="orderBy != null and 'userName'.equals(orderBy)">
+							user_name
+						</when>
+						<when test="orderBy != null and 'userEmail'.equals(orderBy)">
+							user_email
+						</when>
+						<when test="orderBy != null and 'userPhone'.equals(orderBy)">
+							user_phone
+						</when>
+					</choose>
+					<choose>
+						<when test="order != null and 'asc'.equals(order)">
+							asc
+						</when>
+						<when test="order != null and 'desc'.equals(order)">
+							desc
+						</when>
+					</choose>
+					)
 			)
 		WHERE
 		record BETWEEN

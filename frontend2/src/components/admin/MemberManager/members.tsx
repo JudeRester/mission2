@@ -353,7 +353,7 @@ const Members = () => {
     useEffect(() => {
         setPageNum(pre => { let temp = 1; return temp })
         loadMembers();
-    }, [isSearch])
+    }, [isSearch,orderBy,order])
     useEffect(() => {
         loadMembers();
     }, [pageNum]);
