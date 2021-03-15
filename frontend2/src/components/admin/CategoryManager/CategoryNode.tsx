@@ -135,7 +135,8 @@ const CategoryNode = (props: CategoryProps) => {
                 categoryParent: arrayCategories[targetIndex].categoryParent,
             }
             const response = await api.post(`category`, newNode)
-            switch (response.data.code) {
+            const code:number = response.data.code
+            switch (code) {
                 case 200:
                     const response = await api.get('/category/list')
                     // setArrayCategories(response.data.result)
@@ -185,7 +186,8 @@ const CategoryNode = (props: CategoryProps) => {
                 categoryName: addingCategoryName,
             }
             const response = await api.put(`category`, data)
-            switch (response.data.code) {
+            const code:number = response.data.code
+            switch (code) {
                 case 200:
                     const response = await api.get('/category/list')
                     // setArrayCategories(response.data.result)
