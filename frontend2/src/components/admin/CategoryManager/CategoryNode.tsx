@@ -3,12 +3,17 @@ import api from "../../../util/api";
 import {
     makeStyles,
     fade,
-    TextField,
+    Button,
+    InputAdornment,
+    FormControl,
+    Input,
 } from "@material-ui/core";
 
 import React, { useState, useCallback, useEffect } from "react";
 import { TreeItem } from "@material-ui/lab";
-import { Remove, SubdirectoryArrowRight } from "@material-ui/icons";
+import { 
+    Remove, 
+} from "@material-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../modules";
 import { setDragged } from "../../../modules/dragNode";
@@ -49,7 +54,7 @@ const useTreeStyles = makeStyles({
     },
     label: {
         textAlign: 'left',
-        backgroundColor: (props: {backgroundColor:string})=>
+        backgroundColor: (props: { backgroundColor: string }) =>
             props.backgroundColor,
     },
     group: {
@@ -68,23 +73,23 @@ const CategoryNode = (props: CategoryProps) => {
     /**
      * ? store
      */
-    const arrayCategories =useSelector((state:RootState)=>state.arrayCategories)
+    const arrayCategories = useSelector((state: RootState) => state.arrayCategories)
     const draggedNode = useSelector((state: RootState) => state.dragNode)
     const dispatch = useDispatch()
     /**
      * ? props
      */
-    const {category, setExpendedCategoryList, expendedCategoryList, selectedInfo} = props;
+    const { category, setExpendedCategoryList, expendedCategoryList, selectedInfo } = props;
     const expendedCategory = expendedCategoryList
     const setSelectedCategoryInfo = selectedInfo
     /**
      * ?state
      */
     const [addingCategoryName, setAddingCategoryName] = useState<string>('');
-    const [styleProps,setStyleProps] = useState({backgroundColor: null})
+    const [styleProps, setStyleProps] = useState({ backgroundColor: null })
 
     const treeClasses = useTreeStyles(styleProps);
-    
+
     const onChange = useCallback((e: React.ChangeEvent<{ value: string }>) => {
         setAddingCategoryName(e.target.value)
 
@@ -146,7 +151,7 @@ const CategoryNode = (props: CategoryProps) => {
 
     const cancelAddCategory = () => {
         const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.newNode === true)
-        let temp =[...arrayCategories]
+        let temp = [...arrayCategories]
         temp.splice(targetIndex, 1)
         dispatch(setArrayCategories(temp))
         // setArrayCategories(pre => {
@@ -196,10 +201,10 @@ const CategoryNode = (props: CategoryProps) => {
 
     const cancelModifyCategory = () => {
 
-            const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.modifying === true)
-            let temp: CategoryInfo[] = [...arrayCategories]
-            temp[targetIndex].modifying = false;
-            dispatch(setArrayCategories(temp));
+        const targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.modifying === true)
+        let temp: CategoryInfo[] = [...arrayCategories]
+        temp[targetIndex].modifying = false;
+        dispatch(setArrayCategories(temp));
         // setArrayCategories(pre => {
         //     const targetIndex = pre.findIndex((e: CategoryInfo) => e.modifying === true)
         //     let temp: CategoryInfo[] = [...pre]
@@ -241,11 +246,12 @@ const CategoryNode = (props: CategoryProps) => {
 
     const onDragOver = (e: React.DragEvent) => {
         e.preventDefault();
+        
     }
 
     const onDrop = async (e: React.DragEvent, categoryId: string) => {
         e.stopPropagation()
-        setStyleProps({backgroundColor: null})
+        setStyleProps({ backgroundColor: null })
         if (draggedNode.includes(String(categoryId))) {
             //드랍 불가능 액션
         } else {
@@ -260,78 +266,114 @@ const CategoryNode = (props: CategoryProps) => {
         e.stopPropagation()
         if (draggedNode.includes(String(categoryId))) {
             //드랍 불가능 표시
-            setStyleProps({backgroundColor:"red"})
+            setStyleProps({ backgroundColor: "red" })
         } else {
             //드랍 가능 표시
-            setStyleProps({backgroundColor:"lightblue"})
+            setStyleProps({ backgroundColor: "lightblue" })
         }
+        const targetIndex = expendedCategory.findIndex((e: string) => e === ''+categoryId);
+        targetIndex === -1&&setExpendedCategoryList(expendedCategory.concat(''+categoryId))
     }
 
     const onDragLeave = (e: React.DragEvent, categoryId: string) => {
         e.stopPropagation()
-        setStyleProps({backgroundColor: null})
+        setStyleProps({ backgroundColor: null })
         // let targetIndex = arrayCategories.findIndex((e: CategoryInfo) => e.categoryId === -1)
         // const temp = [...arrayCategories]
         // temp.splice(targetIndex, 1)
         // setArrayCategories(temp)
     }
 
-    return(
-    <>
-        <DropForHighOrder id={category.categoryId}/>
-        <TreeItem
-            draggable
-            onDragStart={(e) => { onDragStart(e, category) }}
-            onDragOver={onDragOver}
-            onDrop={(e) => { onDrop(e, category.categoryId) }}
-            onDragEnter={(e) => { onDragEnter(e, category.categoryId) }}
-            onDragLeave={(e) => { onDragLeave(e, category.categoryId) }}
-            id={category.categoryId}
-            key={category.categoryId}
-            nodeId={category.categoryId + ''}
-            label={category.categoryName ?
-                category.modifying ?
-                    <TextField
-                        id="standard-basic"
-                        onKeyPress={(e) => { handleModifyCategoryName(e) }}
-                        onChange={onChange}
-                        onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-                            event.stopPropagation()
-                        }}
-                        onBlur={cancelModifyCategory}
-                        value={addingCategoryName}
-                        autoFocus
-                    />
-                    :
-                    category.categoryName :
-                <TextField
-                    id="standard-basic"
-                    onKeyPress={(e) => { handleInputNewCategoryName(e) }}
-                    onChange={onChange}
-                    onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-                        event.stopPropagation()
-                    }}
-                    onBlur={cancelAddCategory}
-                    value={addingCategoryName}
-                    autoFocus
-                />
-            }
-            onIconClick={() => handleTreeIconClick(category.categoryId + '')}
-            classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
-            onLabelClick={category.categoryName ?
-                () => handleTreeLabelClick(category.categoryId + '')
-                : null}
-            endIcon={<Remove />}>
+    return (
+        <>
+            <DropForHighOrder id={category.categoryId} />
+            <TreeItem
+                draggable
+                onDragStart={(e) => { onDragStart(e, category) }}
+                onDragOver={onDragOver}
+                onDrop={(e) => { onDrop(e, category.categoryId) }}
+                onDragEnter={(e) => { onDragEnter(e, category.categoryId) }}
+                onDragLeave={(e) => { onDragLeave(e, category.categoryId) }}
+                id={category.categoryId}
+                key={category.categoryId}
+                nodeId={category.categoryId + ''}
+                label={category.categoryName ?
+                    category.modifying ?
+                        <FormControl >
+                            <Input
+                                id="standard-basic"
+                                onKeyPress={(e) => { handleModifyCategoryName(e) }}
+                                onChange={onChange}
+                                onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+                                    event.stopPropagation()
+                                }}
+                                onBlur={cancelModifyCategory}
+                                value={addingCategoryName}
+                                autoFocus
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <Button color="primary"
+                                            onMouseDown={checkIsNameEmptyForModify}
+                                        >
+                                            확인
+                                        </Button>
+                                        <Button color="secondary"
+                                            onMouseDown={cancelModifyCategory}
+                                        >
+                                            취소
+                                        </Button>
+                                    </InputAdornment>
+                                }
 
-            {Array.isArray(category.children) ? category.children.map((node) => 
-            <CategoryNode 
-            {...props}
-            category={node} 
-            // setExpendedCategoryList={setExpendedCategoryList} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} treeCategoryList={treeCategories} setTreeCategoryList={setTreeCategories} 
-            />) : null}
-        </TreeItem>
-        <DropForLowOrder id={category.categoryId} />
-    </>)
+                            />
+                        </FormControl>
+                        :
+                        category.categoryName :
+                    <FormControl >
+                        <Input
+                            id="standard-basic"
+                            onKeyPress={(e) => { handleInputNewCategoryName(e) }}
+                            onChange={onChange}
+                            onClick={(event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+                                event.stopPropagation()
+                            }}
+                            onBlur={cancelAddCategory}
+                            value={addingCategoryName}
+                            autoFocus
+                            endAdornment={
+                                <InputAdornment position="end">
+                                    <Button color="primary"
+                                        onMouseDown={checkIsNameEmpty}
+                                    >
+                                        확인
+                                        </Button>
+                                    <Button color="secondary"
+                                        onMouseDown={cancelAddCategory}
+                                    >
+                                        취소
+                                        </Button>
+                                </InputAdornment>
+                            }
+
+                        />
+                    </FormControl>
+                }
+                onIconClick={() => handleTreeIconClick(category.categoryId + '')}
+                classes={{ label: treeClasses.label, group: treeClasses.group, iconContainer: treeClasses.iconContainer }}
+                onLabelClick={category.categoryName ?
+                    () => handleTreeLabelClick(category.categoryId + '')
+                    : null}
+                endIcon={<Remove />}>
+
+                {Array.isArray(category.children) ? category.children.map((node) =>
+                    <CategoryNode
+                        {...props}
+                        category={node}
+                    // setExpendedCategoryList={setExpendedCategoryList} expendedCategoryList={expendedCategory} selectedInfo={setSelectedCategoryInfo} treeCategoryList={treeCategories} setTreeCategoryList={setTreeCategories} 
+                    />) : null}
+            </TreeItem>
+            <DropForLowOrder id={category.categoryId} />
+        </>)
 }
 
 export default CategoryNode

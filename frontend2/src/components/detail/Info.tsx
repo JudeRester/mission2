@@ -22,7 +22,11 @@ import {
     DialogActions,
     CircularProgress,
 } from "@material-ui/core"
-import { StarBorder, ExpandLess, ExpandMore, Comment, GetApp } from "@material-ui/icons"
+import { 
+    ExpandLess, 
+    ExpandMore, 
+    GetApp 
+} from "@material-ui/icons"
 // import { InboxIcon } from '@material-ui/icons/MoveToInbox';
 import React, { useEffect, useState } from "react"
 import Carousel from "react-material-ui-carousel"
@@ -149,6 +153,10 @@ const Info = (props: MatchParams) => {
         setChecked(newChecked);
     };
 
+    const goBack = ()=>{
+        history.goBack();
+    }
+    
     const goModify = () => {
         history.push(`/modify/${assetSeq}`)
     }
@@ -300,8 +308,11 @@ const Info = (props: MatchParams) => {
                                 </TableCell>
                             </TableRow>
                         </Table>
-                        <Button onClick={goModify} color="primary">수정</Button>
-                        {(user.userRole==="ROLE_ADMIN" || user.userId === assetInfo.assetOwner) && <Button onClick={handleDeleteOpen} color="secondary">삭제</Button>}
+                        <div style={{textAlign:"center", margin:"auto"}}>
+                        <Button variant="contained" onClick={goBack} style={{margin:"5px"}}>뒤로가기</Button>
+                        <Button onClick={goModify} style={{margin:"5px"}} variant="contained" color="primary">수정</Button>
+                        {(user.userRole==="ROLE_ADMIN" || user.userId === assetInfo.assetOwner) && <Button onClick={handleDeleteOpen} style={{margin:"5px"}} variant="contained" color="secondary">삭제</Button>}
+                        </div>
                     </Grid>
                     <Grid item xs={12}>
                         <Divider />

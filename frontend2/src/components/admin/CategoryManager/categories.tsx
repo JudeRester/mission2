@@ -32,9 +32,17 @@ import {
 } from "@material-ui/core/colors";
 
 import arrayToTree from "array-to-tree";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, 
+{ 
+    useEffect, 
+    useState, 
+} from "react";
 import { TreeItem, TreeView } from "@material-ui/lab";
-import { ChevronRight, ExpandMore, Folder, FolderOpen, Remove, SubdirectoryArrowRight } from "@material-ui/icons";
+import { 
+    Folder, 
+    FolderOpen, 
+    Remove, 
+} from "@material-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../modules";
 import CategoryNode from "./CategoryNode";

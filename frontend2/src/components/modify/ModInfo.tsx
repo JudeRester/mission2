@@ -3,8 +3,8 @@ import axios from 'axios';
 import styled from '@emotion/styled';
 import { useHistory } from 'react-router';
 import arrayToTree from 'array-to-tree';
-import { ExpandMore, ChevronRight, Comment, Delete } from '@material-ui/icons'
-import { Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles } from '@material-ui/core';
+import { ExpandMore, ChevronRight, Comment, Delete, FolderOpen, Folder, Remove } from '@material-ui/icons'
+import { Button, CircularProgress, colors, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, fade, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles } from '@material-ui/core';
 import { TreeItem, TreeView } from '@material-ui/lab';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../modules';
@@ -144,7 +144,7 @@ const ModInfo = (props: MatchParams) => {
     let [tags, setTags] = useState<Array<string>>([]);
     let [categories, setCategories] = useState([]);
     let [selectedCategory, setSelectedCategory] = useState<string>();
-    let [categoriesHavingChild, setCategoriesHavingChild] = useState<Array<string>>();
+    let [expendedCategory, setExpendedCategory] = useState<Array<string>>();
     let [isTagDuplicated, setIsTagDuplicated] = useState<boolean>(false);
     let [alertOpen, setAlertOpen] = useState<boolean>(false);
     let [fileDeleteAlertOpen, setFileDeleteAlertOpen] = useState<boolean>(false)
@@ -182,7 +182,7 @@ const ModInfo = (props: MatchParams) => {
                     getParents(node.children);
                 }
             });
-            setCategoriesHavingChild(tempArray)
+            setExpendedCategory(tempArray)
         };
         getParents(categories);
     }, [categories])
@@ -218,7 +218,12 @@ const ModInfo = (props: MatchParams) => {
     }
 
     const renderTrees = (nodes: TreeViews) => (
-        <TreeItem key={nodes.categoryId} nodeId={nodes.categoryId + ''} label={nodes.categoryName} classes={{ label: classes.label }}>
+        <TreeItem
+            endIcon={<Remove />}
+            key={nodes.categoryId}
+            nodeId={nodes.categoryId + ''}
+            label={nodes.categoryName}
+            classes={{ label: classes.label, group: classes.group, iconContainer: classes.iconContainer }}>
             {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTrees(node)) : null}
         </TreeItem>
     );
@@ -338,6 +343,16 @@ const ModInfo = (props: MatchParams) => {
         label: {
             textAlign: 'left'
         },
+        group: {
+            marginLeft: 7,
+            paddingLeft: 18,
+            borderLeft: `1px dashed ${fade('#000000', 0.4)}`,
+        },
+        iconContainer: {
+            "& svg": {
+                marginLeft: 10
+            }
+        }
     });
     const classes = useStyles();
     return (
@@ -362,8 +377,9 @@ const ModInfo = (props: MatchParams) => {
                                             onNodeToggle={handleToggle}
                                             onNodeSelect={handleNodeSelect}
                                             className={classes.root}
-                                            expanded={categoriesHavingChild}
-                                            defaultSelected={assetInfo.assetCategory + ''}
+                                            defaultCollapseIcon={<FolderOpen />}
+                                            defaultExpandIcon={<Folder />}
+                                            expanded={expendedCategory}
                                         >
                                             <div>
                                                 {categories.map((category: TreeViews) => {
