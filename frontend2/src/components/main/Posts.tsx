@@ -650,8 +650,8 @@ const Posts = (props: MatchParams) => {
         </Grid>
         <Grid>
           {pageInfo && <Pagination classes={{ ul: classes.ul }}
-            hideNextButton={!pageInfo.next}
-            hidePrevButton={!pageInfo.prev}
+            // hideNextButton={true}
+            // hidePrevButton={true}
             count={pageInfo.endPage}
             page={pageNum}
             onChange={(e: React.ChangeEvent<unknown>, value: number) => { setPageNum(value) }}

@@ -17,6 +17,8 @@ public class Page {
 
         if (realEnd < this.endPage) {
             this.endPage = realEnd;
+        } else {
+            this.endPage = realEnd;
         }
         this.prev = this.startPage > 1;
         this.next = this.endPage < realEnd;
